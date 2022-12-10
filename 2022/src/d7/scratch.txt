@@ -1,0 +1,290 @@
+use std::{fs};
+use ::function_name::named;
+use itertools::Itertools;
+
+struct Directory {
+    pub name: String,
+    pub size: u32,
+    pub children: Vec<Directory>
+}
+
+#[named]
+fn part1() {
+    let file_contents = fs::read_to_string("src\\d7\\data_test.txt").expect("Error loading file");
+    let mut lines = file_contents.split("\r\n").collect::<Vec<&str>>();
+    //let mut path: Vec<Directory> = Vec::new();
+    let mut root = Directory { name: "/".to_string(), size: 0, children: Vec::new() };
+    let mut collecting = false;
+    //let mut curr_total = 0;
+    for line in lines {
+        assert!(line.len()>2);
+        if &line[0..1] == "$" && collecting {
+            if !path.is_empty() {
+                //let index = path.len() - 1;
+                //path[index].size = curr_total;
+                println!("{}: {}", path.iter().fold(String::new(), |res, dir| res + "/" + &dir.name), path.last().unwrap().size);
+            }
+            //curr_total = 0;
+            collecting = false;
+        }
+        match &line[..4] {
+            "$ cd" => {
+                let dir = &line[4..];
+                match dir {
+                    " /" => {   
+                        path.clear();
+                    }
+                    " .." => {
+                        let depth = path.len();
+                        if depth > 1 {
+                            path[depth - 2].size += path[depth - 1].size;
+                        }
+                        path.pop();
+                        if !path.is_empty() {
+                            println!("{}: {}", path.iter().fold(String::new(), |res, dir| res + "/" + &dir.name), path.last().unwrap().size);
+                        }
+                    }
+                    _ => {
+                        path.push(Directory { name: line[5..].to_string(), size: 0 } );
+                    }
+                }
+                //println!("{}", path.iter().fold(String::new(), |res, dir| res + "/" + dir));
+            }
+            "$ ls" => {
+                collecting = true;
+            }
+            _ => {
+                let (a, b) = line.split(" ").collect_tuple().unwrap();
+                if a != "dir" {
+                    let depth = path.len();
+                    if depth > 0 {
+                        path[depth - 1].size += a.parse::<u32>().unwrap();
+                    }
+                }
+            }
+        }
+    }
+    println!("{}: {}", path.iter().fold(String::new(), |res, dir| res + "/" + &dir.name), path.last().unwrap().size);
+
+    let match_pos = 0;
+    println!("{}: {}", function_name!(), match_pos);
+}
+
+#[named]
+fn part2() {
+    let file_contents = fs::read_to_string("src\\d7\\data.txt").expect("Error loading file");
+
+    let mut match_pos = 0;
+
+
+    println!("{}: {}", function_name!(), match_pos)
+}
+
+pub fn run() {
+    part1();
+    part2();
+}
+
+// part1: 1707
+// part2: 3697
+
+-------------------------------------------------------------
+
+use std::{fs};
+use ::function_name::named;
+use itertools::Itertools;
+
+struct Directory {
+    pub name: String,
+    pub size: u32,
+    pub children: Vec<Directory>
+}
+
+#[named]
+fn part1() {
+    let file_contents = fs::read_to_string("src\\d7\\data_test.txt").expect("Error loading file");
+    let lines = file_contents.split("\r\n").collect::<Vec<&str>>();
+    //let mut path: Vec<Directory> = Vec::new();
+    let mut root = Directory { name: "/".to_string(), size: 0, children: Vec::new() };
+    //let current_dir: &Directory = &root;
+    let mut path: Vec<&mut Directory> = Vec::new();
+    let mut collecting = false;
+    //let mut curr_total = 0;
+    for line in lines {
+        assert!(line.len()>2);
+        if &line[0..1] == "$" && collecting {
+            if !path.is_empty() {
+                //let index = path.len() - 1;
+                //path[index].size = curr_total;
+                println!("{}: {}", path.iter().fold(String::new(), |res, dir| res + "/" + &dir.name), path.last().unwrap().size);
+            }
+            //println!("{}: {}", current_dir.name, current_dir.size);
+            collecting = false;
+        }
+        match &line[..4] {
+            "$ cd" => {
+                let (_, a, b) = line.split(" ").collect_tuple().unwrap();
+                let dir = &line[4..];
+                match dir {
+                    " /" => {
+                        path.clear();
+                        path.push(&root);
+                    }
+                    " .." => {
+                        //let depth = path.len();
+                        // if depth > 1 {
+                        //     path[depth - 2].size += path[depth - 1].size;
+                        // }
+                        path.pop();
+                        // if !path.is_empty() {
+                        //     println!("{}: {}", path.iter().fold(String::new(), |res, dir| res + "/" + &dir.name), path.last().unwrap().size);
+                        // }
+                    }
+                    _ => {
+                        let depth = path.len();
+                        //let &curr_dir: path[depth-1];
+                        path[depth-1].children.push(Directory { name: line[5..].to_string(), size: 0, children: Vec::new() } );
+                    }
+                }
+                //println!("{}", path.iter().fold(String::new(), |res, dir| res + "/" + dir));
+            }
+            "$ ls" => {
+                collecting = true;
+            }
+            _ => {
+                assert!(collecting);
+                let (a, b) = line.split(" ").collect_tuple().unwrap();
+                match a {
+                    "dir" => {
+                        path[depth-1].children.push(Directory { name: line[5..].to_string(), size: 0, children: Vec::new() } );
+                    }
+                    _ => {
+                        path.last().unwrap().size += a.parse::<u32>().unwrap();
+                    }
+                }
+            }
+        }
+    }
+    println!("{}: {}", path.iter().fold(String::new(), |res, dir| res + "/" + &dir.name), path.last().unwrap().size);
+
+    let match_pos = 0;
+    println!("{}: {}", function_name!(), match_pos);
+}
+
+#[named]
+fn part2() {
+    println!("{}: {}", function_name!(), "!");
+}
+
+pub fn run() {
+    part1();
+    part2();
+}
+
+// part1: 1707
+// part2: 3697
+
+
+-------------------------------------------------------------
+
+
+use std::{fs};
+use ::function_name::named;
+use itertools::Itertools;
+
+struct Directory {
+    pub name: String,
+    pub size: u32,
+    pub children: Vec<Directory>
+}
+
+#[named]
+fn part1() {
+    let file_contents = fs::read_to_string("src\\d7\\data_test.txt").expect("Error loading file");
+    let lines = file_contents.split("\r\n").collect::<Vec<&str>>();
+    //let mut path: Vec<Directory> = Vec::new();
+    let mut root: Directory = Directory { name: "/".to_string(), size: 0, children: Vec::new() };
+    //let current_dir: &Directory = &root;
+    let mut path: Vec<&mut Directory> = Vec::new();
+    path.push(&mut root);
+    let mut collecting = false;
+    //let mut curr_total = 0;
+    for line in lines {
+        assert!(line.len()>2);
+        if &line[0..2] == "$ " {
+            if collecting {
+                if !path.is_empty()
+                {
+                    //let index = path.len() - 1;
+                    //path[index].size = curr_total;
+                    println!("{}: {}", path.iter().fold(String::new(), |res, dir| res + "/" + &dir.name), path.last().unwrap().size);
+                }
+                //println!("{}: {}", current_dir.name, current_dir.size);
+                collecting = false;
+            }
+            match &line[2..4] {
+                "cd" => {
+                    let dir = &line[4..];
+                    match dir {
+                        " /" => {
+                            path.clear();
+                            path.push(&root);
+                            assert!(path.len() == 1 && &path[0].name == "/");
+                        }
+                        " .." => {
+                            //let depth = path.len();
+                            // if depth > 1 {
+                            //     path[depth - 2].size += path[depth - 1].size;
+                            // }
+                            path.pop();
+                            // if !path.is_empty() {
+                            //     println!("{}: {}", path.iter().fold(String::new(), |res, dir| res + "/" + &dir.name), path.last().unwrap().size);
+                            // }
+                        }
+                        _ => {
+                            //let depth = path.len();
+                            //let x: &mut Directory = path.last().unwrap().children.iter().find(|c| c.name == line[5..]).unwrap();
+                            //path.push(&mut x);
+                        }
+                    }
+                    //println!("{}", path.iter().fold(String::new(), |res, dir| res + "/" + dir));
+                }
+                "ls" => {
+                    collecting = true;
+                }
+                _ => {
+                    panic!()
+                }
+            }
+        }
+        else {
+            assert!(collecting && !path.is_empty());
+            let (a, b) = line.split(" ").collect_tuple().unwrap();
+            match a {
+                "dir" => {
+                    //path.last().unwrap().children.push(Directory { name: b.to_string(), size: 0, children: Vec::new() } );
+                }
+                _ => {
+                    //path.last().unwrap().size += a.parse::<u32>().unwrap();
+                }
+            }
+        }
+    }
+    //println!("{}: {}", path.iter().fold(String::new(), |res, dir| res + "/" + &dir.name), path.last().unwrap().size);
+
+    let match_pos = 0;
+    println!("{}: {}", function_name!(), match_pos);
+}
+
+#[named]
+fn part2() {
+    println!("{}: {}", function_name!(), "!");
+}
+
+pub fn run() {
+    part1();
+    part2();
+}
+
+// part1: 1707
+// part2: 3697
