@@ -1,0 +1,21 @@
+{
+  "name": "scripting-starter",
+  "version": "0.1.0",
+  "type": "commonjs",
+  "productName": "Minecraft GameTest Starter Project",
+  "description": "Minecraft GameTest Starter Project",
+  "private": true,
+  "devDependencies": {
+    "del": "^6.0.0",
+    "gulp": "^4.0.2",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "typescript": "^4.5.2"
+  },
+  "scripts": {
+    "build": "xcopy /d /y /e behavior_packs build\\behavior_packs\\ /exclude:build_exclude.txt && tsc"
+  },
+  "dependencies": {
+    "@types/node": "^16.11.13",
+    "node": "^17.2.0"
+  }
+}
