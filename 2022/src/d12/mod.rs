@@ -104,7 +104,7 @@ fn part1() {
     // There is no other potential start location beyond the initial 'S'
     let valid_start_loc_test: Option<fn(char) -> bool> = None;
     let shortest_path = find_shortest_path(valid_start_loc_test);
-    println!("{}: {} ({} ms)", function_name!(), shortest_path, now.elapsed().as_millis());
+    println!("{}: {} ({} ms)", function_name!(), shortest_path, now.elapsed().as_micros() as f32 / 1000.0);
 }
 
 #[named]
@@ -114,7 +114,7 @@ fn part2() {
     // Any 'a' in the grid can be a valid start location
     let valid_start_loc_test: Option<fn(char) -> bool> = Some(|c| c == 'a');
     let shortest_path = find_shortest_path(valid_start_loc_test);
-    println!("{}: {} ({} ms)", function_name!(), shortest_path, now.elapsed().as_millis());
+    println!("{}: {} ({} ms)", function_name!(), shortest_path, now.elapsed().as_micros() as f32 / 1000.0);
 }
 
 pub fn run() {
