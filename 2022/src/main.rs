@@ -10,7 +10,8 @@
 // mod d9;
 // mod d10;
 // mod d11;
-mod d12;
+// mod d12;
+mod d13;
 //mod test;
 
 fn main() {
@@ -38,8 +39,10 @@ fn main() {
     // d10::run();
     // println!("Day11:");
     // d11::run();
-    println!("Day12:");
-    d12::run();
+    // println!("Day12:");
+    // d12::run();
+    println!("Day13:");
+    d13::run();
     // println!("Test:");
     // test::run();
 }

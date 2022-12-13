@@ -61,7 +61,7 @@ fn part2() {
         iteration_count += 1;
         let crt_index = (iteration_count - 1) % 40;
 
-        print!("{}", if num::abs(crt_index - register) < 2 { '#' } else { '.'});
+        print!("{}", if num::abs(crt_index - register) < 2 { '#' } else { ' ' });
 
         if iteration_count % 40 == 0 {
             println!("");
