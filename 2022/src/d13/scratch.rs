@@ -11,6 +11,35 @@ enum node {
     ERROR
 }
 
+
+// fn add_elements_to_list(line_in: &str, list: &mut Vec<Node>) {
+//     let mut line = line_in.to_string();
+//     while !line.is_empty() {
+//         if line.chars().nth(0) == Some('[') {
+//             let end_pos = line.rfind(']').unwrap();
+//             let mut v: Vec<Node> = Vec::new();
+//             add_elements_to_list(&line[1..end_pos], &mut v);
+//             list.push(Node::List(v));
+//             line = line[end_pos+1..].to_string();
+//         }
+//         else {
+//             let comma_pos_search = line.find(',');
+//             if comma_pos_search.is_some() {
+//                 let n = line[0..comma_pos_search.unwrap()].parse::<i32>().unwrap();
+//                 line = line[comma_pos_search.unwrap()+1..].to_string();
+//                 list.push(Node::Num(n));
+//                 println!("XXX Num:{},  line:{}", n, line);
+//             }
+//             else {
+//                 let n = line.parse::<i32>().unwrap();
+//                 line = String::new();
+//                 list.push(Node::Num(n));
+//                 println!("XXX Num:{},  line:{}", n, line);
+//             }
+//         }
+//     }
+// }
+
 fn add_elements_to_list(line_in: &str, list: &mut Vec<node>) {
     let mut line = line_in.to_string();
     while !line.is_empty() {
