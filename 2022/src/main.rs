@@ -12,8 +12,9 @@
 // mod d11;
 // mod d12;
 // mod d13;
-mod d14;
-//mod test;
+// mod d14;
+mod d15;
+// mod test;
 
 fn main() {
     // println!("Day1 (2021):");
@@ -44,8 +45,10 @@ fn main() {
     // d12::run();
     // println!("Day13:");
     // d13::run();
-    println!("Day14:");
-    d14::run();
+    // println!("Day14:");
+    // d14::run();
+    println!("Day15:");
+    d15::run();
     // println!("Test:");
     // test::run();
 }
