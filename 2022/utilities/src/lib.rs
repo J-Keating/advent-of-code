@@ -1,4 +1,4 @@
-use std::{cmp};
+use std::{cmp, fmt};
 use ::num::abs;
 
 pub fn valid_vec_index<T>(v: &Vec<T>, index: i32) -> bool {
@@ -39,6 +39,11 @@ impl Point {
         self.y += other.y;
     }
 
+    pub fn manhattan_dist(self, other: &Point) -> i32 {
+        let diff = other.sub(&self);
+        abs(diff.x) + abs(diff.y)
+    }
+
     pub fn interpolate<F>(self, other: &Point, mut callback: F) where F: FnMut(&Point)
     {
         let diff = other.sub(&self);
@@ -50,5 +55,11 @@ impl Point {
             callback(&curr);
             curr.move_by(&step);
         }
+    }
+}
+
+impl fmt::Display for Point {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
     }
 }
