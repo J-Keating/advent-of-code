@@ -14,6 +14,18 @@ pub fn alloc_2d_vec<T: Clone>(height: usize, width: usize, val: T) -> Vec<Vec<T>
     ret
 }
 
+pub fn alloc_3d_vec<T: Clone>(max_x: usize, max_y: usize, max_z: usize, val: T) -> Vec<Vec<Vec<T>>> {
+    let mut ret: Vec<Vec<Vec<T>>> = Vec::new();
+    ret.resize(max_x, Vec::new());
+    for x in 0..max_x {
+        ret[x].resize(max_y, Vec::new());
+        for y in 0..max_y {
+            ret[x][y].resize(max_z, val.clone());
+        }
+    }
+    ret
+}
+
 #[allow(dead_code)]
 #[derive(Eq, Hash, PartialEq, Clone, Copy)]
 pub struct Point {

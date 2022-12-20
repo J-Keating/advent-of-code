@@ -50,7 +50,7 @@ fn simulate_sand(curr_loc: &Point, grid: &Vec<Vec<GridState>>) -> SimulationResu
 
 fn do_it_all(build_floor: bool) -> i32 {
     let mut paths: Vec<Vec<Point>> = Vec::new();
-    let file_contents = fs::read_to_string("src\\d15\\data_test.txt").expect("Error loading file");
+    let file_contents = fs::read_to_string("src\\d16\\data_test.txt").expect("Error loading file");
     for path_line in file_contents.split("\r\n") {
         let pairs_this_line = path_line.split(" -> ").map(
             |p| p.split(',').map(
