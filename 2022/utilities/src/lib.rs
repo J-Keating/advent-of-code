@@ -46,9 +46,9 @@ impl Point {
 
     pub fn neg(self) -> Point { Point { x: -self.x, y: -self.y } }
 
-    pub fn move_by(&mut self, other: &Point) {
-        self.x += other.x;
-        self.y += other.y;
+    pub fn move_by(&mut self, other: &Point) -> &Point {
+        *self = self.add(&other);
+        self
     }
 
     pub fn manhattan_dist(self, other: &Point) -> i32 {
