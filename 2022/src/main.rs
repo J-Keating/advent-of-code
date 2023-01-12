@@ -14,9 +14,10 @@
 // mod d13;
 // mod d14;
 // mod d15;
-mod d16;
+// mod d16;
 // mod d17;
 // mod d18;
+mod d19;
 // mod d20;
 // mod d21;
 // mod d23;
@@ -55,12 +56,14 @@ fn main() {
     // d14::run();
     // println!("Day15:");
     // d15::run();
-    println!("Day16:");
-    d16::run();
+    // println!("Day16:");
+    // d16::run();
     // println!("Day17:");
     // d17::run();
     // println!("Day18:");
     // d18::run();
+    println!("Day19:");
+    d19::run();
     // println!("Day20:");
     // d20::run();
     // println!("Day21:");
