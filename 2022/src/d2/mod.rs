@@ -43,41 +43,9 @@ fn part2() {
     println!("{}: {}", function_name!(), score);
 }
 
-fn test() {
-    let digits = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
-    let short_digits = digits
-                        .iter()
-                        .enumerate()
-                        .filter(|&(index, &digit)| digit.len() < index)
-                        .map(|(_, &digit)| digit);
-
-    println!("Short digits:");
-    for d in short_digits {
-        println!("The word {} is shorter than its value.", d);
-    }
-}
-
-fn test2() {
-    let a = ["1", "two", "NaN", "four", "5"];
-    {
-        let mut iter = a.iter().map(|s| s.parse()).filter(|s| s.is_ok()).map(|s| s.unwrap());
-        assert_eq!(iter.next(), Some(1));
-        assert_eq!(iter.next(), Some(5));
-        assert_eq!(iter.next(), None);
-    }
-    {
-        let mut iter = a.iter().filter_map(|s| s.parse().ok());
-
-        assert_eq!(iter.next(), Some(1));
-        assert_eq!(iter.next(), Some(5));
-        assert_eq!(iter.next(), None);    }
-}
-
 pub fn run() {
     part1();
     part2();
-    test();
-    test2();
 }
 
 // part1: 12740
