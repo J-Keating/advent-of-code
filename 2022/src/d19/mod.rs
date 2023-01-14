@@ -1,6 +1,8 @@
-use std::{fs, collections::VecDeque, time::Instant};
+use std::{fs, collections::{VecDeque, HashMap}, time::Instant};
 use ::function_name::named;
+use itertools::Itertools;
 use regex::Regex;
+#[allow(dead_code)]
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 enum MineralType {
@@ -19,6 +21,7 @@ trait MineralStateOperations {
     fn add_all(&mut self, other: &MineralState);
     fn sub_all(&mut self, other: &MineralState);
     fn can_afford(&self, other: &MineralState) -> bool;
+    fn all_less_or_equal(&self, other: &MineralState) -> bool;
 }
 
 type MineralState = [i32; MineralType::COUNT as usize];
@@ -59,6 +62,15 @@ impl MineralStateOperations for MineralState {
         }
         true
     }
+
+    fn all_less_or_equal(&self, other: &MineralState) -> bool {
+        for i in 0..MineralType::COUNT as usize {
+            if self[i] > other[i] {
+                return false;
+            }
+        }
+        true
+    }
 }
 type MineralCost = MineralState;
 type Blueprint = [MineralCost; MineralType::COUNT as usize];
@@ -68,7 +80,6 @@ struct WorldState {
     pub minute: i32,
     pub robot_count: MineralState,
     pub ore_count: MineralState,
-    pub last_robot_added: Option<MineralType>,
 }
 
 impl WorldState {
@@ -77,7 +88,6 @@ impl WorldState {
             minute: 0,
             robot_count: MineralState::new(),
             ore_count: MineralState::new(),
-            last_robot_added: None,
         };
         ret.robot_count[MineralType::Ore as usize] = 1;
         ret
@@ -86,7 +96,6 @@ impl WorldState {
     fn tick_minute(&mut self) -> &mut Self {
         self.minute += 1;
         self.ore_count.add_all(&self.robot_count);
-        self.last_robot_added = None;
         self
     }
 
@@ -97,23 +106,17 @@ impl WorldState {
 
     fn add_robot(&mut self, mineral_type: MineralType) -> &mut Self {
         self.robot_count.add(mineral_type, 1);
-        self.last_robot_added = Some(mineral_type);
-        // if self.robot_count[MineralType::Geode as usize] > 1 {
-        //     panic!("We have more than one geode robot!");
-        // }
         self
-    }
-
-    fn state_last_minute(&self) -> WorldState {
-        assert!(self.last_robot_added == None);
-        let mut ret = *self;
-        ret.minute -= 1;
-        ret.ore_count.sub_all(&self.robot_count);
-        ret
     }
 
     fn check(&self, minute: i32, robot_count: MineralState, ore_count: MineralState) -> bool {
         self.minute == minute && self.robot_count == robot_count && self.ore_count == ore_count
+    }
+}
+
+fn print_worldstates(worldstates: &VecDeque<WorldState>) {
+    for ws in worldstates {
+        println!("Minute: {}, Robots: {:?}, Ore: {:?}", ws.minute, ws.robot_count, ws.ore_count);
     }
 }
 
@@ -163,6 +166,14 @@ fn repro_sample() {
     assert!(ws.check(20, [1, 4, 2, 1], [4, 25, 7, 2]));
 }
 
+#[test]
+fn mineralstate_compare() {
+    let x: MineralState = [1, 2, 3, 4];
+    assert!(x.can_afford( &[1, 2, 3, 4] ));
+    assert!(!x.can_afford( &[1, 2, 3, 5] ));
+    assert!(x.can_afford( &[0, 2, 3, 4] ));
+}
+
 fn blueprint_from_line(line: &str) -> Blueprint {
     let re = Regex::new(r"Blueprint (\d+): Each ore robot costs (\d+) ore. Each clay robot costs (\d+) ore. Each obsidian robot costs (\d+) ore and (\d+) clay. Each geode robot costs (\d+) ore and (\d+) obsidian.").unwrap();
     let x = re.captures(line).unwrap();
@@ -188,23 +199,81 @@ fn load_data(path: &str) -> Vec<Blueprint> {
     ret
 }
 
-const MINUTES: i32 = 24;
-fn most_geodes_from_blueprint(robot_costs: &Blueprint) -> i32 {
+fn cull_bad_worldstate_options(in_options: VecDeque<WorldState>, total_minutes: i32) -> VecDeque<WorldState> {
+    let mut out_options: VecDeque<WorldState> = VecDeque::new();
+    let minute = in_options[0].minute;
+    // Want to cull bad options...
+    // For all states with identical robot counts, we can drop ones with clearly worse ore counts
+    let mut robot_count_map: HashMap<MineralCost, Vec<MineralCost>> = HashMap::new();
+    for state in in_options {
+        let robot_count = state.robot_count;
+        let ore_count = state.ore_count;
+        if robot_count_map.contains_key(&robot_count) {
+            let ore_counts = robot_count_map.get_mut(&robot_count).unwrap();
+            // If any one of the ore counts is better (greater or equal for all ores) than our new one
+            // then we're done with it
+            if ore_counts.iter().filter(|c| c.can_afford(&ore_count)).count() > 0 {
+                continue
+            }
+            // If our new one is better (greater or equal for all ores) than any of the current ones,
+            // the we're going to add it.  But first, remove any smaller than it.
+            let mut new_counts = ore_counts.iter().filter(|&c| !ore_count.can_afford(c)).map(|c| *c).collect_vec();// = foo_iter.collect_vec(); //foo_iter.filter(|&&c| !ore_count.can_afford(&c)).collect_vec();
+            new_counts.push(ore_count);
+            *ore_counts = new_counts;
+        } else {
+            robot_count_map.insert(robot_count, vec![ore_count]);
+        }
+    }
+    for (robot_count, ore_counts) in &robot_count_map {
+        for ore_count in ore_counts {
+            out_options.push_back(WorldState { minute, robot_count: *robot_count, ore_count: *ore_count });
+        }
+    }
+
+    // Geodes are the goal.  Eliminate scenarios where we can't get enough geodes in the remaining time.
+    let minutes_left = total_minutes - minute;
+    // If a robot was made every remaining minute, how many geodes would that be?
+    // This is the minimum goeodes that could be added to any existing option in the remaining time.
+    let max_possible_additional_geodes_from_new_robots = (minutes_left * (minutes_left+1)) / 2;
+    // If each of the the existing options made no more geode robots at all, how many geodes would they end up with?
+    // This is the minimum number of geodes that we will get from of the existing options.
+    let min_final_geodes_from_current_options = out_options.iter().map(|x| x.ore_count[MineralType::Geode as usize] + x.robot_count[MineralType::Geode as usize] * minutes_left).max().unwrap();
+    let before_count = out_options.len();
+    out_options = out_options.into_iter().filter(|x| {
+        // If we added the *max* number of geodes possible in the remaining time and it's *still*
+        // less than the minimum number of geodes we can get from the current options, then we can
+        // eliminate the option.
+        let max_from_this = x.ore_count[MineralType::Geode as usize] + (x.robot_count[MineralType::Geode as usize] * minutes_left) + max_possible_additional_geodes_from_new_robots;
+        max_from_this >= min_final_geodes_from_current_options
+    }).collect();
+    if before_count != out_options.len() {
+        //println!("Culled {} options to {} options", before_count, out_options.len());
+    }
+
+    out_options
+}
+
+fn most_geodes_from_blueprint(robot_costs: &Blueprint, total_minutes: i32) -> i32 {
     let mut options: VecDeque<WorldState> = VecDeque::new();
     options.push_back(WorldState::new());
     let mut last_minute = options.get(0).unwrap().minute;
-    while options.get(0).unwrap().minute < MINUTES {
-        let state = options.pop_front().unwrap();
-        if state.minute != last_minute {
-            println!("Minute {}: {}", state.minute, options.len());
-            last_minute = state.minute;
+    while options.get(0).unwrap().minute < total_minutes {
+        let minute = options.get(0).unwrap().minute;
+        if minute != last_minute {
+            //println!("Minute {}: {}", minute, options.len());
+            last_minute = minute;
+            assert!(options.len() == options.iter().filter(|x| x.minute == last_minute).count());
+            // println!("Culling {} options:", options.len());
+            // println!("  Before");
+            // print_worldstates(&options);
+            options = cull_bad_worldstate_options(options, total_minutes);
+            // println!("  After");
+            // print_worldstates(&options);
         }
+        let state = options.pop_front().unwrap();
         if state.ore_count.can_afford(&robot_costs[MineralType::Geode as usize]) {
             // If we can afford a geode-cracking robot, it's always the right thing to do
             let new_state = *state.clone().spend_minerals(&robot_costs[MineralType::Geode as usize]).tick_minute().add_robot(MineralType::Geode);
-            // if last_minute == 17 {
-            //     println!("{}: {:?}", new_state.minute, new_state);
-            // }
             options.push_back(new_state);
         }
         else {
@@ -212,14 +281,8 @@ fn most_geodes_from_blueprint(robot_costs: &Blueprint) -> i32 {
             let mut cant_afford_count = 0;
             for i in [MineralType::Obsidian, MineralType::Clay, MineralType::Ore] {
                 if state.ore_count.can_afford(&robot_costs[i as usize]) {
-                    if state.last_robot_added == None && state.state_last_minute().ore_count.can_afford(&robot_costs[i as usize]) {
-                        continue;
-                    }
                     let new_state = *state.clone().spend_minerals(&robot_costs[i as usize]).tick_minute().add_robot(i);
-                    //let existing = options.iter().find(|x| x.minute == new_state.minute && x.robot_count == new_state.robot_count);
                     options.push_back(new_state);
-                    // if existing.is_none() {
-                    // }
                 }
                 else {
                     cant_afford_count += 1;
@@ -228,15 +291,10 @@ fn most_geodes_from_blueprint(robot_costs: &Blueprint) -> i32 {
             // If we can afford all of the robots, then we should have bought one of them, so doing nothing is a bad idea
             if cant_afford_count != 0 {
                 options.push_back(*state.clone().tick_minute());
-                // let new_state = *state.clone().tick_minute();
-                // let existing = options.iter().find(|x| x.minute == new_state.minute && x.robot_count == new_state.robot_count);
-                // if existing.is_none() {
-                //     options.push_back(new_state);
-                // }
             }
         }
     }
-    assert!(options.len() == options.iter().filter(|x| x.minute == MINUTES).count());
+    assert!(options.len() == options.iter().filter(|x| x.minute == total_minutes).count());
     options.iter().map(|x| x.ore_count[MineralType::Geode as usize]).max().unwrap()
 }
 
@@ -246,21 +304,29 @@ fn part1() {
     let blueprints = load_data("src\\d19\\data.txt");
     let mut total_quality_level = 0;
     for (i, b) in blueprints.iter().enumerate() {
-        println!("{:?} => ", b);
-        let best_geode_count = most_geodes_from_blueprint(&b);
+        print!("{}: {:?} => ", i, b);
+        let best_geode_count = most_geodes_from_blueprint(&b, 24);
         println!("{}", best_geode_count);
         total_quality_level += best_geode_count * (i as i32 + 1);
     }
 
     println!("{}: {} ({} sec)", function_name!(), total_quality_level, now.elapsed().as_secs_f32());
 }
-
+    
 #[named]
 fn part2() {
-    let blueprints = load_data("src\\d19\\data_test.txt");
-    let mut exterior_face_count = 0;
+    let now = Instant::now();
+    let blueprints = load_data("src\\d19\\data.txt");
 
-    println!("{}: {}", function_name!(), exterior_face_count);
+    let mut total_quality_level = 1;
+    for (i, b) in blueprints[0..3].iter().enumerate() {
+        print!("{}: {:?} => ",i, b);
+        let best_geode_count = most_geodes_from_blueprint(&b, 32);
+        println!("{}", best_geode_count);
+        total_quality_level *= best_geode_count;
+    }
+
+    println!("{}: {} ({} sec)", function_name!(), total_quality_level, now.elapsed().as_secs_f32());
 }
 
 pub fn run() {
@@ -268,5 +334,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 4604
-// part2: 2604
+// part1: 1624 (60.739445 sec)
+// part2: 12628 (84.307846 sec)
