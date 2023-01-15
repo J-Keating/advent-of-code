@@ -1,7 +1,7 @@
-use std::{fs, cmp};
+use std::{fs};
 
 use ::function_name::named;
-use itertools::{Itertools, iterate, Combinations};
+use itertools::{Itertools, iterate};
 use utilities::{alloc_2d_vec};
 //use lazy_static::lazy_static;
 
@@ -16,6 +16,7 @@ fn test_iterator() {
     println!("x={:?}", x);
 }
 
+#[allow(dead_code)]
 fn increment(x: i32) -> i32 {
     println!("{} ==> {}", x, x + 1);
     x + 1
@@ -267,7 +268,7 @@ fn move_as_cube(mut state: State, board: &Board) -> State {
 }
 
 fn do_it_all(path: &str, processor: fn(State, &Board) -> State) -> i32 {
-    let (mut board, actions) = load_data(path);
+    let (board, actions) = load_data(path);
     let mut state = State {
         row: 0,
         col: board.data[0].iter().find_position(|c| *c != &' ').unwrap().0 as i32,
@@ -335,12 +336,14 @@ fn part2() {
 }
 
 pub fn run() {
-    // part1_test();
+    part1_test();
+    part2_test();
     part1();
-    // part2_test();
     part2();
 }
 
-// Day23:
+// Day22:
+// part1_test: 6032
+// part2_test: 5031
 // part1: 149138
 // part2: 153203
