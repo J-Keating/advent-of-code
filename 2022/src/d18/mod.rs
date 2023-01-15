@@ -1,38 +1,7 @@
-use std::{fs, io::BufRead, cmp, collections::VecDeque};
+use std::{fs, io::BufRead, collections::VecDeque};
 use ::function_name::named;
 
-use utilities::{alloc_3d_vec, valid_vec_index};
-
-#[derive(Copy, Clone)]
-struct Point3<T> {
-    pub x: T,
-    pub y: T,
-    pub z: T
-}
-
-#[allow(dead_code)]
-impl<T> Point3<T> where T: num::PrimInt {
-    pub fn expand_to_include(&mut self, other: &Point3<T>) {
-        self.x = cmp::max(self.x, other.x);
-        self.y = cmp::max(self.y, other.y);
-        self.z = cmp::max(self.z, other.z);
-    }
-
-    pub fn neighbors(&self) -> Vec<Point3<T>> {
-        let step: T = T::one();
-        let ret = vec![
-            Point3 { x: self.x - step, y: self.y, z: self.z },
-            Point3 { x: self.x + step, y: self.y, z: self.z },
-            Point3 { x: self.x, y: self.y - step, z: self.z },
-            Point3 { x: self.x, y: self.y + step, z: self.z },
-            Point3 { x: self.x, y: self.y, z: self.z - step },
-            Point3 { x: self.x, y: self.y, z: self.z + step }
-        ];
-        ret
-    }
-
-    pub fn add(self, other: &Point3<T>) -> Point3<T> { Point3 { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z } }
-}
+use utilities::{alloc_3d_vec, valid_vec_index, Point3};
 
 type PointUsize = Point3<usize>;
 
