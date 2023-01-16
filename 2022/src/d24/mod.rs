@@ -1,4 +1,4 @@
-use std::{fs, time::Instant};
+use std::{fs, time::Instant, collections::HashSet};
 
 use ::function_name::named;
 use utilities::{alloc_2d_vec, valid_vec_index};
@@ -151,17 +151,17 @@ fn load_data(path: &str) -> World {
 
 fn best_time_to_reach_end(world: &World, start_time: usize) -> usize {
     let mut time_curr = start_time;
-    let mut prev_options: Vec<Point> = vec![world.start_loc];
-    let mut next_options: Vec<Point> = Vec::new();
+    let mut prev_options: HashSet<Point> = HashSet::new();
+    let mut next_options: HashSet<Point> = HashSet::new();
+    prev_options.insert(world.start_loc);
     let mut at_end = false;
     while !at_end {
         time_curr += 1;
         //world.print_level_at_time(time_curr);
         let level = world.get_level_at_time(time_curr);
-        while !prev_options.is_empty() && !at_end {
-            let p = prev_options.pop().unwrap();
+        for p in prev_options.drain() {
             if level.safe[p.r as usize][p.c as usize] {
-                next_options.push(p);
+                next_options.insert(p);
             }
             for n in p.neighbors() {
                 if n == world.end_loc {
@@ -172,9 +172,8 @@ fn best_time_to_reach_end(world: &World, start_time: usize) -> usize {
                 && valid_vec_index(&level.safe[0], n.c)
                 && level.safe[n.r as usize][n.c as usize]
                 && !next_options.contains(&n)
-                //&& n != world.start_loc
                 {
-                    next_options.push(n);
+                    next_options.insert(n);
                 }
             }
         }
@@ -220,5 +219,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 283 (3188.538 ms)
-// part2: 883 (9527.31 ms)
+// part1: 283 (373.207 ms)
+// part2: 883 (1123.216 ms)
