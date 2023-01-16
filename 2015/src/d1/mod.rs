@@ -1,6 +1,4 @@
 use std::fs;
-use std::str::FromStr;
-
 use ::function_name::named;
 
 #[named]
@@ -27,6 +25,7 @@ fn part2() {
 }
 
 pub fn run() {
+    println!("Day1:");
     part1();
     part2();
 }

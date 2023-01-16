@@ -1,8 +1,5 @@
 use std::collections::HashSet;
 use std::fs;
-use std::str::FromStr;
-use itertools::Itertools;
-
 use ::function_name::named;
 
 fn move_in_direction(curr: (i32, i32), c: char) -> (i32, i32) {
@@ -51,6 +48,7 @@ fn part2() {
 }
 
 pub fn run() {
+    println!("Day3:");
     part1();
     part2();
 }
