@@ -3,7 +3,7 @@ use ::function_name::named;
 use regex::Regex;
 use utilities::{alloc_2d_vec};
 
-const DAY: i32 = 6;
+const DAY: i32 = 7;
 
 #[test]
 fn test_regex() {
