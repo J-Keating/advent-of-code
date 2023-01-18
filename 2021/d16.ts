@@ -106,7 +106,9 @@ namespace d16 {
   }
 }
 
-d16.part1("test", "./data/d16_test.txt");
-d16.part1("real", "./data/d16_real.txt");
-d16.part2("test", "./data/d162_test.txt");
-d16.part2("real", "./data/d16_real.txt");
+export function solve() {
+  d16.part1("test", "./data/d16_test.txt");
+  d16.part1("real", "./data/d16_real.txt");
+  d16.part2("test", "./data/d162_test.txt");
+  d16.part2("real", "./data/d16_real.txt");
+}

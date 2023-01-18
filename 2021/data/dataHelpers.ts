@@ -41,6 +41,11 @@ export class Point {
     this.row = row;
     this.col = col;
   }
+
+  add(other: Point) {
+    this.row += other.row;
+    this.col += other.col;
+  }
 }
 
 export class PointXY {
@@ -50,5 +55,10 @@ export class PointXY {
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+
+  add(other: PointXY) {
+    this.x += other.x;
+    this.y += other.y;
   }
 }

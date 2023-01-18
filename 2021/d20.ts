@@ -29,7 +29,9 @@ namespace d20 {
   }
 }
 
-d20.part1("test", d20Data.testAlgo, d20Data.testImage);
-d20.part1("real", d20Data.realAlgo, d20Data.realImage);
-// d20.part2("test", './data/d20_test.txt');
-// d20.part2("real", './data/d20_real.txt');
+export function solve() {
+  d20.part1("test", d20Data.testAlgo, d20Data.testImage);
+  d20.part1("real", d20Data.realAlgo, d20Data.realImage);
+  // d20.part2("test", './data/d20_test.txt');
+  // d20.part2("real", './data/d20_real.txt');
+}
