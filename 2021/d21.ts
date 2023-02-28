@@ -18,7 +18,7 @@ namespace d21 {
         ret += this.roll();
       }
       return ret;
-      // Cleaver, but a bad idea, since map() calls roll(), which has a persistent side effect.
+      // Clever, but a bad idea, since map() calls roll(), which has a persistent side effect.
       // Reads better as a for loop.  And, it's slower.
       // return Array(count)
       //   .fill(0)
