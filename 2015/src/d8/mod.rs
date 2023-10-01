@@ -10,11 +10,11 @@ fn load_data(filename: &str) -> vec::Vec<String> {
     data.lines().map(|s| s.to_string()).collect()
 }
 
-fn count_chars(line: String) -> (usize, usize) {
+fn count_chars(line: &String) -> (usize, usize) {
     let code_len = line.len();
     let mut mem_len = 0;
     let mut pos = 1;
-    while (pos < code_len - 1) {
+    while pos < code_len - 1 {
         match line.chars().nth(pos).unwrap() {
             '\\' => {
                 match line.chars().nth(pos + 1).unwrap() {
@@ -35,23 +35,38 @@ fn count_chars(line: String) -> (usize, usize) {
     (code_len, mem_len)
 }
 
+fn encode_string(line: &String) -> String {
+    let mut ret = String::new();
+    ret.push('"');
+    for c in line.chars() {
+        match c {
+            '\\' => {
+                ret.push_str("\\\\");
+            }
+            '"' => {
+                ret.push_str("\\\"");
+            }
+            _ => {
+                ret.push(c);
+            }
+        }
+    }
+    ret.push('"');
+    ret
+}
+
 #[named]
 fn part1() {
     let lines = load_data(&format!("src\\d{}\\data.txt", DAY));
-    let mut orig_len_total = 0;
-    let mut mem_len_total = 0;
-    for line in lines {
-        let (orig_len, mem_len) = count_chars(line);
-        println!("{}: {} - {} = {}", function_name!(), orig_len, mem_len, orig_len - mem_len);
-        orig_len_total += orig_len;
-        mem_len_total += mem_len;
-    }
-    println!("{}: {} - {} = {}", function_name!(), orig_len_total, mem_len_total, orig_len_total - mem_len_total);
+    let res = lines.iter().map(| f | count_chars(f)).fold(0, |acc, (a, b)| acc + a - b);
+    println!("{}: {}", function_name!(), res);
 }
 
 #[named]
 fn part2() {
-    println!("{}: a = {:?}", function_name!(), 0);
+    let lines = load_data(&format!("src\\d{}\\data.txt", DAY));
+    let res = lines.iter().map(| f | encode_string(f).len() - f.len()).sum::<usize>();
+    println!("{}: {}", function_name!(), res);
 }
 
 pub fn run() {
@@ -60,5 +75,5 @@ pub fn run() {
     part2();
 }
 
-// part1: a = 3176
-// part2: a = 14710
+// part1: 1333
+// part2: 2046
