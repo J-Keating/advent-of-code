@@ -1,7 +1,5 @@
 use ::function_name::named;
-use itertools::Itertools;
-use regex::Regex;
-use std::{collections::HashMap, fs, vec};
+use std::{ fs, vec};
 
 const DAY: i32 = 8;
 
@@ -11,28 +9,27 @@ fn load_data(filename: &str) -> vec::Vec<String> {
 }
 
 fn count_chars(line: &String) -> (usize, usize) {
-    let code_len = line.len();
     let mut mem_len = 0;
-    let mut pos = 1;
-    while pos < code_len - 1 {
-        match line.chars().nth(pos).unwrap() {
-            '\\' => {
-                match line.chars().nth(pos + 1).unwrap() {
-                    '\\' | '"' => {
-                        pos += 1;
+    let mut trimmed_buffer = line.chars().skip(1).take(line.len() - 2);
+    loop {
+        match trimmed_buffer.next() {
+            None => break,
+            Some(c) => {
+                if c == '\\' {
+                    match trimmed_buffer.next().unwrap() {
+                        '\\' | '"' => {}
+                        'x' => {
+                            trimmed_buffer.next();
+                            trimmed_buffer.next();
+                        }
+                        _ => panic!("Unknown escape sequence: {}", line),
                     }
-                    'x' => {
-                        pos += 3;
-                    }
-                    _ => panic!("Unknown escape sequence: {}", line),
                 }
+                mem_len += 1;
             }
-            _ => {}
         }
-        mem_len += 1;
-        pos += 1;
     }
-    (code_len, mem_len)
+    (line.len(), mem_len)
 }
 
 fn encode_string(line: &String) -> String {
@@ -58,7 +55,7 @@ fn encode_string(line: &String) -> String {
 #[named]
 fn part1() {
     let lines = load_data(&format!("src\\d{}\\data.txt", DAY));
-    let res = lines.iter().map(| f | count_chars(f)).fold(0, |acc, (a, b)| acc + a - b);
+    let res = lines.iter().map(| f | count_chars(f)).map(| (code_len, mem_len) | code_len - mem_len).sum::<usize>();
     println!("{}: {}", function_name!(), res);
 }
 
