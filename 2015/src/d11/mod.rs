@@ -104,5 +104,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 117
-// part2: 909
+// part1: hepxxyzz
+// part2: heqaabcc
