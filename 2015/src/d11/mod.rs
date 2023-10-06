@@ -47,7 +47,7 @@ fn contains_two_pairs(input: &str) -> bool {
 }
 
 fn increment_password(input: &str) -> String {
-    let mut chars = input.chars().rev();
+    let chars = input.chars().rev();
     let mut result = String::new();
     let mut carry = true;
     for c in chars {
