@@ -42,30 +42,36 @@ fn get_distance(reindeer: &ReindeerMovement, time: i32) -> i32 {
     cycle_count * cycle_distance + remainder_distance
 }
 
-fn find_winning_reindeer(reindeers: &Vec<ReindeerMovement>, time: i32) -> (String, i32) {
+fn find_winning_reindeer(reindeers: &Vec<ReindeerMovement>, time: i32) -> (i32, i32) {
     let mut max_distance = 0;
-    let mut max_name = String::new();
-    for reindeer in reindeers {
+    let mut max_index: i32 = -1;
+    for (i, reindeer)  in reindeers.iter().enumerate() {
         let distance = get_distance(reindeer, time);
         if distance > max_distance {
             max_distance = distance;
-            max_name = reindeer.name.clone();
+            max_index = i as i32;
         }
     }
-    (max_name, max_distance)
+    (max_index, max_distance)
 }
 
 #[named]
 fn part1() {
     let reindeers = load_data(&format!("src\\d{}\\data.txt", DAY));
-    let (name, max_distance) = find_winning_reindeer(&reindeers, 2503);
-    println!("{}: {} went {} km", function_name!(), name, max_distance);
+    let (index, max_distance) = find_winning_reindeer(&reindeers, 2503);
+    println!("{}: {} went {} km", function_name!(), reindeers[index as usize].name, max_distance);
 }
 
 #[named]
 fn part2() {
     let reindeers = load_data(&format!("src\\d{}\\data.txt", DAY));
-    println!("{}: {}", function_name!(), reindeers.len());
+    let points = &mut vec![0; reindeers.len()];
+    for t in 1..=2503 {
+        let (index, _) = find_winning_reindeer(&reindeers, t);
+        points[index as usize] += 1;
+    }
+    let max_index = (0..points.len()).max_by_key(|&i| points[i]).unwrap();
+    println!("{}: {} has {} points", function_name!(), reindeers[max_index].name, points[max_index]);
 }
 
 pub fn run() {
