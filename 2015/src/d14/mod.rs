@@ -81,4 +81,4 @@ pub fn run() {
 }
 
 // part1: Donner went 2655 km
-// part2: 909
+// part2: Vixen has 1059 points
