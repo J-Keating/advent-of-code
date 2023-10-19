@@ -12,7 +12,8 @@
 // mod d12;
 
 // mod d14;
-mod d15;
+// mod d15;
+mod d16;
 
 fn main() {
     // d1::run();
@@ -29,5 +30,6 @@ fn main() {
     // d12::run();
 
     // d14::run();
-    d15::run();
+    // d15::run();
+    d16::run();
 }
