@@ -15,4 +15,5 @@ regex = "1.7.1"
 crypto-common = "0.1.6"
 md-5 = "0.10.5"
 json = "0.12.4"
+bit_field = "0.10.2"
  
