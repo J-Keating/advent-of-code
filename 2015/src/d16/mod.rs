@@ -25,16 +25,28 @@ fn load_data(filename: &str) -> String {
     file_contents_as_string
 }
 
-fn is_sue_a_match(data_string: &str) -> bool {
+fn part_1_compare(_: &str, a: i32, b: i32) -> bool {
+    a == b
+}
+
+fn part_2_compare(animal: &str, a: i32, b: i32) -> bool {
+    match animal {
+        "cats" | "trees" => a < b,
+        "pomeranians" | "goldfish" => a > b,
+        _ => a == b,
+    }
+}
+
+fn is_sue_a_match(data_string: &str, compare_func: fn(&str, i32, i32)->bool) -> bool {
     let re = Regex::new(r"Sue (\d+):(.+)").unwrap();
     for cap in re.captures_iter(data_string) {
-        let sue_number = i32::from_str(&cap[1]).unwrap();
+        let _sue_number = i32::from_str(&cap[1]).unwrap();
         for item in cap[2].split(",") {
             let mut parts = item.split(":");
             let key = parts.next().unwrap().trim();
             let value = i32::from_str(parts.next().unwrap().trim()).unwrap();
             assert!(INFO.contains_key(key));
-            if INFO.get(key) != Some(&value) {
+            if !compare_func(key, *INFO.get(key).unwrap(), value) {
                 return false;
             }
         }
@@ -48,16 +60,20 @@ fn is_sue_a_match(data_string: &str) -> bool {
 fn part1() {
     let data = load_data(&format!("src\\d{}\\data.txt", DAY));
     for line in data.lines() {
-        if is_sue_a_match(line) {
+        if is_sue_a_match(line, part_1_compare) {
             println!("{}: {}", function_name!(), line);
         }
     }
-    println!("{}: {}", function_name!(), data.lines().count());
 }
 
 #[named]
 fn part2() {
-    println!("{}: {}", function_name!(), 0);
+    let data = load_data(&format!("src\\d{}\\data.txt", DAY));
+    for line in data.lines() {
+        if is_sue_a_match(line, part_2_compare) {
+            println!("{}: {}", function_name!(), line);
+        }
+    }
 }
 
 pub fn run() {
