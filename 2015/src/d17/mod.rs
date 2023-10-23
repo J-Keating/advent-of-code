@@ -1,5 +1,4 @@
-use ::function_name::named;
-use std::{collections::HashSet, fs, str::FromStr, hash::Hash};
+use std::{collections::HashSet, fs, str::FromStr};
 use bit_field::BitField;
 
 const DAY: i32 = 17;
