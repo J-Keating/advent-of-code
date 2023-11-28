@@ -1,0 +1,3 @@
+[submodule "2023/src_deps/cppfront_cmake"]
+	path = 2023/src_deps/cppfront_cmake
+	url = https://github.com/JakeShirley/cppfront
