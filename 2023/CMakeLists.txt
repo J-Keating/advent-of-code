@@ -10,4 +10,8 @@ add_subdirectory(src_deps/cppfront_cmake)
 # -format-colon-errors - Emit ':line:col:' format for messages 
 set(CPPFRONT_FLAGS "-p" "-format-colon-errors")
 
-add_executable(main src/main.cpp2 src/test/test.cpp2 src/test/test.h2 src/d1/d1.cpp2 src/d1/d1.h2)
+add_executable(main src/main.cpp2
+src/test/test.cpp2 src/test/test.h2
+src/d1_2022/d1_2022.cpp2 src/d1_2022/d1_2022.h2
+src/d1/d1.cpp2 src/d1/d1.h2
+)

@@ -4,32 +4,12 @@ d1: namespace = {
 
 writeln: (msg: _) = std::cout << "> " << msg << std::endl;
 
-get_numbers: () -> std::vector<int> = {
-    input_file: std::ifstream = ("src/d1/data.txt");
-    input_file.is_open();    // Do nothing but convnce the compiler that fb is used
-    ret: std::vector<int> = ();
-    // current_num: int = 0;
-    // while (input_file >> current_num) {
-    //     ret.push_back(current_num);
-    // }
-    line: std::string = ();
-    while (std::getline(input_file, line)) {
-        if (line.empty()) {
-            continue;
-        }
-        ret.push_back(std::stoi(line));
-    }
-    return ret;
-}
-
 part1: () = {
-    sums: std::vector<int> = get_numbers();
-    for sums do (num) {
-        writeln(num);
-    }
+    std::cout << "Part1: " << std::endl;
 }
 
 part2: () = {
+    std::cout << "Part2: " << std::endl;
 }
     
 run: () = {

@@ -1,0 +1,44 @@
+#include "d1_2022-f.h2"
+
+d1_2022: namespace = {
+
+writeln: (msg: _) = std::cout << "> " << msg << std::endl;
+
+get_sums: () -> std::vector<int> = {
+    input_file: std::ifstream = ("src/d1_2022/data.txt");
+    input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+    ret: std::vector<int> = ();
+    line: std::string = ();
+    sum: int = 0;
+    while (std::getline(input_file, line)) {
+        if (line.empty()) {
+            ret.push_back(sum);
+            sum = 0;
+            continue;
+        }
+        sum += std::stoi(line);
+    }
+    return ret;
+}
+
+part1: () = {
+    sums: std::vector<int> = get_sums();
+    max_elt: _ = std::max_element(sums.begin(), sums.end());
+    std::cout << "Part1: " << max_elt* << std::endl;
+}
+
+part2: () = {
+    sums: std::vector<int> = get_sums();
+    std::sort(sums.begin(), sums.end());
+    total: int = std::reduce(sums.end() - 3, sums.end());
+    std::cout << "Part2: " << total << std::endl;
+}
+    
+run: () = {
+    part1();
+    part2();
+}
+
+}
+
+

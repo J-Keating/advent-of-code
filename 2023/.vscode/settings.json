@@ -8,6 +8,7 @@
         "format": "cpp",
         "list": "cpp",
         "vector": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "numeric": "cpp"
     }
 }

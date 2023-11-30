@@ -1,5 +1,3 @@
-x: () -> int = { return 3; }
-
 d1: namespace = {
     run: () = {}
 }
