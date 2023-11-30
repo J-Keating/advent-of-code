@@ -1,0 +1,42 @@
+#include "test-7.h2"
+
+test: namespace = {
+
+// Example type
+Foo : type = {
+    bar: int;
+
+     operator=: (out this, n: int) = {
+        bar = n;
+    }
+
+    testMethod: (this) -> int = {
+        return this.bar;
+    }
+}
+
+
+part1: () = {
+    input: std::string = "Test String";
+    std::cout << input << std::endl;
+}
+
+part2: () = {
+    hello("cpp2!");
+    
+    foo: int = 1338;
+    hello(foo);
+
+    foo2: Foo = 42;
+    hello(foo2.testMethod() as std::string);
+}
+    
+run: () = {
+    part1();
+    part2();
+}
+
+}
+
+hello: (msg: _) = std::cout << "Hello " << msg << std::endl;
+

@@ -1,25 +1,6 @@
-
-// Example type
-Foo : type = {
-    bar: int;
-
-     operator=: (out this, n: int) = {
-        bar = n;
-    }
-
-    testMethod: (this) -> int = {
-        return this.bar;
-    }
-}
+#include "d1-c.h2"
 
 main: () -> int = {
-    hello("cpp2!");
-    
-    foo: int = 1338;
-    hello(foo);
-
-    foo2: Foo = 42;
-    hello(foo2.testMethod() as std::string);
+    d1::run();
 }
 
-hello: (msg: _) = std::cout << "Hello " << msg << std::endl;
