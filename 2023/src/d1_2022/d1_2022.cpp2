@@ -2,43 +2,58 @@
 
 d1_2022: namespace = {
 
-writeln: (msg: _) = std::cout << "> " << msg << std::endl;
-
-get_sums: () -> std::vector<int> = {
-    input_file: std::ifstream = ("src/d1_2022/data.txt");
-    input_file.is_open();    // Do nothing but convnce the compiler that fb is used
-    ret: std::vector<int> = ();
-    line: std::string = ();
-    sum: int = 0;
-    while (std::getline(input_file, line)) {
-        if (line.empty()) {
-            ret.push_back(sum);
-            sum = 0;
-            continue;
-        }
-        sum += std::stoi(line);
+    writeln: (msg: _) = std::cout << "> " << msg << std::endl;
+    left_fold_print: <Args...: type> (inout out: std::ostream, args...: Args) = {
+        // Binary left fold expression
+        (out << ... << args) << std::endl;
     }
-    return ret;
-}
+    spew: <Args...: type> (args...: Args) = {
+        (std::cout << ... << args);
+        std::cout << std::endl;
+    }
+    spewf: <Args...: type> (format: _, args...: Args) = {
+        std::cout << std::format(format, args...) << std::endl;
+    }
 
-part1: () = {
-    sums: std::vector<int> = get_sums();
-    max_elt: _ = std::max_element(sums.begin(), sums.end());
-    std::cout << "Part1: " << max_elt* << std::endl;
-}
+    get_sums: () -> std::vector<int> = {
+        input_file: std::ifstream = ("src/d1_2022/data.txt");
+        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+        ret: std::vector<int> = ();
+        line: std::string = ();
+        sum: int = 0;
+        while (std::getline(input_file, line)) {
+            if (line.empty()) {
+                ret.push_back(sum);
+                sum = 0;
+                continue;
+            }
+            sum += std::stoi(line);
+        }
+        return ret;
+    }
 
-part2: () = {
-    sums: std::vector<int> = get_sums();
-    std::sort(sums.begin(), sums.end());
-    total: int = std::reduce(sums.end() - 3, sums.end());
-    std::cout << "Part2: " << total << std::endl;
-}
-    
-run: () = {
-    part1();
-    part2();
-}
+    part1: () = {
+        sums: std::vector<int> = get_sums();
+        max_elt: _ = std::max_element(sums.begin(), sums.end());
+        std::cout << "Part1: " << max_elt* << std::endl;
+    }
 
+    part2: () = {
+        sums: std::vector<int> = get_sums();
+        std::sort(sums.begin(), sums.end());
+        total: _ = std::reduce(sums.end() - 3, sums.end());
+        total2: _ = std::accumulate(sums.end() - 3, sums.end(), 0);
+        std::cout << "Part2: " << total << " " << total2 << std::endl;
+        std::cout << std::format("Part2.2: {} {}", total, total2) << std::endl;
+        //spew("Part2.3: ", total, " ", total2);
+        //spewf("Part2.4: {} {}", total, total2);
+        //spewf(total, total2);
+    }
+        
+    run: () = {
+        part1();
+        part2();
+    }
 }
 
 

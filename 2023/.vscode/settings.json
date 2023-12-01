@@ -9,6 +9,7 @@
         "list": "cpp",
         "vector": "cpp",
         "xstring": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "utility": "cpp"
     }
 }

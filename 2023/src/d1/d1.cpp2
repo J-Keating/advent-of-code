@@ -2,20 +2,63 @@
 
 d1: namespace = {
 
-writeln: (msg: _) = std::cout << "> " << msg << std::endl;
+    writeln: (msg: _) = std::cout << "> " << msg << std::endl;
 
-part1: () = {
-    std::cout << "Part1: " << std::endl;
-}
+    get_lines: () -> std::vector<std::string> = {
+        input_file: std::ifstream = ("src/d1/data.txt");
+        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+        ret: std::vector<std::string> = ();
+        line: std::string = ();
+        while (std::getline(input_file, line)) {
+            ret.push_back(line);
+        }
+        return ret;
+    }
 
-part2: () = {
-    std::cout << "Part2: " << std::endl;
-}
-    
-run: () = {
-    part1();
-    part2();
-}
+    part1: () = {
+        lines: std::vector<std::string> = get_lines();
+        sum: int = 0;
+        for lines do (line) {
+            tens: size_t = line.find_first_of("0123456789");
+            ones: size_t = line.find_last_of("0123456789");
+            sum += 10 * (line[tens] - '0') + (line[ones] - '0');
+        }
+        std::cout << "Part1: " << sum << std::endl;
+    }
+
+    part2: () = {
+        number_names: std::vector<std::string> = ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine");
+        lines: std::vector<std::string> = get_lines();
+        sum: int = 0;
+        for lines do (line) {
+            tens_pos: size_t = line.find_first_of("0123456789");
+            ones_pos: size_t = line.find_last_of("0123456789");
+            tens: int = line[tens_pos] - '0';
+            ones: int = line[ones_pos] - '0';
+            number: int = 0;
+            for number_names do (name) {
+                first_pos: size_t = line.find(name);
+                if (first_pos != std::string::npos && first_pos < tens_pos) {
+                    tens_pos = first_pos;
+                    tens = number;
+                }
+                last_pos: size_t = line.rfind(name);
+                if (last_pos != std::string::npos && last_pos > ones_pos) {
+                    ones_pos = last_pos;
+                    ones = number;
+                }
+                number += 1;
+            }
+
+            sum += 10 * tens + ones;
+        }
+        std::cout << "Part2: " << sum << std::endl;
+    }
+        
+    run: () = {
+        part1();
+        part2();
+    }
 
 }
 
