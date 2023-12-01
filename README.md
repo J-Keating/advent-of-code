@@ -7,4 +7,5 @@
 * [2019](https://adventofcode.com/2019) - _Someday?_
 * [2020](https://adventofcode.com/2020) - _Someday?_
 * [2021](https://adventofcode.com/2021) - (_Started in 2021_.) - Done to learn [TypeScript](https://www.typescriptlang.org/) (incomplete)
-* [2022](https://adventofcode.com/2022) - (_Started in 2022_.) - Done to learn [Rust](https://www.rust-lang.org/) - **Completed on 1/15/23.**  Learned a lot but took me a while.  Didn't *quite* make the leaderboard.  :) 
+* [2022](https://adventofcode.com/2022) - (_Started in 2022_.) - Done to learn [Rust](https://www.rust-lang.org/) - **Completed on 1/15/23.**  Learned a lot but took me a while.  Didn't *quite* make the leaderboard.  :)
+* [2023](https://adventofcode.com/2022) - (_Started in 2023_.) - Started experimenting with Herb Sutter's [CPP2](https://github.com/hsutter/cppfront).
