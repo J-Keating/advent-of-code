@@ -26,6 +26,27 @@ d1: namespace = {
         std::cout << "Part1: " << sum << std::endl;
     }
 
+    part1_regex: () = {
+        color_regex: std::regex = ("[^0-9]*([0-9]).*([0-9])?[^0-9]*");
+        lines: std::vector<std::string> = get_lines();
+        sum: int = 0;
+        color_match: std::smatch = ();
+        for lines do (line) {
+            std::regex_search(line, color_match, color_regex);
+            assert(color_match.ssize() == 3);
+            tens: char = color_match[1].first* - '0';
+            ones: char = 0;
+            if (color_match[color_match.size() - 1].matched) {
+                ones = color_match[color_match.size() - 1].first* - '0';
+            }
+            else {
+                ones = tens;
+            }
+            sum += 10 * tens + ones;
+        }
+        std::cout << "Part1_regex: " << sum << std::endl;
+    }
+
     part2: () = {
         number_names: std::vector<std::string> = ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine");
         lines: std::vector<std::string> = get_lines();
@@ -57,9 +78,11 @@ d1: namespace = {
         
     run: () = {
         part1();
+        part1_regex();
         part2();
     }
-
+    // Part1: 54239
+    // Part2: 55343
 }
 
 

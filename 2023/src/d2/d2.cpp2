@@ -1,0 +1,116 @@
+#include "d2-8.h2"
+
+d2: namespace = {
+
+    writeln: (msg: _) = std::cout << "> " << msg << std::endl;
+
+    Play : @ordered type = {
+        public red: int;
+        public green: int;
+        public blue: int;
+
+        operator=: (out this, that) = {
+            this.red = that.red;
+            this.green = that.green;
+            this.blue = that.blue;
+        }
+        operator=: (out this, move that) = {
+            this.red = that.red;
+            this.green = that.green;
+            this.blue = that.blue;
+        }
+        operator=: (out this, r: int, g: int, b: int) = {
+            red = r;
+            green = g;
+            blue = b;
+        }
+        operator>=: (this, that) -> bool = {
+            return this.red >= that.red && this.green >= that.green && this.blue >= that.blue;
+        }
+        operator<=: (this, that) -> bool = {
+            return this.red <= that.red && this.green <= that.green && this.blue <= that.blue;
+        }
+    }
+
+    get_lines: () -> std::vector<std::string> = {
+        input_file: std::ifstream = ("src/d2/data.txt");
+        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+        ret: std::vector<std::string> = ();
+        line: std::string = ();
+        while (std::getline(input_file, line)) {
+            ret.push_back(line);
+        }
+        return ret;
+    }
+
+    parse_line: (line: std::string) -> std::pair<int, Play> = {
+        required_marbles: Play = (0, 0, 0);
+        game_regex: std::regex = ("Game (.+):(.+)");
+        game_matches: std::smatch = ();
+        std::regex_search(line, game_matches, game_regex);
+        assert(game_matches.ssize() == 3);
+        game_num: int = std::stoi(game_matches[1]);
+        all_sets_stream: std::stringstream = (game_matches[2]);
+        all_sets_stream.gcount();    // Do nothing but convnce the compiler that this is used
+        set: std::string = ();
+        while (std::getline(all_sets_stream, set, ';')) {
+            set_stream: std::stringstream = (set);
+            set_stream.gcount();    // Do nothing but convnce the compiler that this is used
+            cube_count: std::string = ();
+            while (std::getline(set_stream, cube_count, ',')) {
+                //std::cout << "Game: " << game_num << " Cube Count: " << cube_count << std::endl;
+                play_regex: std::regex = ("\\s*([\\d]+)\\s+(red|green|blue)");
+                play_matches: std::smatch = ();
+                std::regex_search(cube_count, play_matches, play_regex);
+                assert(play_matches.ssize() == 3);
+                c: char = play_matches[2].str().c_str()[0];
+                if c == 'r' {
+                    required_marbles.red = std::max(required_marbles.red, std::stoi(play_matches[1]));
+                }
+                else if c == 'g' {
+                    required_marbles.green = std::max(required_marbles.green, std::stoi(play_matches[1]));
+                }
+                else if c == 'b' {
+                    required_marbles.blue = std::max(required_marbles.blue, std::stoi(play_matches[1]));
+                }
+                else {
+                    assert(false);
+                }
+            }
+        }
+        return std::make_pair(game_num, required_marbles);
+    }
+
+    part1: () = {
+        available : Play = (12, 13, 14);
+        lines: std::vector<std::string> = get_lines();
+        sum: int = 0;
+        for lines do (line) {
+            required_marbles: std::pair<int, Play> = parse_line(line);
+            if (required_marbles.second <= available) {
+                sum = sum + required_marbles.first;
+            }
+        }
+        std::cout << "Part1: " << sum << std::endl;
+    }
+
+    part2: () = {
+        lines: std::vector<std::string> = get_lines();
+        sum: int = 0;
+        for lines do (line) {
+            required_marbles: std::pair<int, Play> = parse_line(line);
+            p: Play = required_marbles.second;
+            sum = sum + (p.red * p.green * p.blue);
+        }
+        std::cout << "Part2: " << sum << std::endl;
+    }
+        
+    run: () = {
+        part1();
+        part2();
+    }
+    // Part1: 3035
+    // Part2: 66027
+}
+
+

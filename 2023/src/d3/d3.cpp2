@@ -1,0 +1,120 @@
+#include "d3-0c.h2"
+
+d3: namespace = {
+
+    writeln: (msg: _) = std::cout << "> " << msg << std::endl;
+
+    is_digit: (c: char) -> bool = {
+        return c >= '0' && c <= '9';
+    }
+
+    is_symbol: (c: char) -> bool = {
+        return c != '.' && !is_digit(c);
+    }
+
+    get: (col: int, row: int, lines: std::vector<std::vector<char>>) -> char = {
+        if (col < 0 || row < 0 || col >= lines.ssize() || row >= lines[col].ssize()) {
+            return '.';
+        }
+        return lines[col][row];
+    }
+
+    get_lines: () -> std::vector<std::vector<char>> = {
+        input_file: std::ifstream = ("src/d3/data.txt");
+        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+        ret: std::vector<std::vector<char>> = ();
+        line: std::string = ();
+        while (std::getline(input_file, line)) {
+            chars: std::vector<char> = (line.begin(), line.end());
+            ret.push_back(chars);
+        }
+        return ret;
+    }
+
+    part1: () = {
+        lines: std::vector<std::vector<char>> = get_lines();
+        sum: int = 0;
+        for std::views::iota(0, 140) do (row) {
+            col: int = 0;
+            while (col < lines[row].ssize()) {
+                if (is_digit(get(row, col, lines))) {
+                    first_digit: int = col;
+                    while (is_digit(get(row, col, lines))) {
+                        col += 1;
+                    }
+                    string_number: std::string = (lines[row][first_digit]&, lines[row][first_digit]& + col - first_digit);
+                    number: int = std::stoi(string_number);
+
+                    touches_symbol: bool = false;
+                    i: int = row - 1;
+                    while (i <= row + 1 && !touches_symbol) {
+                        j: int = first_digit - 1;
+                        while (j <= col && !touches_symbol) {
+                            if (is_symbol(get(i, j, lines))) {
+                                touches_symbol = true;
+                            }
+                            j += 1;
+                        }
+                        i += 1;
+                    }
+                    
+                    std::cout << number << ": " << touches_symbol << std::endl;
+                    if (touches_symbol) {
+                        sum += number;
+                    }
+                }
+                col += 1;
+            }
+        }
+        std::cout << "Part1: " << sum << std::endl;
+    }
+
+    part2: () = {
+        lines: std::vector<std::vector<char>> = get_lines();
+        gear_numbers: std::map<std::pair<int, int>, std::vector<int>> = ();
+        for std::views::iota(0, 140) do (row) {
+            col: int = 0;
+            while (col < lines[row].ssize()) {
+                if (is_digit(get(row, col, lines))) {
+                    first_digit: int = col;
+                    while (is_digit(get(row, col, lines))) {
+                        col += 1;
+                    }
+                    string_number: std::string = (lines[row][first_digit]&, lines[row][first_digit]& + col - first_digit);
+                    number: int = std::stoi(string_number);
+
+                    i: int = row - 1;
+                    while (i <= row + 1) {
+                        j: int = first_digit - 1;
+                        while (j <= col) {
+                            if (get(i, j, lines) == '*') {
+                                location: std::pair<int, int> = (i, j);
+                                gear_numbers[location].push_back(number);
+                            }
+                            j += 1;
+                        }
+                        i += 1;
+                    }
+                }
+                col += 1;
+            }
+        }
+        sum: int = 0;
+        for gear_numbers do (entry) {
+            numbers: std::vector<int> = (entry.second);
+            if (numbers.size() == 2) {
+                sum = sum + numbers[0] * numbers[1];
+            }
+        }
+        std::cout << "Part1: " << sum << std::endl;
+    }
+        
+    run: () = {
+        part1();
+        part2();
+    }
+    // Part1: 559667
+    // Part1: 86841457
+}
+
+
