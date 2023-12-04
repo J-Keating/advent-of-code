@@ -1,0 +1,114 @@
+#include "d4-7.h2"
+
+d4: namespace = {
+
+    writeln: (msg: _) = std::cout << "> " << msg << std::endl;
+
+    is_digit: (c: char) -> bool = {
+        return c >= '0' && c <= '9';
+    }
+
+    is_symbol: (c: char) -> bool = {
+        return c != '.' && !is_digit(c);
+    }
+
+    get: (col: int, row: int, lines: std::vector<std::vector<char>>) -> char = {
+        if (col < 0 || row < 0 || col >= lines.ssize() || row >= lines[col].ssize()) {
+            return '.';
+        }
+        return lines[col][row];
+    }
+
+    get_lines: (filename: std::string) -> std::vector<std::pair<std::vector<int>, std::vector<int>>> = {
+        input_file: std::ifstream = (filename);
+        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+        ret: std::vector<std::pair<std::vector<int>, std::vector<int>>> = ();
+        line: std::string = ();
+        while (std::getline(input_file, line)) {
+            line_stream: std::stringstream = (line);
+            line_stream.gcount();    // Do nothing but convnce the compiler that this is used
+            card_string: std::string = ();
+            std::getline(line_stream, card_string, ':');
+            winning_number_string: std::string = ();
+            std::getline(line_stream, winning_number_string, '|');
+            our_number_string: std::string = ();
+            std::getline(line_stream, our_number_string);
+
+            card_data: std::pair<std::vector<int>, std::vector<int>> = ();
+            number: int = 0;
+
+            winning_number_stream: std::stringstream = (winning_number_string);
+            winning_number_stream.gcount();    // Do nothing but convnce the compiler that this is used
+            while (winning_number_stream >> number) {
+                card_data.first.push_back(number);
+            }
+
+            our_number_stream: std::stringstream = (our_number_string);
+            our_number_stream.gcount();    // Do nothing but convnce the compiler that this is used
+            while (our_number_stream >> number) {
+                card_data.second.push_back(number);
+            }
+            ret.push_back(card_data);
+        }
+        return ret;
+    }
+
+    part1: () = {
+        lines:= get_lines("src/d4/data.txt");
+        sum: int = 0;
+        for lines do (card_data) {
+            score: int = 0;
+            for card_data.first do (winning_number) {
+                for card_data.second do (our_number) {
+                    if (winning_number == our_number) {
+                        if (score == 0) {
+                            score = 1;
+                        }
+                        else {
+                            score = score * 2;
+                        }
+                    }
+                }
+            }
+            sum = sum + score;
+        }
+        std::cout << "Part1: " << sum << std::endl;
+    }
+
+    part2: () = {
+        lines:= get_lines("src/d4/data.txt");
+        matches: std::vector<int> = ();
+        for lines do (card_data) {
+            card_matches: int = 0;
+            for card_data.first do (winning_number) {
+                for card_data.second do (our_number) {
+                    if (winning_number == our_number) {
+                        card_matches = card_matches + 1;
+                    }
+                }
+            }
+            matches.push_back(card_matches);
+        }
+        counts: std::vector<int> = ();
+        counts.resize(matches.ssize(), 1);
+        current_card: int = 0;
+        while (current_card < matches.ssize()) {
+            i: int = 0;
+            while (i < matches[current_card]) {
+                counts[current_card + i + 1] = counts[current_card + i + 1] + counts[current_card];
+                i = i + 1;
+            }
+            current_card = current_card + 1;
+        }
+        std::cout << "Part2: " << std::reduce(counts.begin(), counts.end()) << std::endl;
+    }
+        
+    run: () = {
+        part1();
+        part2();
+    }
+    // Part1: 19135
+    // Part1: 86841457
+}
+
+

@@ -4,26 +4,11 @@ d2: namespace = {
 
     writeln: (msg: _) = std::cout << "> " << msg << std::endl;
 
-    Play : @ordered type = {
-        public red: int;
-        public green: int;
-        public blue: int;
+    Play : @struct type = {
+        red: int;
+        green: int;
+        blue: int;
 
-        operator=: (out this, that) = {
-            this.red = that.red;
-            this.green = that.green;
-            this.blue = that.blue;
-        }
-        operator=: (out this, move that) = {
-            this.red = that.red;
-            this.green = that.green;
-            this.blue = that.blue;
-        }
-        operator=: (out this, r: int, g: int, b: int) = {
-            red = r;
-            green = g;
-            blue = b;
-        }
         operator>=: (this, that) -> bool = {
             return this.red >= that.red && this.green >= that.green && this.blue >= that.blue;
         }
