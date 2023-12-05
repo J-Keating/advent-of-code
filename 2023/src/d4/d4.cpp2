@@ -19,36 +19,33 @@ d4: namespace = {
         return lines[col][row];
     }
 
+    parse_line: (line: std::string) -> std::pair<std::vector<int>, std::vector<int>> = {
+        card_regex: const std::regex = ("Card (.+):(.+)\\|(.+)");
+        card_matches: std::smatch = ();
+        std::regex_search(line, card_matches, card_regex);
+        assert(card_matches.ssize() == 4);
+        winning_number_stream: std::stringstream = (card_matches[2]);
+        our_number_stream: std::stringstream = (card_matches[3]);
+
+        card_data: std::pair<std::vector<int>, std::vector<int>> = ();
+        // For reasons I don't understand the std::ranges::copy below won't compile outside without this dummy while loop.  😭
+        while (true)  
+        {
+            std::ranges::copy(std::istream_iterator<int>(winning_number_stream), std::istream_iterator<int>(), std::back_inserter(card_data.first));
+            std::ranges::copy(std::istream_iterator<int>(our_number_stream), std::istream_iterator<int>(), std::back_inserter(card_data.second));
+            break;
+        }
+
+        return card_data;
+    }
+
     get_lines: (filename: std::string) -> std::vector<std::pair<std::vector<int>, std::vector<int>>> = {
         input_file: std::ifstream = (filename);
         input_file.is_open();    // Do nothing but convnce the compiler that fb is used
         ret: std::vector<std::pair<std::vector<int>, std::vector<int>>> = ();
         line: std::string = ();
         while (std::getline(input_file, line)) {
-            line_stream: std::stringstream = (line);
-            line_stream.gcount();    // Do nothing but convnce the compiler that this is used
-            card_string: std::string = ();
-            std::getline(line_stream, card_string, ':');
-            winning_number_string: std::string = ();
-            std::getline(line_stream, winning_number_string, '|');
-            our_number_string: std::string = ();
-            std::getline(line_stream, our_number_string);
-
-            card_data: std::pair<std::vector<int>, std::vector<int>> = ();
-            number: int = 0;
-
-            winning_number_stream: std::stringstream = (winning_number_string);
-            winning_number_stream.gcount();    // Do nothing but convnce the compiler that this is used
-            while (winning_number_stream >> number) {
-                card_data.first.push_back(number);
-            }
-
-            our_number_stream: std::stringstream = (our_number_string);
-            our_number_stream.gcount();    // Do nothing but convnce the compiler that this is used
-            while (our_number_stream >> number) {
-                card_data.second.push_back(number);
-            }
-            ret.push_back(card_data);
+            ret.push_back(parse_line(line));
         }
         return ret;
     }
@@ -108,7 +105,7 @@ d4: namespace = {
         part2();
     }
     // Part1: 19135
-    // Part1: 86841457
+    // Part1: 5704953
 }
 
 
