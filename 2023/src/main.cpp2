@@ -3,12 +3,18 @@
 #include "d2-8.h2"
 #include "d3-0c.h2"
 #include "d4-7.h2"
+#include "d5-02.h2"
+#include "d6-1.h2"
+#include "d7-c.h2"
 
 main: () -> int = {
     //d1_2022::run();
     //d1::run();
-    d2::run();
+    //d2::run();
     //d3::run();
-    d4::run();
+    //d4::run();
+    d5::run();
+    d6::run();
+    d7::run();
 }
 

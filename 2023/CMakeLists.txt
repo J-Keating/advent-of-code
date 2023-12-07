@@ -17,4 +17,7 @@ src/d1/d1.cpp2 src/d1/d1.h2
 src/d2/d2.cpp2 src/d2/d2.h2
 src/d3/d3.cpp2 src/d3/d3.h2
 src/d4/d4.cpp2 src/d4/d4.h2
+src/d5/d5.cpp2 src/d5/d5.h2
+src/d6/d6.cpp2 src/d6/d6.h2
+src/d7/d7.cpp2 src/d7/d7.h2
 )

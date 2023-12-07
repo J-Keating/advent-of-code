@@ -1,0 +1,105 @@
+#include "d6-1.h2"
+
+d6: namespace = {
+
+    writeln: (msg: _) = std::cout << "> " << msg << std::endl;
+
+
+    NumberMapping : @struct type = {
+        dest: longlong;
+        source: longlong;
+        length: longlong;
+
+        map: (this, in_number: longlong, out out_number: longlong) -> bool = {
+            out_number = in_number;
+            if (in_number >= this.source && in_number < this.source + this.length) {
+                out_number = this.dest + (in_number - this.source);
+                return true;
+            }
+            return false;
+        }
+    }
+
+    load_file: (filename: std::string) -> std::tuple<std::vector<longlong>, std::vector<std::vector<NumberMapping>>> =
+    { 
+        seeds: std::vector<longlong> = ();
+        maps: std::vector<std::vector<NumberMapping>> = ();
+        do {
+        input_file: std::ifstream = (filename);
+        line: std::string = ();
+        std::getline(input_file, line);
+        assert(line.starts_with("seeds:"));
+        line_stream: std::stringstream = (line);
+        scratch: std::string = ();
+        std::getline(line_stream, scratch, ':');
+        std::ranges::copy(std::istream_iterator<longlong>(line_stream), std::istream_iterator<longlong>(), std::back_inserter(seeds));
+
+        current_map: *std::vector<NumberMapping> = (nullptr);
+        while (std::getline(input_file, line)) {
+            if (line.ends_with("map:")) {
+                current_map = (maps.emplace_back())&;
+            }
+            else if (!line.empty()) {
+                line_stream = (line);
+                dest: longlong = 0;
+                src: longlong = 0;
+                length: longlong = 0;
+                line_stream >> dest >> src >> length;
+                current_map*.emplace_back(NumberMapping(dest, src, length));
+            }
+        } } while (false);
+        return (seeds, maps);
+    }
+
+    part1: () = {
+        data := load_file("src/d6/data.txt");
+        seeds: std::vector<longlong> = data.get<0>();
+        maps: std::vector<std::vector<NumberMapping>> = data.get<1>();
+
+        min: longlong = 0x7fffffffffffffff;
+        for seeds do (seed) {
+            current := seed;
+            for maps do (map) {
+                for map do (mapping) {
+                    if (mapping.map(current, current&)) {
+                        break;
+                    }
+                }
+            }
+            min = std::min(min, current);
+        }
+
+        std::cout << "Part1: " << min << std::endl;
+    }
+
+    part2: () = {
+        data:= load_file("src/d6/data_test.txt");
+        seeds: std::vector<longlong> = data.get<0>();
+        maps: std::vector<std::vector<NumberMapping>> = data.get<1>();
+
+        min: longlong = 0x7fffffffffffffff;
+        : int = 0;
+        for seeds do (seed) {
+            current := seed;
+            for maps do (map) {
+                for map do (mapping) {
+                    if (mapping.map(current, current&)) {
+                        break;
+                    }
+                }
+            }
+            min = std::min(min, current);
+        }
+
+        std::cout << "Part2: " << min << std::endl;
+    }
+        
+    run: () = {
+        part1();
+        part2();
+    }
+    // Part1: 19135
+    // Part1: 5704953
+}
+
+
