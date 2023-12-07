@@ -13,8 +13,8 @@ main: () -> int = {
     //d2::run();
     //d3::run();
     //d4::run();
-    d5::run();
-    d6::run();
+    // d5::run();
+    // d6::run();
     d7::run();
 }
 

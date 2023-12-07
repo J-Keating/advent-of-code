@@ -6,7 +6,7 @@ d1: namespace = {
 
     get_lines: () -> std::vector<std::string> = {
         input_file: std::ifstream = ("src/d1/data.txt");
-        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+        input_file.is_open();    // Do nothing but convnce the compiler that this is used
         ret: std::vector<std::string> = ();
         line: std::string = ();
         while (std::getline(input_file, line)) {
