@@ -1,0 +1,133 @@
+#include "d8-3.h2"
+
+d8: namespace = {
+
+    load_file: (filename: std::string, out moves: std::string, out nodes: std::map<std::string, std::pair<std::string, std::string>>) =
+    {
+        line: std::string = std::string();
+        moves = std::string();
+        nodes = std::map<std::string, std::pair<std::string, std::string>>();
+
+        input_file: std::ifstream = (filename);
+        input_file.is_open();    // Do nothing but convnce the compiler that this is used
+
+        std::getline(input_file, moves);
+        std::getline(input_file, line);
+
+        node_regex: const std::regex = (R"((.+) = \((.+), (.+)\))");
+        node_matches: std::smatch = ();
+
+        while (std::getline(input_file, line)) {
+            std::regex_search(line, node_matches, node_regex);
+            assert(node_matches.ssize() == 4);
+            nodes[node_matches[1]] = (node_matches[2], node_matches[3]);
+        }
+    }
+
+    part1: () = {
+        moves: std::string = ();
+        nodes: std::map<std::string, std::pair<std::string, std::string>> = ();
+        load_file("src/d8/data.txt", moves&, nodes&);
+
+        step_count: int = 0;
+        curr: std::string = "AAA";
+        while (curr != "ZZZ") {
+            move: char = moves[step_count % moves.ssize()];
+            if (move == 'L') {
+                curr = nodes[curr].first;
+            } else if (move == 'R') {
+                curr = nodes[curr].second;
+            } else {
+                assert(false);
+            }
+            step_count += 1;
+        }
+
+        std::cout << "Part1: " << step_count << std::endl;
+    }
+
+    is_complete: (curr_nodes: std::vector<std::string>) -> i64 = {
+        ends_with_z_count := std::ranges::count_if(curr_nodes, :(k: _) -> bool = { return k.ends_with("Z"); });
+        return ends_with_z_count == curr_nodes.size();
+    }
+
+    part2_old: () = {
+        moves: std::string = ();
+        nodes: std::map<std::string, std::pair<std::string, std::string>> = ();
+        load_file("src/d8/data.txt", moves&, nodes&);
+
+        start_nodes: std::vector<std::string> = ();
+        for nodes do (node) {
+            if (node.first.ends_with("A")) {
+                start_nodes.push_back(node.first);
+            }
+        }
+        curr_nodes := start_nodes;
+
+        step_count: int = 0;
+        while (!is_complete(curr_nodes)) {
+            if curr_nodes[0].ends_with("Z") {
+                std::cout << curr_nodes[0] << " : " << step_count << std::endl;
+            }
+            move: char = moves[step_count % moves.ssize()];
+            if (move == 'L') {
+                std::transform(curr_nodes.begin(), curr_nodes.end(), curr_nodes.begin(), :(k: _) -> std::string = { return nodes&$*[k].first; });
+            } else if (move == 'R') {
+                std::transform(curr_nodes.begin(), curr_nodes.end(), curr_nodes.begin(), :(k: _) -> std::string = { return nodes&$*[k].second; });
+            } else {
+                assert(false);
+            }
+            step_count += 1;
+        }
+
+        std::cout << "Part2: " << step_count << std::endl;
+    }
+
+    part2: () = {
+        moves: std::string = ();
+        nodes: std::map<std::string, std::pair<std::string, std::string>> = ();
+        load_file("src/d8/data.txt", moves&, nodes&);
+
+        start_nodes: std::vector<std::string> = ();
+        for nodes do (node) {
+            if (node.first.ends_with("A")) {
+                start_nodes.push_back(node.first);
+            }
+        }
+        cycles: std::vector<u64> = ();
+
+        for start_nodes do (start_node) {
+            step_count: u64 = 0;
+            curr: std::string = start_node;
+            while (!curr.ends_with("Z")) {
+                move: char = moves[step_count % moves.ssize()];
+                if (move == 'L') {
+                    curr = nodes[curr].first;
+                } else if (move == 'R') {
+                    curr = nodes[curr].second;
+                } else {
+                    assert(false);
+                }
+                step_count += 1;
+            }
+            cycles.push_back(step_count);
+        }
+
+        lcm: u64 = cycles[0];
+        i: int = 1;
+        while (i < cycles.ssize()) {
+            lcm = std::lcm(lcm, cycles[i]);
+            i += 1;
+        }
+        std::cout << "Part2: " << lcm << std::endl;
+    }
+
+    run: () = {
+        part1();
+        part2();
+    }
+    // Part1: 248812215
+    // Part1: 5704953
+}
+
+

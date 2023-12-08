@@ -20,4 +20,5 @@ src/d4/d4.cpp2 src/d4/d4.h2
 src/d5/d5.cpp2 src/d5/d5.h2
 src/d6/d6.cpp2 src/d6/d6.h2
 src/d7/d7.cpp2 src/d7/d7.h2
+src/d8/d8.cpp2 src/d8/d8.h2
 )
