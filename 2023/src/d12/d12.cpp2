@@ -5,21 +5,105 @@ d12: namespace = {
     DAY_NUM: const int = 12;
     writeln: (msg: _) = std::cout << msg << std::endl;
 
-    load_file: (filename: std::string) -> std::vector<std::string> =
+    load_file: (filename: std::string) -> std::vector<std::pair<std::string, std::vector<int>>> =
     {
         input_file: std::ifstream = (filename);
         input_file.is_open();    // Do nothing but convnce the compiler that fb is used
-        ret: std::vector<std::string> = ();
+        ret: std::vector<std::pair<std::string, std::vector<int>>> = (); //std::vector<std::string> = ();
         line: std::string = ();
         while (std::getline(input_file, line)) {
-            ret.push_back(line);
+            line_stream: std::stringstream = (line);
+            record: std::string = ();
+            line_stream >> record;
+
+            lengths: std::vector<int> = ();
+            length_string: std::string = ();
+            while (std::getline(line_stream, length_string, ',')) {
+                lengths.push_back(std::stoi(length_string));
+            }
+            ret.push_back(std::make_pair(record, lengths));
         }
         return ret;
     }
 
+    get_segments: (line: std::string) -> std::vector<int> = {
+        ret: std::vector<int> = ();
+        hash_count := 0;
+        last := '.';
+        for line do (c) {
+            if (c == '#') {
+                hash_count += 1;
+            } else {
+                if (hash_count > 0) {
+                    ret.push_back(hash_count);
+                    hash_count = 0;
+                }
+            }
+            last = c;
+        }
+        if (hash_count > 0) {
+            ret.push_back(hash_count);
+        }
+        return ret;
+    }
+
+    test_get_segments: () = {
+        x: std::vector<int> = (1, 1, 3);
+        assert(get_segments("#.#.###") == x);
+        assert(get_segments(".#...#....###.") == x);
+        y: std::vector<int> = (1,3,1,6);
+        assert(get_segments(".#.###.#.######") == y);
+        z: std::vector<int> = (4,1,1);
+        assert(get_segments("####.#...#...") == z);
+        aa: std::vector<int> = (1,6,5);
+        assert(get_segments("#....######..#####.") == aa);
+        bb: std::vector<int> = (3,2,1);
+        assert(get_segments(".###.##....#") == bb);
+    }
+
+    check_combinations_rec: (copy str: std::string, copy unknown: std::vector<int>, goal: std::vector<int>, inout matching_combo_count: int) = {
+        if (unknown.ssize() == 0) {
+            //writeln(str);
+            segments := get_segments(str);
+            if (segments == goal) {
+                matching_combo_count += 1;
+            }
+            return;
+        }
+        loc: int = unknown.back();
+        unknown.pop_back();
+        str[loc] = '#';
+        check_combinations_rec(str, unknown, goal, matching_combo_count);
+        str[loc] = '.';
+        check_combinations_rec(str, unknown, goal, matching_combo_count);
+    }
+
+    check_combinations: (str: std::string, goal: std::vector<int>) -> int = {
+        unknown: std::vector<int> = ();
+        for std::views::iota(0, str.ssize()) do (i) {
+            if (str[i] == '?') {
+                unknown.push_back(i);
+            }
+        }
+        matching_combo_count := 0;
+        check_combinations_rec(str, unknown, goal, matching_combo_count&*);
+        return matching_combo_count;
+    }
+
     part1: () = {
         lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 1, lines.ssize()));
+        total := 0;
+        index := 0;
+        for lines do (line) {
+            matching_patterns := check_combinations(line.first, line.second);
+            //writeln(std::format("{} -> {}", line.first, matching_patterns));
+            total += matching_patterns;
+            if (index % 50 == 0) {
+                writeln(std::format("{}", index));
+            }
+            index += 1;
+        }
+        writeln(std::format("Part {}: {}", 1, total));
     }
 
     part2: () = {
