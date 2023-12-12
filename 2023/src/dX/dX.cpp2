@@ -1,0 +1,39 @@
+#include "dX-5.h2"
+
+dX: namespace = {
+
+    DAY_NUM: const int = 0;
+    writeln: (msg: _) = std::cout << msg << std::endl;
+
+    load_file: (filename: std::string) -> std::vector<std::string> =
+    {
+        input_file: std::ifstream = (filename);
+        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+        ret: std::vector<std::string> = ();
+        line: std::string = ();
+        while (std::getline(input_file, line)) {
+            ret.push_back(line);
+        }
+        return ret;
+    }
+
+    part1: () = {
+        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        writeln(std::format("Part {}: {}", 1, lines.ssize()));
+    }
+
+    part2: () = {
+        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        writeln(std::format("Part {}: {}", 2, lines.ssize()));
+    }
+
+    run: () = {
+        writeln(std::format("Day {}", DAY_NUM));
+        part1();
+        part2();
+    }
+    // Part1: 
+    // Part2: 
+}
+
+

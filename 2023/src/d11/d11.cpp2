@@ -1,0 +1,98 @@
+#include "d11-9.h2"
+
+d11: namespace = {
+
+    DAY_NUM: const int = 11;
+    writeln: (msg: _) = std::cout << msg << std::endl;
+
+    Point: @struct type = {
+        row: i64;
+        col: i64;
+
+        axis_dist: (this, that) -> i64 = {
+            return std::abs(this.row - that.row) + std::abs(this.col - that.col);
+        }
+    }
+
+
+    load_file: (filename: std::string) -> std::vector<std::vector<char>> =
+    {
+        input_file: std::ifstream = (filename);
+        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+        ret: std::vector<std::vector<char>> = ();
+        line: std::string = ();
+        while (std::getline(input_file, line)) {
+            chars: std::vector<char> = (line.begin(), line.end());
+            ret.push_back(chars);
+        }
+        return ret;
+    }
+
+    find_distances: (lines: std::vector<std::vector<char>>, blank_row_size: i64) -> i64 =
+    {
+        galaxy_locations: std::vector<Point> = ();
+
+        blank_rows: std::vector<i64> = ();
+        for std::views::iota(0u, lines.size()) do (row) {
+            any_galaxy_in_row := std::ranges::any_of(lines[row], :(c: char) -> bool = { return c == '#'; });
+            if (!any_galaxy_in_row) {
+                blank_rows.push_back(row);
+            }
+        }
+        blank_cols: std::vector<i64> = ();
+        for std::views::iota(0u, lines[0].size()) do (col) {
+            any_galaxy_in_col := std::ranges::any_of(std::views::iota(0u, lines.size()), :(r_test: int) -> bool = { return lines&$*[r_test][col&$*] == '#'; });
+            if (!any_galaxy_in_col) {
+                blank_cols.push_back(col);
+            }
+        }
+
+        row_offset: i64 = 0;
+        for std::views::iota(0u, lines.size()) do (row) {
+            if (std::ranges::find(blank_rows, row) != blank_rows.end()) {
+                row_offset += blank_row_size;
+                continue;
+            }
+            col_offset: i64 = 0;
+            for std::views::iota(0u, lines[row].size()) do (col) {
+                if (std::ranges::find(blank_cols, col) != blank_cols.end()) {
+                    col_offset += blank_row_size;
+                    continue;
+                }
+                if lines[row][col] == '#' {
+                    galaxy_locations.push_back(Point(row + row_offset, col + col_offset));
+                }
+            }
+        }
+        //std::ranges::for_each(galaxy_locations, :(p: Point) -> void = { writeln(std::format("({}, {})", p.row, p.col)); });
+        total_dist: i64 = 0;
+        for std::views::iota(0u, galaxy_locations.size()) do (i) {
+            for std::views::iota(i + 1u, galaxy_locations.size()) do (j) {
+                total_dist += galaxy_locations[i].axis_dist(galaxy_locations[j]);
+            }
+        }
+        return total_dist;
+    }
+
+    part1: () = {
+        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        total_dist := find_distances(lines, 1);
+        writeln(std::format("Part {}: {}", 1, total_dist));
+    }
+
+    part2: () = {
+        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        total_dist := find_distances(lines, 1000000 - 1);
+        writeln(std::format("Part {}: {}", 2, total_dist));
+    }
+
+    run: () = {
+        writeln(std::format("Day {}", DAY_NUM));
+        part1();
+        part2();
+    }
+    // Part 1: 9543156
+    // Part 2: 625243292686
+}
+
+

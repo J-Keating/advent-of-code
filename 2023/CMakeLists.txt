@@ -13,6 +13,7 @@ set(CPPFRONT_FLAGS "-p" "-format-colon-errors")
 add_executable(main src/main.cpp2
 src/test/test.cpp2 src/test/test.h2
 src/d1_2022/d1_2022.cpp2 src/d1_2022/d1_2022.h2
+src/dX/dX.cpp2 src/dX/dX.h2
 src/d1/d1.cpp2 src/d1/d1.h2
 src/d2/d2.cpp2 src/d2/d2.h2
 src/d3/d3.cpp2 src/d3/d3.h2
@@ -21,4 +22,8 @@ src/d5/d5.cpp2 src/d5/d5.h2
 src/d6/d6.cpp2 src/d6/d6.h2
 src/d7/d7.cpp2 src/d7/d7.h2
 src/d8/d8.cpp2 src/d8/d8.h2
+src/d9/d9.cpp2 src/d9/d9.h2
+src/d10/d10.cpp2 src/d10/d10.h2
+src/d11/d11.cpp2 src/d11/d11.h2
+src/d12/d12.cpp2 src/d12/d12.h2
 )

@@ -1,4 +1,4 @@
-#include "d1_2022-f.h2"
+#include "dX-5.h2"
 #include "d1-c.h2"
 #include "d2-8.h2"
 #include "d3-0c.h2"
@@ -7,16 +7,25 @@
 #include "d6-1.h2"
 #include "d7-c.h2"
 #include "d8-3.h2"
+#include "d9-1.h2"
+#include "d10-05.h2"
+#include "d11-9.h2"
+#include "d12-b.h2"
 
 main: () -> int = {
-    //d1_2022::run();
-    //d1::run();
-    //d2::run();
-    //d3::run();
-    //d4::run();
+    // dX::run();
+    // d1_2022::run();
+    // d1::run();
+    // d2::run();
+    // d3::run();
+    // d4::run();
     // d5::run();
     // d6::run();
     // d7::run();
-    d8::run();
+    // d8::run();
+    // d9::run();
+    // d10::run();
+    d11::run();
+    // d12::run();
 }
 
