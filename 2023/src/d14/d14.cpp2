@@ -1,0 +1,151 @@
+#include "d14-f.h2"
+
+d14: namespace = {
+
+    DAY_NUM: const int = 14;
+    writeln: (msg: _) = std::cout << msg << std::endl;
+
+    load_file: (filename: std::string) -> std::vector<std::vector<char>> =
+    {
+        input_file: std::ifstream = (filename);
+        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+        ret: std::vector<std::vector<char>> = ();
+        line: std::string = ();
+        while (std::getline(input_file, line)) {
+            chars: std::vector<char> = (line.begin(), line.end());
+            ret.push_back(chars);
+        }
+        return ret;
+    }
+
+    print_grid: (grid: std::vector<std::vector<char>>) =
+    {
+        for std::views::iota(0, grid.ssize()) do (row) {
+            for std::views::iota(0, grid[row].ssize()) do (col) {
+                std::cout << grid[row][col];
+            }
+            std::cout << std::endl;
+        }
+    }
+
+    move: (inout grid: std::vector<std::vector<char>>, copy row: int, copy col: int, row_step: int, col_step: int) =
+    {
+        if (grid[row][col] == 'O') {
+            next_row := row + row_step;
+            next_col := col + col_step;
+            while (next_row >= 0 && next_row < grid.ssize() && next_col >= 0 && next_col < grid[next_row].ssize() && grid[next_row][next_col] == '.') {
+                grid[row][col] = '.';
+                grid[next_row][next_col] = 'O';
+                row = next_row;
+                col = next_col;
+                next_row += row_step;
+                next_col += col_step;
+            }
+        }
+    }
+
+    compute_load: (grid: std::vector<std::vector<char>>) -> int = {
+        sum := 0;
+        weight := grid.ssize();
+        for std::views::iota(0, grid.ssize()) do (row) {
+            count := 0;
+            for std::views::iota(0, grid[row].ssize()) do (col) {
+                if (grid[row][col] == 'O') {
+                    count += 1;
+                }
+            }
+            sum += count * weight;
+            weight -= 1;
+        }
+        return sum;
+    }
+
+    part1: () = {
+        grid := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        for std::views::iota(0, grid.ssize()) do (row) {
+            for std::views::iota(0, grid[row].ssize()) do (col) {
+                move(grid&*, row, col, -1, 0);
+            }
+        }
+        load := compute_load(grid);
+        writeln(std::format("Part {}: {}", 1, load));
+    }
+
+    pack_positions: (grid: std::vector<std::vector<char>>) -> std::vector<bool> = {
+        bit_vector: std::vector<bool> = ();
+        bit_vector.resize(grid.ssize() * grid[0].ssize());
+        //bit_vector: std::vector<bool> = (50, 0);
+        i: int = 0;
+        for std::views::iota(0, grid.ssize()) do (row) {
+            for std::views::iota(0, grid[row].ssize()) do (col) {
+                if (grid[row][col] == 'O') {
+                    bit_vector[i] = true;
+                }
+                i += 1;
+            }
+        }
+        //ret := std::hash<std::vector<bool>>(bit_vector);
+        return bit_vector;
+    }
+
+    part2: () = {
+        grid := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+
+        seen_patterns: std::map<std::vector<bool>, std::vector<std::pair<int, int>>> = ();
+        loop_location: int = 0;
+        loop_size: int = 0;
+        for std::views::iota(1, 1000000001) do (i) {
+            for std::views::iota(0, grid.ssize()) do (row) {
+                for std::views::iota(0, grid[row].ssize()) do (col) {
+                    move(grid&*, row, col, -1, 0);
+                }
+            }
+            for std::views::iota(0, grid[0].ssize()) do (col) {
+                for std::views::iota(0, grid.ssize()) do (row) {
+                    move(grid&*, row, col, 0, -1);
+                }
+            }
+            for std::views::iota(0, grid.ssize()) | std::views::reverse do (row) {
+                for std::views::iota(0, grid[row].ssize()) do (col) {
+                    move(grid&*, row, col, 1, 0);
+                }
+            }
+            for std::views::iota(0, grid[0].ssize()) | std::views::reverse do (col) {
+                for std::views::iota(0, grid.ssize()) do (row) {
+                    move(grid&*, row, col, 0, 1);
+                }
+            }
+            pattern := pack_positions(grid);
+            seen_patterns[pattern].push_back(std::make_pair(compute_load(grid), i));
+            if (loop_location == 0) && (seen_patterns[pattern].ssize() == 2) {
+                loop_location = i;
+            }
+            else if (loop_size == 0 && seen_patterns[pattern].ssize() == 3) {
+                loop_size = i - loop_location;
+                break;
+            }
+        }
+        load: int = 0;
+        equivalent_iteration := (1000000000 - loop_location) % loop_size;
+        for seen_patterns do (v) {
+            if (v.second.ssize() > 1) {
+                if ((v.second[1].second - loop_location) % loop_size == equivalent_iteration) {
+                    load = v.second[1].first;
+                    break;
+                }
+            }
+        }
+
+        writeln(std::format("Part {}: {}", 2, load));
+    }
+
+    run: () = {
+        writeln(std::format("Day {}", DAY_NUM));
+        part1();
+        part2();
+    }
+    // Part 1: 105784
+    // Part 2: 91286
+}
+
+

@@ -11,6 +11,7 @@
 #include "d10-05.h2"
 #include "d11-9.h2"
 #include "d12-b.h2"
+#include "d14-f.h2"
 
 main: () -> int = {
     // dX::run();
@@ -26,6 +27,8 @@ main: () -> int = {
     // d9::run();
     // d10::run();
     // d11::run();
-    d12::run();
+    // d12::run();
+    //
+    d14::run();
 }
 
