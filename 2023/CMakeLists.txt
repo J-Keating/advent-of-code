@@ -26,6 +26,8 @@ src/d9/d9.cpp2 src/d9/d9.h2
 src/d10/d10.cpp2 src/d10/d10.h2
 src/d11/d11.cpp2 src/d11/d11.h2
 src/d12/d12.cpp2 src/d12/d12.h2
+src/d13/d13.cpp2 src/d13/d13.h2
 src/d14/d14.cpp2 src/d14/d14.h2
 src/d15/d15.cpp2 src/d15/d15.h2
+src/d16/d16.cpp2 src/d16/d16.h2
 )
