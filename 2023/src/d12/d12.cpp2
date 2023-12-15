@@ -47,6 +47,36 @@ d12: namespace = {
         return ret;
     }
 
+    // cache: std::map<std::string>, std::vector<int>> = ();
+    // get_segments_rec: (line: std::basic_string_view<char>, copy index: int) -> std::vector<int> = {
+    //     if (index < 0) {
+    //         return ();
+    //     }
+    //     hash_key: std::hash<std::basic_string_view<char>> = (line);
+    //     hash_key += line.
+    //     if (cache.contains(hash)) {
+    //         return cache[hash];
+    //     }
+    //     while (index >= 0 && line[index] == '.') {
+    //         index -= 1;
+    //     }
+    //     if (index < 0) {
+    //         return ();
+    //     }
+    //     end_hash := index;
+    //     while (index >= 0 && line[index] == '#') {
+    //         index -= 1;
+    //     }
+    //     ret := get_segments_rec((line.data(), index), index);
+    //     ret.push_back(end_hash - index);
+    //     cache[hash] = ret;
+    //     return ret;
+    // }
+
+    // get_segments: (line: std::string) -> std::vector<int> = {
+    //     return get_segments_rec(line, line.ssize() - 1);
+    // }
+
     test_get_segments: () = {
         x: std::vector<int> = (1, 1, 3);
         assert(get_segments("#.#.###") == x);
@@ -91,6 +121,7 @@ d12: namespace = {
     }
 
     part1: () = {
+        test_get_segments();
         lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
         total := 0;
         index := 0;
@@ -116,8 +147,8 @@ d12: namespace = {
         part1();
         part2();
     }
-    // Part1: 
-    // Part2: 
+    // Part 1: 7221
+    // Part 2: 1000
 }
 
 

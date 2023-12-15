@@ -6,10 +6,15 @@ d5: namespace = {
 
 
     NumberMapping : @struct type = {
-        dest: longlong;
-        source: longlong;
-        length: longlong;
+        dest: longlong = 0;
+        source: longlong = 0;
+        length: longlong = 0;
 
+        constructor: (inout this, dest_in: longlong, source_in: longlong, length_in: longlong) = {
+            this.dest = dest_in;
+            this.source = source_in;
+            this.length = length_in;
+        }
         map: (this, in_number: longlong, out out_number: longlong) -> bool = {
             out_number = in_number;
             if (in_number >= this.source && in_number < this.source + this.length) {
@@ -40,7 +45,7 @@ d5: namespace = {
                 current_map = (maps.emplace_back())&;
             }
             else if (!line.empty()) {
-                line_stream = (line);
+                line_stream: std::stringstream = (line);
                 dest: longlong = 0;
                 src: longlong = 0;
                 length: longlong = 0;

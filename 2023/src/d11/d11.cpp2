@@ -6,9 +6,13 @@ d11: namespace = {
     writeln: (msg: _) = std::cout << msg << std::endl;
 
     Point: @struct type = {
-        row: i64;
-        col: i64;
+        row: i64 = 0;
+        col: i64 = 0;
 
+        constructor: (inout this, row_in: i64, col_in: i64) = {
+            this.row = row_in;
+            this.col = col_in;
+        }
         axis_dist: (this, that) -> i64 = {
             return std::abs(this.row - that.row) + std::abs(this.col - that.col);
         }

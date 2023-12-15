@@ -1,0 +1,130 @@
+#include "d15-1.h2"
+
+d15: namespace = {
+
+    DAY_NUM: const int = 15;
+    writeln: (msg: _) = std::cout << msg << std::endl;
+
+    load_file: (filename: std::string) -> std::vector<std::string> =
+    {
+        input_file: std::ifstream = (filename);
+        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+        ret: std::vector<std::string> = ();
+        line: std::string = ();
+        std::getline(input_file, line);
+        line_stream: std::stringstream = (line);
+        line_stream.gcount();    // Do nothing but convnce the compiler that fb is used
+        step: std::string = ();
+        while (std::getline(line_stream, step, ',')) {
+            ret.push_back(step);
+        }
+
+        return ret;
+    }
+
+    hash: (str: std::string) -> int = {
+        current: int = 0;
+        for str do (c) {
+            current += c as int;
+            current *= 17;
+            current = current % 256;
+        }
+        return current;
+    }
+
+    test_hash: () = {
+        assert(hash("HASH") == 52);
+    }
+
+    part1: () = {
+        steps := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        sum := 0;
+        for steps do (step) {
+            sum += hash(step);
+        }
+        writeln(std::format("Part {}: {}", 1, sum));
+    }
+
+    Box: @struct type = {
+        Lense: @struct type = {
+            label: std::string;
+            focal_length: int = 0;
+
+            constructor: (inout this, label_in: std::string, focal_length_in: int) = {
+                this.label = label_in;
+                this.focal_length = focal_length_in;
+            }
+            operator==: (this, other: Lense) -> bool = {
+                return this.label == other.label;
+            }
+        }
+
+        lenses: std::vector<Lense>;
+
+        insert_lens: (inout this, lense: Box::Lense) = {
+            existing := std::find(this.lenses.begin(), this.lenses.end(), lense);
+            if (existing == this.lenses.end()) {
+                this.lenses.push_back(lense);
+            }
+            else {
+                existing*.focal_length = lense.focal_length;
+            }
+        }
+        remove_lens: (inout this, lense: Box::Lense) = {
+            existing := std::find(this.lenses.begin(), this.lenses.end(), lense);
+            if (existing != this.lenses.end()) {
+                this.lenses.erase(existing);
+            }
+        }
+    }
+
+
+    part2: () = {
+        steps := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        boxes: std::vector<Box> = (256); 
+        for steps do (step) {
+            op := step.find('=');
+            if (op == std::string::npos) {
+                op = step.find('-');
+                assert(op != std::string::npos);
+            }
+            label := step.substr(0, op);
+            box_number := hash(label);
+
+            if step[op] == '=' {
+                focal_length := std::stoi(step.substr(op + 1));
+                lense: Box::Lense = (label, focal_length);
+                boxes[box_number].insert_lens(lense);
+            }
+            else if step[op] == '-' {
+                boxes[box_number].remove_lens(Box::Lense(label, 0));
+            }
+            else {
+                assert(false);
+            }
+        }
+
+        sum := 0;
+        box_power := 1;
+        for boxes do (box) {
+            lense_index := 1;
+            for box.lenses do (lense) {
+                sum += box_power * lense_index * lense.focal_length;
+                lense_index += 1;
+            }
+            box_power += 1;
+        }
+
+        writeln(std::format("Part {}: {}", 2, sum));
+    }
+
+    run: () = {
+        writeln(std::format("Day {}", DAY_NUM));
+        part1();
+        part2();
+    }
+    // Part1: 
+    // Part2: 
+}
+
+
