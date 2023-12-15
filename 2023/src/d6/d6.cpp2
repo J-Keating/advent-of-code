@@ -5,26 +5,90 @@ d6: namespace = {
     DAY_NUM: const int = 6;
     writeln: (msg: _) = std::cout << msg << std::endl;
 
-    load_file: (filename: std::string) -> std::vector<std::string> =
-    {
-        input_file: std::ifstream = (filename);
-        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
-        ret: std::vector<std::string> = ();
-        line: std::string = ();
-        while (std::getline(input_file, line)) {
-            ret.push_back(line);
+    get_config_test_p1: () -> std::pair<std::vector<i64>, std::vector<i64>> = {
+        times: std::vector<i64> = (7, 15, 30);
+        distances: std::vector<i64> = (9, 40, 200);
+        return std::make_pair(times, distances);
+    }
+
+    get_config_p1: () -> std::pair<std::vector<i64>, std::vector<i64>> = {
+        times: std::vector<i64> = (44, 80, 65, 72);
+        distances: std::vector<i64> = (208, 1581, 1050, 1102);
+        return std::make_pair(times, distances);
+    }
+
+    get_config_test_p2: () -> std::pair<std::vector<i64>, std::vector<i64>> = {
+        times: std::vector<i64> = (71530);
+        distances: std::vector<i64> = (940200);
+        return std::make_pair(times, distances);
+    }
+
+    get_config_p2: () -> std::pair<std::vector<i64>, std::vector<i64>> = {
+        times: std::vector<i64> = (44806572);
+        distances: std::vector<i64> = (208158110501102);
+        return std::make_pair(times, distances);
+    }
+
+    run_simulation: (time: i64, distance: i64) -> i64 = {
+        winning_config_count := 0;
+        for std::views::iota(1, time - 1) do (i) {
+            total_distance := i * (time - i);
+            if total_distance > distance {
+                winning_config_count += 1;
+            }
         }
-        return ret;
+        return winning_config_count;
+    }
+
+    is_winner: (total_time: i64, hold_time: i64, test_distance: i64) -> i64 = {
+        total_distance := hold_time * (total_time - hold_time);
+        return total_distance > test_distance;
     }
 
     part1: () = {
-        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 1, lines.ssize()));
+        data := get_config_p1();
+        result := 1;
+        for std::views::iota(0, data.first.ssize()) do (i) {
+            result *= run_simulation(data.first[i], data.second[i]);
+        }
+        writeln(std::format("Part {}: {}", 1, result));
     }
 
     part2: () = {
-        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 2, lines.ssize()));
+        data := get_config_p2();
+        total_time := data.first[0];
+        test_distance := data.second[0];
+
+        // Binary search for first win
+        low := 1;
+        high := total_time / 2;
+        assert(!is_winner(total_time, low, test_distance) && is_winner(total_time, high, test_distance));
+        while low < high {
+            mid := (low + high) / 2;
+            if is_winner(total_time, mid, test_distance) {
+                high = mid;
+            } else {
+                low = mid + 1;
+            }
+        }
+        assert(low == high);
+        first_win := low;
+
+        low = total_time / 2;
+        high = total_time - 1;
+        assert(is_winner(total_time, low, test_distance) && !is_winner(total_time, high, test_distance));
+        while low < high {
+            mid := (low + high) / 2;
+            if !is_winner(total_time, mid, test_distance) {
+                high = mid;
+            } else {
+                low = mid + 1;
+            }
+        }
+        assert(low == high);
+        last_win := low - 1;
+
+        writeln(std::format("Part {}: {} to {} for {} combinations", 2, first_win, last_win, last_win - first_win + 1));
     }
 
     run: () = {
@@ -32,8 +96,8 @@ d6: namespace = {
         part1();
         part2();
     }
-    // Part1: 
-    // Part2: 
+    // Part 1: 32076
+    // Part 2: 5264176 to 39542396 for 34278221 combinations
 }
 
 
