@@ -22,10 +22,10 @@ main: () -> int = {
     // d3::run();
     // d4::run();
     // d5::run();
-    d6::run();
+    // d6::run();
     // d7::run();
     // d8::run();
-    // d9::run();
+    d9::run();
     // d10::run();
     // d11::run();
     // d12::run();

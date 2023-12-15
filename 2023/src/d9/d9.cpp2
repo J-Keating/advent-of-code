@@ -5,26 +5,77 @@ d9: namespace = {
     DAY_NUM: const int = 9;
     writeln: (msg: _) = std::cout << msg << std::endl;
 
-    load_file: (filename: std::string) -> std::vector<std::string> =
+    load_file: (filename: std::string) -> std::vector<std::vector<int>> =
     {
         input_file: std::ifstream = (filename);
         input_file.is_open();    // Do nothing but convnce the compiler that fb is used
-        ret: std::vector<std::string> = ();
+        ret: std::vector<std::vector<int>> = ();
         line: std::string = ();
         while (std::getline(input_file, line)) {
-            ret.push_back(line);
+            line_stream: std::stringstream = (line);
+            line_stream.gcount();
+            numbers: std::vector<int> = ();
+            num := 0;
+            while (line_stream >> num) {
+                numbers.push_back(num);
+            }
+            ret.push_back(numbers);
         }
         return ret;
     }
 
+    add_next_at_end: (inout numbers: std::vector<int>) = {
+        count := numbers.size();
+        if std::ranges::count(numbers, 0) == count {
+            numbers.push_back(0);
+            return;
+        }
+        next: std::vector<int> = ();
+        next.resize(count - 1);
+        for std::views::iota(0u, count - 1) do (i) {
+            next[i] = numbers[i+1] - numbers[i];
+        }
+        add_next_at_end(next);
+        assert(next.ssize() == count);
+        numbers.push_back(numbers[count - 1] + next[count - 1]);
+    }
+
+    add_next_at_start: (inout numbers: std::vector<int>) = {
+        count := numbers.size();
+        if std::ranges::count(numbers, 0) == count {
+            numbers.insert(numbers.begin(), 0);
+            return;
+        }
+        next: std::vector<int> = ();
+        next.resize(count - 1);
+        for std::views::iota(0u, count - 1) do (i) {
+            next[i] = numbers[i+1] - numbers[i];
+        }
+        add_next_at_start(next);
+        assert(next.ssize() == count);
+        numbers.insert(numbers.begin(), numbers[0] - next[0]);
+    }
+
     part1: () = {
-        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 1, lines.ssize()));
+        sequences := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        sum := 0;
+        for sequences do (inout sequence) {
+            add_next_at_end(sequence&*);
+            sum += sequence[sequence.ssize()-1];
+            writeln(std::format("{}", sequence[sequence.ssize()-1]));
+        }
+        writeln(std::format("Part {}: {}", 1, sum));
     }
 
     part2: () = {
-        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 2, lines.ssize()));
+        sequences := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        sum := 0;
+        for sequences do (inout sequence) {
+            add_next_at_start(sequence&*);
+            sum += sequence[0];
+            writeln(std::format("{}", sequence[0]));
+        }
+        writeln(std::format("Part {}: {}", 2, sum));
     }
 
     run: () = {
@@ -32,8 +83,8 @@ d9: namespace = {
         part1();
         part2();
     }
-    // Part1: 
-    // Part2: 
+    // Part 1: 1921197370
+    // Part 2: 1124
 }
 
 
