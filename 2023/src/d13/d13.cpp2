@@ -39,48 +39,56 @@ d13: namespace = {
         return ret;
     }
 
-    find_vertical_symetry_at: (board: std::vector<std::vector<char>>, col: int) -> bool = {
+    find_vertical_symetry_at: (board: std::vector<std::vector<char>>, col: int, desired_smudge_count: int) -> bool = {
         l := col;
         r := col + 1;
+        smudge_count := 0;
         while l >= 0 && r < board[0].ssize() {
             for std::views::iota(0, board.ssize()) do (row) {
                 if board[row][l] != board[row][r] {
-                    return false;
+                    smudge_count += 1;
+                    if smudge_count > desired_smudge_count {
+                        return false;
+                    }
                 }
             }
             l -= 1;
             r += 1;
         }
-        return true;
+        return smudge_count == desired_smudge_count;
     }
 
-    find_vertical_symmetry: (board: std::vector<std::vector<char>>) -> int = {
+    find_vertical_symmetry: (board: std::vector<std::vector<char>>, desired_smudge_count: int) -> int = {
         for std::views::iota(0, board[0].ssize()-1) do (col) {
-            if find_vertical_symetry_at(board, col) {
+            if find_vertical_symetry_at(board, col, desired_smudge_count) {
                 return col + 1;
             }
         }
         return -1;
     }
 
-    find_horizontal_symetry_at: (board: std::vector<std::vector<char>>, row: int) -> bool = {
+    find_horizontal_symetry_at: (board: std::vector<std::vector<char>>, row: int, desired_smudge_count: int) -> bool = {
         t := row;
         b := row + 1;
+        smudge_count := 0;
         while t >= 0 && b < board.ssize() {
             for std::views::iota(0, board[0].ssize()) do (col) {
                 if board[t][col] != board[b][col] {
-                    return false;
+                    smudge_count += 1;
+                    if smudge_count > desired_smudge_count {
+                        return false;
+                    }
                 }
             }
             t -= 1;
             b += 1;
         }
-        return true;
+        return smudge_count == desired_smudge_count;
     }
 
-    find_horizontal_symmetry: (board: std::vector<std::vector<char>>) -> int = {
+    find_horizontal_symmetry: (board: std::vector<std::vector<char>>, desired_smudge_count: int) -> int = {
         for std::views::iota(0, board.ssize()-1) do (row) {
-            if find_horizontal_symetry_at(board, row) {
+            if find_horizontal_symetry_at(board, row, desired_smudge_count) {
                 return row + 1;
             }
         }
@@ -95,14 +103,14 @@ d13: namespace = {
             board: std::vector<std::vector<char>> = boards&*.get_next_board();
             writeln(std::format("{}: {}x{}", board_index, board.ssize(), board[0].ssize()));
             //board.print();
-            symetry := find_vertical_symmetry(board);
+            symetry := find_vertical_symmetry(board, 0);
             if symetry >= 0 {
                 writeln(std::format("Vertical symetry at {}", symetry));
                 total += symetry;
             } else {
                 writeln("No Vertical symetry");
             }
-            symetry = find_horizontal_symmetry(board);
+            symetry = find_horizontal_symmetry(board, 0);
             if symetry >= 0 {
                 writeln(std::format("Horizontal symetry at {}", symetry));
                 total += (100 * symetry);
@@ -116,7 +124,29 @@ d13: namespace = {
 
     part2: () = {
         boards := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 2, boards.ssize()));
+        board_index := 1;
+        total := 0;
+        while (!boards.empty()) {
+            board: std::vector<std::vector<char>> = boards&*.get_next_board();
+            writeln(std::format("{}: {}x{}", board_index, board.ssize(), board[0].ssize()));
+            //board.print();
+            symetry := find_vertical_symmetry(board, 1);
+            if symetry >= 0 {
+                writeln(std::format("Vertical symetry at {}", symetry));
+                total += symetry;
+            } else {
+                writeln("No Vertical symetry");
+            }
+            symetry = find_horizontal_symmetry(board, 1);
+            if symetry >= 0 {
+                writeln(std::format("Horizontal symetry at {}", symetry));
+                total += (100 * symetry);
+            } else {
+                writeln("No Horizontal symetry");
+            }
+            board_index += 1;
+        }
+        writeln(std::format("Part {}: {}", 2, total));
     }
 
     run: () = {
