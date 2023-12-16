@@ -18,14 +18,269 @@ d10: namespace = {
         return ret;
     }
 
+    DIRECTION: @enum type = {
+        NORTH := 0;
+        EAST;
+        SOUTH;
+        WEST;
+        INVALID;
+
+        from_int: (value: int) -> DIRECTION = {
+            return DIRECTION(value);
+        }
+        to_int: (this) -> int = {
+            if this == DIRECTION::NORTH { return 0; }
+            if this == DIRECTION::EAST { return 1; }
+            if this == DIRECTION::SOUTH { return 2; }
+            if this == DIRECTION::WEST { return 3; }
+            assert(false);
+            return -1;
+        }
+
+        left: (this) -> DIRECTION = {
+            return DIRECTION((this.to_int() + 3) % 4);
+        }
+
+        right: (this) -> DIRECTION = {
+            return DIRECTION((this.to_int() + 1) % 4);
+        }
+    }
+
+    follow_pipe: (current_direction: DIRECTION, shape: char, strict: bool) -> DIRECTION =
+    {
+        if shape == '|' {
+            if current_direction == DIRECTION::NORTH { return DIRECTION::NORTH; }
+            if current_direction == DIRECTION::SOUTH { return DIRECTION::SOUTH; }
+        }
+        if shape == '-' {
+            if current_direction == DIRECTION::EAST { return DIRECTION::EAST; }
+            if current_direction == DIRECTION::WEST { return DIRECTION::WEST; }
+        }
+        if shape == 'L' {
+            if current_direction == DIRECTION::SOUTH { return DIRECTION::EAST; }
+            if current_direction == DIRECTION::WEST { return DIRECTION::NORTH; }
+        }
+        if shape == 'J' {
+            if current_direction == DIRECTION::SOUTH { return DIRECTION::WEST; }
+            if current_direction == DIRECTION::EAST { return DIRECTION::NORTH; }
+        }
+        if shape == '7' {
+            if current_direction == DIRECTION::NORTH { return DIRECTION::WEST; }
+            if current_direction == DIRECTION::EAST { return DIRECTION::SOUTH; }
+        }
+        if shape == 'F' {
+            if current_direction == DIRECTION::NORTH { return DIRECTION::EAST; }
+            if current_direction == DIRECTION::WEST { return DIRECTION::SOUTH; }
+        }
+        if (strict) { assert(false); }
+        return DIRECTION::INVALID;
+    }
+
+    follow_pipe: (current_direction: DIRECTION, shape: char) -> DIRECTION =
+    {
+        return follow_pipe(current_direction, shape, true);
+    }
+
+    Loc: @struct type = {
+        row: int;
+        col: int;
+
+        constructor: (inout this, row_in: int, col_in: int) = {
+            this.row = row_in;
+            this.col = col_in;
+        }
+        operator+: (this, other: Loc) -> Loc = {
+            return Loc(this.row + other.row, this.col + other.col);
+        }
+        operator+=: (inout this, other: Loc) = {
+            this.row += other.row;
+            this.col += other.col;
+        }
+        operator==: (this, other: Loc) -> bool = {
+            return this.row == other.row && this.col == other.col;
+        }
+    }
+
+    get_step: (direction: DIRECTION) -> Loc =
+    {
+        if direction == DIRECTION::NORTH { return Loc(-1, 0); }
+        if direction == DIRECTION::SOUTH { return Loc(1, 0); }
+        if direction == DIRECTION::EAST { return Loc(0, 1); }
+        if direction == DIRECTION::WEST { return Loc(0, -1); }
+        assert(false);
+        return Loc(0, 0);
+    }
+
+    get_direction: (current_direction: Loc, to: Loc) -> DIRECTION =
+    {
+        if current_direction.row == to.row {
+            if current_direction.col < to.col { return DIRECTION::EAST; }
+            if current_direction.col > to.col { return DIRECTION::WEST; }
+        }
+        if current_direction.col == to.col {
+            if current_direction.row < to.row { return DIRECTION::SOUTH; }
+            if current_direction.row > to.row { return DIRECTION::NORTH; }
+        }
+        assert(false);
+        return DIRECTION::INVALID;
+    }
+
+    find_char: (lines: std::vector<std::vector<char>>, c: char) -> Loc =
+    {
+        for std::views::iota(0, lines.ssize()) do (row) {
+            for std::views::iota(0, lines[0].ssize()) do (col){
+                if lines[row][col] == c {
+                    return Loc(row, col);
+                }
+            }
+        }
+        return Loc(0, 0);
+    }
+
+    find_connected_neighbors: (lines: std::vector<std::vector<char>>, loc: Loc) -> std::vector<Loc> =
+    {
+        ret: std::vector<Loc> = ();
+        for std::views::iota(0, 4) do (i) {
+            direction: DIRECTION = DIRECTION::from_int(i);
+            new_loc: Loc = loc + get_step(direction);
+            if new_loc.row < 0 || new_loc.row >= lines.ssize() { continue; }
+            if new_loc.col < 0 || new_loc.col >= lines[0].ssize() { continue; }
+            if follow_pipe(direction, lines[new_loc.row][new_loc.col], false) != DIRECTION::INVALID {
+                ret.push_back(new_loc);
+            }
+            // step: Loc = get_step(direction);
+            // new_loc: Loc = loc + step;
+            // if new_loc.row < 0 || new_loc.row >= lines.ssize() { continue; }
+            // if new_loc.col < 0 || new_loc.col >= lines[0].ssize() { continue; }
+            // for std::views::iota(0, 4) do (j) {
+            //     out_of_new_loc := follow_pipe(DIRECTION::from_int(j), lines[new_loc.row][new_loc.col]);
+            //     if out_of_new_loc != DIRECTION::INVALID {
+            //         if new_loc + get_step(out_of_new_loc) == loc {
+            //             ret.push_back(new_loc);
+            //         }
+            //     }
+            // }
+        }
+        return ret;
+    }
+
+    print: (lines: std::vector<std::vector<char>>) = {
+        std::for_each(lines.begin(), lines.end(), :(row: std::vector<char>) -> void = {
+            std::for_each(row.begin(), row.end(), :(c: char) -> void = {
+                std::cout << c;
+            });
+            std::cout << std::endl;
+        });
+    }
+
+    get: (lines: std::vector<std::vector<char>>, loc: Loc) -> char = {
+        if loc.row < 0 || loc.row >= lines.ssize() { return 'X'; }
+        if loc.col < 0 || loc.col >= lines[0].ssize() { return 'X'; }
+        return lines[loc.row][loc.col];
+    }
+
+    set: (inout lines: std::vector<std::vector<char>>, loc: Loc, c: char) = {
+        if loc.row < 0 || loc.row >= lines.ssize() { return; }
+        if loc.col < 0 || loc.col >= lines[0].ssize() { return; }
+        lines[loc.row][loc.col] = c;
+    }
+
+    set_if_empty: (inout lines: std::vector<std::vector<char>>, loc: Loc, c: char) = {
+        if lines.get(loc) == ' ' {
+            lines&*.set(loc, c);
+        }
+    }
+
     part1: () = {
-        lines := load_file(std::format("src/d{}/data_test.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 1, lines.ssize()));
+        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        start := find_char(lines, 'S');
+        connected_neighbors := find_connected_neighbors(lines, start);
+        assert(connected_neighbors.ssize() == 2);
+        last := start;
+        current := connected_neighbors[0];
+        direction := get_direction(last, current);
+        path_length := 1;
+        while current != start {
+            direction = follow_pipe(direction, lines[current.row][current.col]);
+            current += get_step(direction);
+            path_length += 1;
+        }
+        writeln(std::format("Part {}: {}", 1, path_length/2));
     }
 
     part2: () = {
         lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 2, lines.ssize()));
+
+        in_out_array: std::vector<std::vector<char>> = ();
+        for std::views::iota(0, lines.ssize()) do (row) {
+            in_out_array.push_back(std::vector<char>(lines[0].ssize(), ' '));
+        }
+
+        start := find_char(lines, 'S');
+        connected_neighbors := find_connected_neighbors(lines, start);
+        assert(connected_neighbors.ssize() == 2);
+        last := start;
+        current := connected_neighbors[0];
+        direction := get_direction(last, current);
+        path_length := 1;
+        while current != start {
+            in_out_array[current.row][current.col] = lines[current.row][current.col];
+            direction = follow_pipe(direction, lines[current.row][current.col]);
+            current += get_step(direction);
+            path_length += 1;
+        }
+        //in_out_array.print();
+
+        last = start;
+        current = connected_neighbors[0];
+        direction = get_direction(last, current);
+        while current != start {
+            in_out_array&*.set_if_empty(current + get_step(direction.left()), 'a');
+            in_out_array&*.set_if_empty(current + get_step(direction.right()), 'b');
+            direction = follow_pipe(direction, lines[current.row][current.col]);
+            in_out_array&*.set_if_empty(current + get_step(direction.left()), 'a');
+            in_out_array&*.set_if_empty(current + get_step(direction.right()), 'b');
+            current += get_step(direction);
+        }
+        //in_out_array.print();
+
+        for in_out_array do (inout row) {
+            last := ' ';
+            for row do (inout c) {
+                if c == 'a' || c == 'b' {
+                    last = c;
+                }
+                if c == ' ' {
+                    c = last;
+                }
+            }
+            for row | std::views::reverse do (inout c) {
+                if c == 'a' || c == 'b' {
+                    last = c;
+                }
+                if c == ' ' {
+                    c = last;
+                }
+            }
+        }
+        in_out_array[start.row][start.col] = 'S';
+        //in_out_array.print();
+
+        assert(in_out_array[0][0] == 'a' || in_out_array[0][0] == 'b');
+        in_char := 'a';
+        if in_out_array[0][0] == 'a' {
+            in_char = 'b';
+        }
+        in_count := 0;
+        std::ranges::for_each(in_out_array, :(row) = {
+            in_count&$* += std::ranges::count(row, in_char$);
+        });
+
+        in_count2 := std::transform_reduce(in_out_array.begin(), in_out_array.end(), 0, std::plus<int>(), :(row) -> int = {
+            return std::ranges::count(row, in_char$);
+        });
+
+        writeln(std::format("Part {}: {} {}", 2, in_count, in_count2));
     }
 
     run: () = {
@@ -33,8 +288,8 @@ d10: namespace = {
         part1();
         part2();
     }
-    // Part1: 
-    // Part2: 
+    // Part 1: 7093
+    // Part 2: 407
 }
 
 
