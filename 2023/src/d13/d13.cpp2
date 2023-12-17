@@ -154,8 +154,8 @@ d13: namespace = {
         part1();
         part2();
     }
-    // Part1: 
-    // Part2: 
+    // Part 1: 33975
+    // Part 2: 29083 
 }
 
 

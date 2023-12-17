@@ -148,18 +148,6 @@ d10: namespace = {
             if follow_pipe(direction, lines[new_loc.row][new_loc.col], false) != DIRECTION::INVALID {
                 ret.push_back(new_loc);
             }
-            // step: Loc = get_step(direction);
-            // new_loc: Loc = loc + step;
-            // if new_loc.row < 0 || new_loc.row >= lines.ssize() { continue; }
-            // if new_loc.col < 0 || new_loc.col >= lines[0].ssize() { continue; }
-            // for std::views::iota(0, 4) do (j) {
-            //     out_of_new_loc := follow_pipe(DIRECTION::from_int(j), lines[new_loc.row][new_loc.col]);
-            //     if out_of_new_loc != DIRECTION::INVALID {
-            //         if new_loc + get_step(out_of_new_loc) == loc {
-            //             ret.push_back(new_loc);
-            //         }
-            //     }
-            // }
         }
         return ret;
     }

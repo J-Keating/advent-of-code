@@ -5,26 +5,200 @@ d16: namespace = {
     DAY_NUM: const int = 16;
     writeln: (msg: _) = std::cout << msg << std::endl;
 
-    load_file: (filename: std::string) -> std::vector<std::string> =
-    {
+    load_file: (filename: std::string) -> std::vector<std::vector<char>> = {
         input_file: std::ifstream = (filename);
         input_file.is_open();    // Do nothing but convnce the compiler that fb is used
-        ret: std::vector<std::string> = ();
+        ret: std::vector<std::vector<char>> = ();
         line: std::string = ();
         while (std::getline(input_file, line)) {
-            ret.push_back(line);
+            chars: std::vector<char> = (line.begin(), line.end());
+            ret.push_back(chars);
         }
         return ret;
     }
 
+    DIRECTION: @enum type = {
+        NORTH := 0;
+        EAST;
+        SOUTH;
+        WEST;
+        INVALID;
+
+        from_int: (value: int) -> DIRECTION = {
+            return DIRECTION(value);
+        }
+        to_int: (this) -> int = {
+            if this == DIRECTION::NORTH { return 0; }
+            if this == DIRECTION::EAST { return 1; }
+            if this == DIRECTION::SOUTH { return 2; }
+            if this == DIRECTION::WEST { return 3; }
+            assert(false);
+            return -1;
+        }
+
+        to_char: (this) -> char = {
+            if this == DIRECTION::NORTH { return '^'; }
+            if this == DIRECTION::EAST { return '>'; }
+            if this == DIRECTION::SOUTH { return 'v'; }
+            if this == DIRECTION::WEST { return '<'; }
+            assert(false);
+            return ' ';
+        }
+
+        left: (this) -> DIRECTION = {
+            return DIRECTION((this.to_int() + 3) % 4);
+        }
+
+        right: (this) -> DIRECTION = {
+            return DIRECTION((this.to_int() + 1) % 4);
+        }
+    }
+
+    bounce_mirror: (current_direction: DIRECTION, shape: char, loc: Loc, inout light_rays: std::vector<Ray>) -> DIRECTION = {
+        if shape == '/' {
+            if current_direction == DIRECTION::NORTH { return DIRECTION::EAST; }
+            if current_direction == DIRECTION::EAST { return DIRECTION::NORTH; }
+            if current_direction == DIRECTION::SOUTH { return DIRECTION::WEST; }
+            if current_direction == DIRECTION::WEST { return DIRECTION::SOUTH; }
+        }
+        if shape == 92 {  // '\'
+            if current_direction == DIRECTION::SOUTH { return DIRECTION::EAST; }
+            if current_direction == DIRECTION::EAST { return DIRECTION::SOUTH; }
+            if current_direction == DIRECTION::WEST { return DIRECTION::NORTH; }
+            if current_direction == DIRECTION::NORTH { return DIRECTION::WEST; }
+        }
+        if shape == '-' {
+            if current_direction == DIRECTION::EAST { return DIRECTION::EAST; }
+            if current_direction == DIRECTION::WEST { return DIRECTION::WEST; }
+            light_rays.push_back(Ray(loc, DIRECTION::EAST));
+            return DIRECTION::WEST;
+        }
+        if shape == '|' {
+            if current_direction == DIRECTION::SOUTH { return DIRECTION::SOUTH; }
+            if current_direction == DIRECTION::NORTH { return DIRECTION::NORTH; }
+            // Add ray to SOUTH to queue and return NORTH
+            light_rays.push_back(Ray(loc, DIRECTION::SOUTH));
+            return DIRECTION::NORTH;
+        }
+        if shape == '.' {
+            return current_direction;
+        }
+        assert(false);
+        return DIRECTION::INVALID;
+    }
+
+    Loc: @struct type = {
+        row: int;
+        col: int;
+
+        constructor: (inout this, row_in: int, col_in: int) = {
+            this.row = row_in;
+            this.col = col_in;
+        }
+        operator+: (this, other: Loc) -> Loc = {
+            return Loc(this.row + other.row, this.col + other.col);
+        }
+        operator+=: (inout this, other: Loc) = {
+            this.row += other.row;
+            this.col += other.col;
+        }
+        operator==: (this, other: Loc) -> bool = {
+            return this.row == other.row && this.col == other.col;
+        }
+    }
+
+    Ray: @struct type = {
+        loc: Loc;
+        direction: DIRECTION;
+
+        constructor: (inout this, loc_in: Loc, direction_in: DIRECTION) = {
+            this.loc = loc_in;
+            this.direction = direction_in;
+        }
+
+        step: (inout this) = {
+            this.loc += get_step(this.direction);
+        }
+    }
+
+    get_step: (direction: DIRECTION) -> Loc = {
+        if direction == DIRECTION::NORTH { return Loc(-1, 0); }
+        if direction == DIRECTION::SOUTH { return Loc(1, 0); }
+        if direction == DIRECTION::EAST { return Loc(0, 1); }
+        if direction == DIRECTION::WEST { return Loc(0, -1); }
+        assert(false);
+        return Loc(0, 0);
+    }
+
+    print: (grid: std::vector<std::vector<char>>) = {
+        std::for_each(grid.begin(), grid.end(), :(row: std::vector<char>) -> void = {
+            std::for_each(row.begin(), row.end(), :(c: char) -> void = {
+                std::cout << c;
+            });
+            std::cout << std::endl;
+        });
+        std::cout << std::endl;
+    }
+
+    in_bounds: (grid: std::vector<std::vector<char>>, loc: Loc) -> bool = {
+        if loc.row < 0 || loc.row >= grid.ssize() { return false; }
+        if loc.col < 0 || loc.col >= grid[0].ssize() { return false; }
+        return true;
+    }
+
+    get: (grid: std::vector<std::vector<char>>, loc: Loc) -> char = {
+        assert(in_bounds(grid, loc));
+        return grid[loc.row][loc.col];
+    }
+
+    set: (inout grid: std::vector<std::vector<char>>, loc: Loc, c: char) = {
+        assert(in_bounds(grid, loc));
+        grid[loc.row][loc.col] = c;
+    }
+
+    set_if_empty: (inout grid: std::vector<std::vector<char>>, loc: Loc, c: char) = {
+        if grid.get(loc) == ' ' {
+            grid&*.set(loc, c);
+        }
+    }
+
     part1: () = {
-        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 1, lines.ssize()));
+        grid := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+
+        visited: std::vector<std::vector<char>> = ();
+        for std::views::iota(0, grid.ssize()) do (row) {
+            visited.push_back(std::vector<char>(grid[0].ssize(), ' '));
+        }
+
+        light_rays: std::vector<Ray> = ();
+        light_rays.push_back(Ray(Loc(0, 0), DIRECTION::EAST));
+        while !light_rays.empty() {
+            ray: Ray = light_rays.back();
+            light_rays.pop_back();
+            while grid.in_bounds(ray.loc) {
+                direction_char := ray.direction.to_char();
+                if visited.get(ray.loc) == direction_char {
+                    break;
+                }
+                visited&*.set(ray.loc, direction_char);
+                ray.direction = bounce_mirror(ray.direction, grid.get(ray.loc), ray.loc, light_rays&*);
+                ray.step();
+                //visited.print();
+            }
+        }
+        visited.print();
+
+        energized_count := 0;
+        std::ranges::for_each(visited, :(row) = {
+            energized_count&$* += std::ranges::count_if(row, :(c) -> bool = { return c != ' ';});
+        });
+
+        writeln(std::format("Part {}: {}", 1, energized_count));
     }
 
     part2: () = {
-        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 2, lines.ssize()));
+        grid := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        writeln(std::format("Part {}: {}", 2, grid.ssize()));
     }
 
     run: () = {
@@ -32,8 +206,8 @@ d16: namespace = {
         part1();
         part2();
     }
-    // Part1: 
-    // Part2: 
+//     Part 1: 7067
+//     Part 2: 
 }
 
 
