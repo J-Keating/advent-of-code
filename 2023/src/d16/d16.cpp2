@@ -61,7 +61,7 @@ d16: namespace = {
             if current_direction == DIRECTION::SOUTH { return DIRECTION::WEST; }
             if current_direction == DIRECTION::WEST { return DIRECTION::SOUTH; }
         }
-        if shape == 92 {  // '\'
+        if shape == '\\' {
             if current_direction == DIRECTION::SOUTH { return DIRECTION::EAST; }
             if current_direction == DIRECTION::EAST { return DIRECTION::SOUTH; }
             if current_direction == DIRECTION::WEST { return DIRECTION::NORTH; }
