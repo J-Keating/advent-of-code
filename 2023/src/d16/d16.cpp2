@@ -162,16 +162,14 @@ d16: namespace = {
         }
     }
 
-    part1: () = {
-        grid := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-
+    count_energized_tiles: (grid: std::vector<std::vector<char>>, start_ray: Ray) -> int = {
         visited: std::vector<std::vector<char>> = ();
         for std::views::iota(0, grid.ssize()) do (row) {
             visited.push_back(std::vector<char>(grid[0].ssize(), ' '));
         }
 
         light_rays: std::vector<Ray> = ();
-        light_rays.push_back(Ray(Loc(0, 0), DIRECTION::EAST));
+        light_rays.push_back(start_ray);
         while !light_rays.empty() {
             ray: Ray = light_rays.back();
             light_rays.pop_back();
@@ -186,19 +184,35 @@ d16: namespace = {
                 //visited.print();
             }
         }
-        visited.print();
+        //visited.print();
 
         energized_count := 0;
         std::ranges::for_each(visited, :(row) = {
             energized_count&$* += std::ranges::count_if(row, :(c) -> bool = { return c != ' ';});
         });
+        return energized_count;
+    }
 
+    part1: () = {
+        grid := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        energized_count := count_energized_tiles(grid, Ray(Loc(0, 0), DIRECTION::EAST));
         writeln(std::format("Part {}: {}", 1, energized_count));
     }
 
     part2: () = {
         grid := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 2, grid.ssize()));
+        height := grid.ssize();
+        width := grid[0].ssize();
+        max_energized_count := 0;
+        for std::views::iota(0, grid.ssize()) do (row) {
+            max_energized_count = std::max(max_energized_count, count_energized_tiles(grid, Ray(Loc(row, 0), DIRECTION::EAST)));
+            max_energized_count = std::max(max_energized_count, count_energized_tiles(grid, Ray(Loc(row, width-1), DIRECTION::WEST)));
+        }
+        for std::views::iota(0, grid[0].ssize()) do (col) {
+            max_energized_count = std::max(max_energized_count, count_energized_tiles(grid, Ray(Loc(0, col), DIRECTION::SOUTH)));
+            max_energized_count = std::max(max_energized_count, count_energized_tiles(grid, Ray(Loc(height-1, col), DIRECTION::NORTH)));
+        }
+        writeln(std::format("Part {}: {}", 2, max_energized_count));
     }
 
     run: () = {
@@ -207,7 +221,7 @@ d16: namespace = {
         part2();
     }
 //     Part 1: 7067
-//     Part 2: 
+//     Part 2: 7324
 }
 
 
