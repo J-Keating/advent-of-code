@@ -162,7 +162,7 @@ d16: namespace = {
         }
     }
 
-    count_energized_tiles: (grid: std::vector<std::vector<char>>, start_ray: Ray) -> int = {
+    race_all_rays_and_count_energized_tiles: (grid: std::vector<std::vector<char>>, start_ray: Ray) -> int = {
         visited: std::vector<std::vector<char>> = ();
         for std::views::iota(0, grid.ssize()) do (row) {
             visited.push_back(std::vector<char>(grid[0].ssize(), ' '));
@@ -195,7 +195,7 @@ d16: namespace = {
 
     part1: () = {
         grid := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        energized_count := count_energized_tiles(grid, Ray(Loc(0, 0), DIRECTION::EAST));
+        energized_count := race_all_rays_and_count_energized_tiles(grid, Ray(Loc(0, 0), DIRECTION::EAST));
         writeln(std::format("Part {}: {}", 1, energized_count));
     }
 
@@ -205,12 +205,12 @@ d16: namespace = {
         width := grid[0].ssize();
         max_energized_count := 0;
         for std::views::iota(0, grid.ssize()) do (row) {
-            max_energized_count = std::max(max_energized_count, count_energized_tiles(grid, Ray(Loc(row, 0), DIRECTION::EAST)));
-            max_energized_count = std::max(max_energized_count, count_energized_tiles(grid, Ray(Loc(row, width-1), DIRECTION::WEST)));
+            max_energized_count = std::max(max_energized_count, race_all_rays_and_count_energized_tiles(grid, Ray(Loc(row, 0), DIRECTION::EAST)));
+            max_energized_count = std::max(max_energized_count, race_all_rays_and_count_energized_tiles(grid, Ray(Loc(row, width-1), DIRECTION::WEST)));
         }
         for std::views::iota(0, grid[0].ssize()) do (col) {
-            max_energized_count = std::max(max_energized_count, count_energized_tiles(grid, Ray(Loc(0, col), DIRECTION::SOUTH)));
-            max_energized_count = std::max(max_energized_count, count_energized_tiles(grid, Ray(Loc(height-1, col), DIRECTION::NORTH)));
+            max_energized_count = std::max(max_energized_count, race_all_rays_and_count_energized_tiles(grid, Ray(Loc(0, col), DIRECTION::SOUTH)));
+            max_energized_count = std::max(max_energized_count, race_all_rays_and_count_energized_tiles(grid, Ray(Loc(height-1, col), DIRECTION::NORTH)));
         }
         writeln(std::format("Part {}: {}", 2, max_energized_count));
     }
