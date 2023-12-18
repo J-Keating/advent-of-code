@@ -69,11 +69,11 @@ d8: namespace = {
             if curr_nodes[0].ends_with("Z") {
                 std::cout << curr_nodes[0] << " : " << step_count << std::endl;
             }
-            move: char = moves[step_count % moves.ssize()];
+            move := moves[step_count % moves.ssize()];
             if (move == 'L') {
-                std::transform(curr_nodes.begin(), curr_nodes.end(), curr_nodes.begin(), :(k: _) -> std::string = { return nodes&$*[k].first; });
+                std::transform(curr_nodes.begin(), curr_nodes.end(), curr_nodes.begin(), :(k) -> std::string = { return nodes&$*[k].first; });
             } else if (move == 'R') {
-                std::transform(curr_nodes.begin(), curr_nodes.end(), curr_nodes.begin(), :(k: _) -> std::string = { return nodes&$*[k].second; });
+                std::transform(curr_nodes.begin(), curr_nodes.end(), curr_nodes.begin(), :(k) -> std::string = { return nodes&$*[k].second; });
             } else {
                 assert(false);
             }
