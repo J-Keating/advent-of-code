@@ -31,4 +31,5 @@ src/d14/d14.cpp2 src/d14/d14.h2
 src/d15/d15.cpp2 src/d15/d15.h2
 src/d16/d16.cpp2 src/d16/d16.h2
 src/d17/d17.cpp2 src/d17/d17.h2
+src/d18/d18.cpp2 src/d18/d18.h2
 )

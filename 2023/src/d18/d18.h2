@@ -1,0 +1,3 @@
+d18: namespace = {
+    run: () = {}
+}

@@ -307,9 +307,15 @@ d17: namespace = {
     }
 
     run: () = {
+        c_start := std::clock();
         writeln(std::format("Day {}", DAY_NUM));
         part1();
+        c_end := std::clock();
+        writeln(std::format("CPU time used: {} ms", 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC));
+        c_start = std::clock();
         part2();
+        c_end = std::clock();
+        writeln(std::format("CPU time used: {} ms", 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC));
     }
     // Part 1: 953
     // Part 2: 1180
