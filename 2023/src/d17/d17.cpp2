@@ -4,6 +4,46 @@ d17: namespace = {
     DAY_NUM: const int = 17;
     writeln: (msg: _) = std::cout << msg << std::endl;
 
+    load_file: (filename: std::string) -> std::vector<std::vector<int>> = {
+        input_file: std::ifstream = (filename);
+        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+        ret: std::vector<std::vector<int>> = ();
+        line: std::string = ();
+        while (std::getline(input_file, line)) {
+            ints: std::vector<int> = ();
+            std::ranges::copy(std::views::transform(line, :(c) -> int = { return c - '0'; }), std::back_inserter(ints));
+            ret.push_back(move ints);
+        }
+        return ret;
+    }
+
+    AXIS: @enum type = {
+        UP_DOWN := 0;
+        LEFT_RIGHT;
+        UNDEFINED;
+
+        get_directions: (this) -> std::array<DIRECTION, 2> = {
+            ret: std::array<DIRECTION, 2>;
+            if (this == UP_DOWN) {
+                ret = (DIRECTION::UP, DIRECTION::DOWN);
+            }
+            else {
+                ret = (DIRECTION::LEFT, DIRECTION::RIGHT);
+            }
+            return ret;
+        }
+        to_int: (this) -> int = {
+            assert(this != UNDEFINED);
+            return this.get_raw_value();
+        }
+        other: (this) -> AXIS = {
+            if (this == UP_DOWN) {
+                return LEFT_RIGHT;
+            }
+            return UP_DOWN;
+        }
+    }
+
     DIRECTION: @enum<int> type = {
         UP := 0;
         RIGHT;
@@ -18,7 +58,6 @@ d17: namespace = {
         left: (this) -> DIRECTION = {
             return DIRECTION((this.to_int() + 3) % 4);
         }
-
         right: (this) -> DIRECTION = {
             return DIRECTION((this.to_int() + 1) % 4);
         }
@@ -51,168 +90,220 @@ d17: namespace = {
         }
     }
 
-    PathState: @struct type = {
-        loc: Loc;
-        current_heat_loss: int;
-        direction: DIRECTION;
-        path_length: int;
-        
-        constructor: (inout this, loc_in: Loc, current_heat_loss_in: int, direction_in: DIRECTION, path_length_in: int) = {
-            this.loc = loc_in;
-            this.current_heat_loss = current_heat_loss_in;
-            this.direction = direction_in;
-            this.path_length = path_length_in;
-        }
-        operator<: (this, other: PathState) -> bool = {
-            return this.current_heat_loss > other.current_heat_loss;
-        }
-    }
-
-    next_path_steps: (path_state: PathState, grid: std::vector<std::vector<int>>) -> std::vector<PathState> = {
-        ret: std::vector<PathState> = ();
-        // Forward, if less than 4
-        if (path_state.path_length < 3) {
-            loc: Loc = (path_state.loc + DIRECTION_STEPS[path_state.direction.to_int()]);
-            if (loc.in_bounds(grid)) {
-                ret.push_back(PathState(
-                    loc,
-                    path_state.current_heat_loss + grid[loc.row][loc.col],
-                    path_state.direction,
-                    path_state.path_length + 1));
+    P1: namespace = {
+        PathState: @struct type = {
+            loc: Loc;
+            current_heat_loss: int;
+            direction: DIRECTION;
+            path_length: int;
+            
+            constructor: (inout this, loc_in: Loc, current_heat_loss_in: int, direction_in: DIRECTION, path_length_in: int) = {
+                this.loc = loc_in;
+                this.current_heat_loss = current_heat_loss_in;
+                this.direction = direction_in;
+                this.path_length = path_length_in;
+            }
+            operator<: (this, other: PathState) -> bool = {
+                return this.current_heat_loss > other.current_heat_loss;
             }
         }
-        // Left
-        {
-            dir: DIRECTION = path_state.direction.left();
-            loc: Loc = (path_state.loc + DIRECTION_STEPS[dir.to_int()]);
-            if (loc.in_bounds(grid)) {
-                ret.push_back(PathState(
-                    loc,
-                    path_state.current_heat_loss + grid[loc.row][loc.col],
-                    dir,
-                    1));
+
+        next_path_steps: (path_state: PathState, grid: std::vector<std::vector<int>>) -> std::vector<PathState> = {
+            ret: std::vector<PathState> = ();
+            // Forward, if less than 4
+            if (path_state.path_length < 3) {
+                loc: Loc = (path_state.loc + DIRECTION_STEPS[path_state.direction.to_int()]);
+                if (loc.in_bounds(grid)) {
+                    ret.push_back(PathState(
+                        loc,
+                        path_state.current_heat_loss + grid[loc.row][loc.col],
+                        path_state.direction,
+                        path_state.path_length + 1));
+                }
+            }
+            // Left
+            {
+                dir: DIRECTION = path_state.direction.left();
+                loc: Loc = (path_state.loc + DIRECTION_STEPS[dir.to_int()]);
+                if (loc.in_bounds(grid)) {
+                    ret.push_back(PathState(
+                        loc,
+                        path_state.current_heat_loss + grid[loc.row][loc.col],
+                        dir,
+                        1));
+                }
+            }
+            // Right
+            {
+                dir: DIRECTION = path_state.direction.right();
+                loc: Loc = (path_state.loc + DIRECTION_STEPS[dir.to_int()]);
+                if (loc.in_bounds(grid)) {
+                    ret.push_back(PathState(
+                        loc,
+                        path_state.current_heat_loss + grid[loc.row][loc.col],
+                        dir,
+                        1));
+                }
+            }
+            return ret;
+        }
+
+        NodeHistory: type == std::array<std::array<int, 4>, 4>;
+
+        is_new_best_path: (node_history: NodeHistory, path_state: PathState) -> bool = {
+            if node_history[path_state.direction.to_int()][path_state.path_length] > path_state.current_heat_loss {
+                return true;
+            }
+            return false;
+        }
+        set_new_best_path: (inout node_history: NodeHistory, path_state: PathState) = {
+            node_history[path_state.direction.to_int()][path_state.path_length] = path_state.current_heat_loss;
+        }
+
+        part1: () = {
+            lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+            height := lines.ssize();
+            width := lines[0].ssize();
+
+            min_heat_loss_at_end: int = std::numeric_limits<int>::max();
+            node_history_grid := std::vector<std::vector<NodeHistory>>(height, std::vector<NodeHistory>(width));
+            for node_history_grid do (inout row) {
+                for row&* do (inout node_history) {
+                    for node_history&* do (inout nh_row) {
+                        for nh_row&* do (inout nh) {
+                            nh&* = std::numeric_limits<int>::max();
+                        }
+                    }
+                }
+            }
+
+            paths: std::priority_queue<PathState> = ();
+
+            paths.push(PathState(Loc(0, 0), 0, DIRECTION::DOWN, 0));
+            while (!paths.empty()) {
+                path_state: PathState = paths.top();
+                paths.pop();
+                if (path_state.loc.row == height - 1 && path_state.loc.col == width - 1) {
+                    //writeln(std::format("Found path with heat loss {}", path_state.current_heat_loss));
+                    min_heat_loss_at_end = std::min(min_heat_loss_at_end, path_state.current_heat_loss);
+                    break;
+                }
+                if is_new_best_path(node_history_grid[path_state.loc.row][path_state.loc.col], path_state) {
+                    set_new_best_path(node_history_grid[path_state.loc.row][path_state.loc.col], path_state);
+
+                    next_paths := next_path_steps(path_state, lines);
+                    for next_paths do (next_path) {
+                        if is_new_best_path(node_history_grid[next_path.loc.row][next_path.loc.col], next_path) {
+                            paths.push(next_path);
+                        }
+                    }
+                }
+            }
+            writeln(std::format("Part {}: {}", 1, min_heat_loss_at_end));
+        }
+    }
+
+
+    P2: namespace = {
+
+        PathState: @struct type = {
+            loc: Loc;
+            current_heat_loss: int;
+            axis: AXIS;
+            
+            constructor: (inout this, loc_in: Loc, current_heat_loss_in: int, axis_in: AXIS) = {
+                this.loc = loc_in;
+                this.current_heat_loss = current_heat_loss_in;
+                this.axis = axis;
+            }
+            operator<: (this, other: PathState) -> bool = {
+                return this.current_heat_loss > other.current_heat_loss;
             }
         }
-        // Right
-        {
-            dir: DIRECTION = path_state.direction.right();
-            loc: Loc = (path_state.loc + DIRECTION_STEPS[dir.to_int()]);
-            if (loc.in_bounds(grid)) {
-                ret.push_back(PathState(
-                    loc,
-                    path_state.current_heat_loss + grid[loc.row][loc.col],
-                    dir,
-                    1));
+
+        next_path_steps: (path_state: PathState, grid: std::vector<std::vector<int>>) -> std::vector<PathState> = {
+            ret: std::vector<PathState> = ();
+            other_axis: AXIS = path_state.axis.other();
+            directions := other_axis.get_directions();
+            for directions do (direction) {
+                heat_loss := path_state.current_heat_loss;
+                step_direction := DIRECTION_STEPS[direction.to_int()];
+                loc: Loc = (path_state.loc + step_direction);
+                for std::ranges::iota_view(1, 11) do (i) {
+                    if (!loc.in_bounds(grid)) {
+                        break;
+                    }
+                    heat_loss += grid[loc.row][loc.col];
+                    if (i >= 4) {
+                        ret.push_back(PathState(
+                            loc,
+                            heat_loss,
+                            other_axis));
+                    }
+                    loc += step_direction;
+                }
             }
+
+            return ret;
         }
-        return ret;
-    }
 
-    //AllPathInHistory: type == std::array<PathState, 4>;
-    // NodeHistory: @struct type = {
-    //     best_heat_loss: int;
-    // }
-    NodeHistory: type == std::array<std::array<int, 4>, 4>;
+        NodeHistory: type == std::array<int, 2>;
 
-    is_new_best_path: (node_history: NodeHistory, path_state: PathState) -> bool = {
-        if node_history[path_state.direction.to_int()][path_state.path_length] > path_state.current_heat_loss {
-            return true;
+        is_new_best_path: (node_history: NodeHistory, path_state: PathState) -> bool = {
+            return path_state.current_heat_loss < node_history[path_state.axis.to_int()];
         }
-        return false;
-    }
-    set_new_best_path: (inout node_history: NodeHistory, path_state: PathState) = {
-        node_history[path_state.direction.to_int()][path_state.path_length] = path_state.current_heat_loss;
-    }
-    //     // if path_state.current_heat_loss > node_history.best_heat_loss { // + (9 * 2) {
-    //     //     return true;
-    //     // }
-    //     // dir := path_state.direction.to_int();
-    //     // if (all_path_history[].current_heat_loss < 0) {
-    //     //     return false;
-    //     // }
-    //     // if (all_path_history[path_state.direction.to_int()].current_heat_loss > path_state.current_heat_loss) {
-    //     //     return false;
-    //     // }
-    //     // if (all_path_history[path_state.direction.to_int()].current_heat_loss == path_state.current_heat_loss && path_history[path_state.direction.to_int()].path_length <= path_state.path_length) {
-    //     //     return false;
-    //     // }
-    //     // return true;
-    //     return false;
-    // }
-
-    // is_better_path: (inout paths_in: PathsIn, dir: DIRECTION, heat_loss: int, path_length: int) -> bool = {
-    //     if (paths_in[dir.to_int()].heat_loss < 0) {
-    //         return true;
-    //     }
-    //     if (paths_in[dir.to_int()].heat_loss > heat_loss) {
-    //         return true;
-    //     }
-    //     if (paths_in[dir.to_int()].heat_loss == heat_loss && paths_in[dir].path_length > path_length) {
-    //         return true;
-    //     }
-    //     return false;
-    // }
-
-    load_file: (filename: std::string) -> std::vector<std::vector<int>> = {
-        input_file: std::ifstream = (filename);
-        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
-        ret: std::vector<std::vector<int>> = ();
-        line: std::string = ();
-        while (std::getline(input_file, line)) {
-            ints: std::vector<int> = ();
-            std::ranges::copy(std::views::transform(line, :(c) -> int = { return c - '0'; }), std::back_inserter(ints));
-            ret.push_back(move ints);
+        set_new_best_path: (inout node_history: NodeHistory, path_state: PathState) = {
+            node_history[path_state.axis.to_int()] = path_state.current_heat_loss;
         }
-        return ret;
-    }
 
-    part1: () = {
-        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        height := lines.ssize();
-        width := lines[0].ssize();
+        part2: () = {
+            lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+            height := lines.ssize();
+            width := lines[0].ssize();
 
-        min_heat_loss_at_end: int = std::numeric_limits<int>::max();
-        node_history_grid := std::vector<std::vector<NodeHistory>>(height, std::vector<NodeHistory>(width));
-        for node_history_grid do (inout row) {
-            for row&* do (inout node_history) {
-                for node_history&* do (inout nh_row) {
-                    for nh_row&* do (inout nh) {
+            min_heat_loss: int = std::numeric_limits<int>::max();
+            node_history_grid := std::vector<std::vector<NodeHistory>>(height, std::vector<NodeHistory>(width));
+            for node_history_grid do (inout row) {
+                for row&* do (inout node_history) {
+                    for node_history&* do (inout nh) {
                         nh&* = std::numeric_limits<int>::max();
                     }
                 }
             }
-        }
-        //memset(node_history_grid[0][0]&, 0, sizeof(NodeHistory));
 
-        //paths: std::deque<PathState> = ();
-        paths: std::priority_queue<PathState> = ();
+            paths: std::priority_queue<PathState> = ();
 
-        paths.push(PathState(Loc(0, 0), 0, DIRECTION::DOWN, 0));
-        while (!paths.empty()) {
-            path_state: PathState = paths.top();
-            paths.pop();
-            if (path_state.loc.row == height - 1 && path_state.loc.col == width - 1) {
-                writeln(std::format("Found path with heat loss {}", path_state.current_heat_loss));
-                min_heat_loss_at_end = std::min(min_heat_loss_at_end, path_state.current_heat_loss);
-                break;
-            }
-            if is_new_best_path(node_history_grid[path_state.loc.row][path_state.loc.col], path_state) {
-                set_new_best_path(node_history_grid[path_state.loc.row][path_state.loc.col], path_state);
+            paths.push(PathState(Loc(0, 0), 0, AXIS::UP_DOWN));
+            paths.push(PathState(Loc(0, 0), 0, AXIS::LEFT_RIGHT));
+            while (!paths.empty()) {
+                path_state: PathState = paths.top();
+                paths.pop();
+                if (path_state.loc.row == height - 1 && path_state.loc.col == width - 1) {
+                    //writeln(std::format("Found path with heat loss {}", path_state.current_heat_loss));
+                    min_heat_loss = path_state.current_heat_loss;
+                    break;
+                }
+                if is_new_best_path(node_history_grid[path_state.loc.row][path_state.loc.col], path_state) {
+                    set_new_best_path(node_history_grid[path_state.loc.row][path_state.loc.col], path_state);
 
-                next_paths := next_path_steps(path_state, lines);
-                for next_paths do (next_path) {
-                    if is_new_best_path(node_history_grid[next_path.loc.row][next_path.loc.col], next_path) {
-                        paths.push(next_path);
+                    next_paths := next_path_steps(path_state, lines);
+                    for next_paths do (next_path) {
+                        if is_new_best_path(node_history_grid[next_path.loc.row][next_path.loc.col], next_path) {
+                            paths.push(next_path);
+                        }
                     }
                 }
             }
+            writeln(std::format("Part {}: {}", 2, min_heat_loss));
         }
-        writeln(std::format("Part {}: {}", 1, min_heat_loss_at_end));
+    }
+
+    part1: () = {
+        P1::part1();
     }
 
     part2: () = {
-        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 2, lines.ssize()));
+        P2::part2();
     }
 
     run: () = {
@@ -220,8 +311,8 @@ d17: namespace = {
         part1();
         part2();
     }
-    // Part1: 
-    // Part2: 
+    // Part 1: 953
+    // Part 2: 1180
 }
 
 
