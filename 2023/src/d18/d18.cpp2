@@ -66,6 +66,9 @@ d18: namespace = {
         operator*: (this, other: int) -> Loc = {
             return Loc(this.row * other, this.col * other);
         }
+        operator==: (this, other: Loc) -> bool = {
+            return this.row == other.row && this.col == other.col;
+        }
         in_bounds: <_> (this, grid: _) -> bool = {
             return this.row >= 0 && this.row < grid.ssize() && this.col >= 0 && this.col < grid[0].ssize();
         }
@@ -86,55 +89,13 @@ d18: namespace = {
     Instruction: @struct type = {
         direction: DIRECTION;
         steps: int;
-        color: Color;
+//        color: Color;
 
-        constructor: (inout this, direction_in: DIRECTION, steps_in: int, color_in: Color) = {
+        constructor: (inout this, direction_in: DIRECTION, steps_in: int) = {
             this.direction = direction_in;
             this.steps = steps_in;
-            this.color = color_in;
+//            this.color = color_in;
         }
-    }
-
-    GroundState: @struct type = {
-        state: char = (' ');
-        wall_colors: std::array<Color, 4> = ();
-    }
-
-    print: (lines: std::vector<std::vector<GroundState>>) = {
-        std::for_each(lines.begin(), lines.end(), :(row) = {
-            std::for_each(row.begin(), row.end(), :(gs) = {
-                std::cout << gs.state;
-            });
-            std::cout << std::endl;
-        });
-    }
-
-    load_file: (filename: std::string) -> std::vector<Instruction> =
-    {
-        color_regex: std::regex = (R"(\(\#([[:xdigit:]]{2})([[:xdigit:]]{2})([[:xdigit:]]{2})\))");
-        color_match: std::smatch = ();
-
-        input_file: std::ifstream = (filename);
-        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
-        ret: std::vector<Instruction> = ();
-        line: std::string = ();
-        while (std::getline(input_file, line)) {
-            line_stream: std::stringstream = (line);
-            direction_char: char = ();
-            steps: int = ();
-            color_string: std::string = ();
-            line_stream >> direction_char >> steps >> color_string;
-
-            std::regex_search(color_string, color_match, color_regex);
-            assert(color_match.size() == 4);
-            color: Color = (Color(
-                std::stoi(color_match[1], nullptr, 16),
-                std::stoi(color_match[2], nullptr, 16),
-                std::stoi(color_match[3], nullptr, 16)
-            ));
-            ret.push_back(Instruction(DIRECTION::from_char(direction_char), steps, color));
-        }
-        return ret;
     }
 
     compute_bounds: (instructions: std::vector<Instruction>) -> std::pair<Loc, Loc> = {
@@ -150,57 +111,196 @@ d18: namespace = {
         }
         return std::make_pair(min_loc, max_loc);
     }
-
-    part1: () = {
-        instructions := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        bounds := compute_bounds(instructions);
-        min_loc := bounds.first;
-        max_loc := bounds.second;
-        height := max_loc.row - min_loc.row + 1;
-        width := max_loc.col - min_loc.col + 1;
-        start_loc := Loc(-min_loc.row, -min_loc.col);
-        map := std::vector<std::vector<GroundState>>(height, std::vector<GroundState>(width));
-        cur_loc := start_loc;
-        for instructions do (instruction) {
-            step_dir := DIRECTION_STEPS[instruction.direction.to_int()];
-            step_char := instruction.direction.to_char();
-            for std::views::iota(0, instruction.steps) do (_) {
-                cur_loc += step_dir;
-                map[cur_loc.row][cur_loc.col].state = step_char;
-            }
+    
+    P1: namespace = {
+        GroundState: @struct type = {
+            state: char = (' ');
+            wall_colors: std::array<Color, 4> = ();
         }
-        outer_points := std::vector<Loc>();
-        outer_points.push_back(Loc(0, 0));
-        while !outer_points.empty() {
-            cur_loc := outer_points.back();
-            outer_points.pop_back();
-            for std::views::iota(0, 4) do (dir) {
-                next_loc := cur_loc + DIRECTION_STEPS[dir];
-                if next_loc.in_bounds<std::vector<std::vector<GroundState>>>(map) && map[next_loc.row][next_loc.col].state == ' ' {
-                    map[next_loc.row][next_loc.col].state = '.';
-                    outer_points.push_back(next_loc);
+
+        print: (lines: std::vector<std::vector<GroundState>>) = {
+            std::for_each(lines.begin(), lines.end(), :(row) = {
+                std::for_each(row.begin(), row.end(), :(gs) = {
+                    std::cout << gs.state;
+                });
+                std::cout << std::endl;
+            });
+        }
+
+        load_file: (filename: std::string) -> std::vector<Instruction> =
+        {
+            color_regex: std::regex = (R"(\(\#([[:xdigit:]]{2})([[:xdigit:]]{2})([[:xdigit:]]{2})\))");
+            color_match: std::smatch = ();
+
+            input_file: std::ifstream = (filename);
+            input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+            ret: std::vector<Instruction> = ();
+            line: std::string = ();
+            while (std::getline(input_file, line)) {
+                line_stream: std::stringstream = (line);
+                direction_char: char = ();
+                steps: int = ();
+                color_string: std::string = ();
+                line_stream >> direction_char >> steps >> color_string;
+
+                std::regex_search(color_string, color_match, color_regex);
+                assert(color_match.size() == 4);
+                // color: Color = (Color(
+                //     std::stoi(color_match[1], nullptr, 16),
+                //     std::stoi(color_match[2], nullptr, 16),
+                //     std::stoi(color_match[3], nullptr, 16)
+                // ));
+                ret.push_back(Instruction(DIRECTION::from_char(direction_char), steps/*, color*/));
+            }
+            return ret;
+        }
+
+        part1: () = {
+            instructions := load_file(std::format("src/d{}/data_test.txt", DAY_NUM));
+            bounds := compute_bounds(instructions);
+            min_loc := bounds.first;
+            max_loc := bounds.second;
+            height := max_loc.row - min_loc.row + 1;
+            width := max_loc.col - min_loc.col + 1;
+            start_loc := Loc(-min_loc.row, -min_loc.col);
+            map := std::vector<std::vector<GroundState>>(height, std::vector<GroundState>(width));
+            cur_loc := start_loc;
+            for instructions do (instruction) {
+                step_dir := DIRECTION_STEPS[instruction.direction.to_int()];
+                step_char := instruction.direction.to_char();
+                for std::views::iota(0, instruction.steps) do (_) {
+                    cur_loc += step_dir;
+                    map[cur_loc.row][cur_loc.col].state = step_char;
                 }
             }
+            outer_points := std::vector<Loc>();
+            outer_points.push_back(Loc(0, 0));
+            while !outer_points.empty() {
+                cur_loc := outer_points.back();
+                outer_points.pop_back();
+                for std::views::iota(0, 4) do (dir) {
+                    next_loc := cur_loc + DIRECTION_STEPS[dir];
+                    if next_loc.in_bounds<std::vector<std::vector<GroundState>>>(map) && map[next_loc.row][next_loc.col].state == ' ' {
+                        map[next_loc.row][next_loc.col].state = '.';
+                        outer_points.push_back(next_loc);
+                    }
+                }
+            }
+            map.print();
+            total_cleared := 0;
+            std::ranges::for_each(map, :(row) = {
+                total_cleared&$* += std::ranges::count_if(row, :(gs) -> bool = { return gs.state != '.'; });
+            });
+            writeln(std::format("Part {}: {}", 1, total_cleared));
         }
-        map.print();
-        total_cleared := 0;
-        std::ranges::for_each(map, :(row) = {
-            total_cleared&$* += std::ranges::count_if(row, :(gs) -> bool = { return gs.state != '.'; });
-        });
-        writeln(std::format("Part {}: {}", 1, total_cleared));
     }
 
-    part2: () = {
-        lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-        writeln(std::format("Part {}: {}", 2, lines.ssize()));
+    P2: namespace = {
+        load_file: (filename: std::string) -> std::vector<Instruction> =
+        {
+            instruction_regex: std::regex = (R"(\(\#([[:xdigit:]]{5})([[:xdigit:]]{1})\))");
+            instruction_match: std::smatch = ();
+
+            input_file: std::ifstream = (filename);
+            input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+            ret: std::vector<Instruction> = ();
+            line: std::string = ();
+            while (std::getline(input_file, line)) {
+                line_stream: std::stringstream = (line);
+                unused_char: char = ();
+                unused_int: int = ();
+                instruction_string: std::string = ();
+                line_stream >> unused_char >> unused_int >> instruction_string;
+
+                std::regex_search(instruction_string, instruction_match, instruction_regex);
+                assert(instruction_match.size() == 3);
+                steps := std::stoi(instruction_match[1], nullptr, 16);
+                direction_int := std::stoi(instruction_match[2]);
+                direction := DIRECTION::UNDEFINED;
+                if direction_int == 0 { direction = DIRECTION::RIGHT; }
+                if direction_int == 1 { direction = DIRECTION::DOWN; }
+                if direction_int == 2 { direction = DIRECTION::LEFT; }
+                if direction_int == 3 { direction = DIRECTION::UP; }
+                assert(direction != DIRECTION::UNDEFINED);
+                ret.push_back(Instruction(direction, steps));
+            }
+            return ret;
+        }
+
+        segment: @struct type = {
+            start: Loc;
+            end: Loc;
+            direction: DIRECTION;
+
+            constructor: (inout this, start_in: Loc, end_in: Loc, direction_in: DIRECTION) = {
+                this.start = start_in;
+                this.end = end_in;
+                this.direction = direction_in;
+            }
+        }
+
+        part2: () = {
+            instructions := P1::load_file(std::format("src/d{}/data_test.txt", DAY_NUM));
+            bounds := compute_bounds(instructions);
+            vert_sum := 0;
+            horiz_sum := 0;
+
+            horizontal_segments := std::vector<segment>();
+            start_loc := Loc(-bounds.first.row, -bounds.first.col);
+            cur_loc := start_loc;
+            for instructions do (instruction) {
+                step_dir := DIRECTION_STEPS[instruction.direction.to_int()];
+                next_loc := cur_loc + step_dir * instruction.steps;
+                if instruction.direction == DIRECTION::UP || instruction.direction == DIRECTION::DOWN {
+                    if (instruction.direction == DIRECTION::UP) { vert_sum -= instruction.steps; }
+                    else { vert_sum += instruction.steps; }
+                } else {
+                    assert(instruction.direction == DIRECTION::LEFT || instruction.direction == DIRECTION::RIGHT);
+                    if (instruction.direction == DIRECTION::LEFT) { horiz_sum -= instruction.steps; }
+                    else { horiz_sum += instruction.steps; }
+                    horizontal_segments.push_back(segment(cur_loc, next_loc, instruction.direction));
+                }
+
+                cur_loc = next_loc;
+            }
+            std::ranges::sort(horizontal_segments, :(a, b) -> bool = {
+                if a.start.row == b.start.row { return a.start.col < b.start.col; }
+                return a.start.row < b.start.row;
+            });
+            assert(cur_loc == start_loc);
+            assert(vert_sum == 0 && horiz_sum == 0);
+
+            horizontal_span := 0;
+            segment_index := 0;
+            while (segment_index < horizontal_segments.ssize()) {
+                current_row := horizontal_segments[segment_index].start.row;
+                //current_row_wall_count := 0;
+                while (segment_index < horizontal_segments.ssize() && horizontal_segments[segment_index].start.row == current_row) {
+                    cur_segment := horizontal_segments[segment_index];
+                    if (cur_segment.direction == DIRECTION::RIGHT) {
+                        horizontal_span += cur_segment.end.col - cur_segment.start.col;
+                    }
+                    else {
+                        assert(cur_segment.direction == DIRECTION::LEFT);
+                        horizontal_span += cur_segment.end.col - cur_segment.start.col;
+                    }
+                    segment_index += 1;
+                }
+                writeln(std::format("Row {}: {}", current_row, horizontal_span));
+                //segment_index += 1;
+            }
+
+            writeln(std::format("Part {}: {}", 2, instructions.ssize()));
+            writeln(std::format("({},{}) -> ({},{})", bounds.first.row, bounds.first.col, bounds.second.row, bounds.second.col));
+        }
     }
 
     run: () = {
         writeln(std::format("Day {}", DAY_NUM));
-        part1();
-        part2();
+        P1::part1();
+        P2::part2();
     }
-    // Part1: 
+    // Part1: 48652
     // Part2: 
 }
 
