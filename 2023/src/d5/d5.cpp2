@@ -23,6 +23,19 @@ d5: namespace = {
             }
             return false;
         }
+        map_and_clamp: (this, in_number: longlong, out out_number: longlong, inout clamped_length: longlong) -> bool = {
+            out_number = in_number;
+            if (in_number < this.source) {
+                clamped_length = std::min(clamped_length, this.source - in_number);
+                return false;
+            }
+            if (in_number >= this.source && in_number < this.source + this.length) {
+                out_number = this.dest + (in_number - this.source);
+                clamped_length = std::min(clamped_length, this.source + this.length - in_number);
+                return true;
+            }
+            return false;
+        }
     }
 
     load_file: (filename: std::string) -> std::tuple<std::vector<longlong>, std::vector<std::vector<NumberMapping>>> =
@@ -35,6 +48,9 @@ d5: namespace = {
         std::getline(input_file, line);
         assert(line.starts_with("seeds:"));
         line_stream: std::stringstream = (line);
+        dest: longlong = 0;
+        src: longlong = 0;
+        length: longlong = 0;
         scratch: std::string = ();
         std::getline(line_stream, scratch, ':');
         std::ranges::copy(std::istream_iterator<longlong>(line_stream), std::istream_iterator<longlong>(), std::back_inserter(seeds));
@@ -46,9 +62,6 @@ d5: namespace = {
             }
             else if (!line.empty()) {
                 line_stream: std::stringstream = (line);
-                dest: longlong = 0;
-                src: longlong = 0;
-                length: longlong = 0;
                 line_stream >> dest >> src >> length;
                 current_map*.emplace_back(NumberMapping(dest, src, length));
             }
@@ -61,7 +74,7 @@ d5: namespace = {
         seeds: std::vector<longlong> = data.get<0>();
         maps: std::vector<std::vector<NumberMapping>> = data.get<1>();
 
-        min: longlong = 0x7fffffffffffffff;
+        min: longlong = std::numeric_limits<longlong>::max();
         for seeds do (seed) {
             current := seed;
             for maps do (map) {
@@ -79,22 +92,30 @@ d5: namespace = {
     }
 
     part2: () = {
-        data:= load_file("src/d5/data_test.txt");
+        data:= load_file("src/d5/data.txt");
         seeds: std::vector<longlong> = data.get<0>();
         maps: std::vector<std::vector<NumberMapping>> = data.get<1>();
 
-        min: longlong = 0x7fffffffffffffff;
-        : int = 0;
-        for seeds do (seed) {
-            current := seed;
-            for maps do (map) {
-                for map do (mapping) {
-                    if (mapping.map(current, current&)) {
-                        break;
+        min: longlong = std::numeric_limits<longlong>::max();
+        seed_index: size_t = 0;
+        while (seed_index < seeds.size()) {
+            seed_start := seeds[seed_index];
+            seed_end := seed_start + seeds[seed_index + 1];
+            seed := seed_start;
+            while (seed < seed_end) {
+                range_length: longlong = seed_end - seed;
+                current := seed;
+                for maps do (map) {
+                    for map do (mapping) {
+                        if (mapping.map_and_clamp(current, current&, range_length&*)) {
+                            break;
+                        }
                     }
                 }
+                min = std::min(min, current);
+                seed = seed + range_length;
             }
-            min = std::min(min, current);
+            seed_index += 2;
         }
 
         std::cout << "Part2: " << min << std::endl;
@@ -104,8 +125,8 @@ d5: namespace = {
         part1();
         part2();
     }
-    // Part1: 19135
-    // Part1: 5704953
+    // Part1: 57075758
+    // Part1: 31161857
 }
 
 
