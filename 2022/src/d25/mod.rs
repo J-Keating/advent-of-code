@@ -55,7 +55,6 @@ fn part1() {
     println!("{}: {} ({} ms)", function_name!(), i64_to_snafu_string(total), now.elapsed().as_micros() as f32 / 1000.0);
 }
 
-#[named]
 pub fn run() {
     part1();
 }
