@@ -119,11 +119,13 @@ d18: namespace = {
         }
 
         print: (lines: std::vector<std::vector<GroundState>>) = {
+            row_index := 0;
             std::for_each(lines.begin(), lines.end(), :(row) = {
                 std::for_each(row.begin(), row.end(), :(gs) = {
                     std::cout << gs.state;
                 });
-                std::cout << std::endl;
+                std::cout << std::format("   {}", row_index$) << std::endl;
+                row_index$&* += 1;
             });
         }
 
@@ -270,27 +272,42 @@ d18: namespace = {
             assert(cur_loc == start_loc);
             assert(vert_sum == 0 && horiz_sum == 0);
 
+            previous_row := -1;
+            previous_wall_count := 0;
+            total_volume := 0;
             horizontal_span := 0;
             segment_index := 0;
             while (segment_index < horizontal_segments.ssize()) {
                 current_row := horizontal_segments[segment_index].start.row;
-                //current_row_wall_count := 0;
+                if (previous_row >= 0) {
+                    total_volume += (horizontal_span + 1) * (current_row - previous_row);
+                    writeln(std::format("Row {}: added {}x{} ({}) : total = {}",
+                        current_row,
+                        (horizontal_span + 1),
+                        (current_row - previous_row),
+                        (horizontal_span + 1) * (current_row - previous_row),
+                        total_volume));
+                }
+                current_row_wall_count := 0;
                 while (segment_index < horizontal_segments.ssize() && horizontal_segments[segment_index].start.row == current_row) {
                     cur_segment := horizontal_segments[segment_index];
-                    if (cur_segment.direction == DIRECTION::RIGHT) {
-                        horizontal_span += cur_segment.end.col - cur_segment.start.col;
+                    horizontal_span += cur_segment.end.col - cur_segment.start.col;
+                    // right-facing segments will be included in the next iteration.  left-facing segments are included in this iteration.
+                    if (cur_segment.direction == DIRECTION::LEFT) {
+                        left_wll_count := cur_segment.start.col - cur_segment.end.col;
+                        total_volume += left_wll_count;
+                        writeln(std::format("Row {}: adding {} for left wall: total = {}", current_row, left_wll_count, total_volume));
                     }
-                    else {
-                        assert(cur_segment.direction == DIRECTION::LEFT);
-                        horizontal_span += cur_segment.end.col - cur_segment.start.col;
-                    }
+                    current_row_wall_count += std::abs(cur_segment.end.col - cur_segment.start.col);
                     segment_index += 1;
                 }
-                writeln(std::format("Row {}: {}", current_row, horizontal_span));
+                writeln(std::format("Row {}: Span = {}", current_row, horizontal_span));
+                previous_row = current_row;
+                previous_wall_count = current_row_wall_count;
                 //segment_index += 1;
             }
 
-            writeln(std::format("Part {}: {}", 2, instructions.ssize()));
+            writeln(std::format("Part {}: {}", 2, total_volume));
             writeln(std::format("({},{}) -> ({},{})", bounds.first.row, bounds.first.col, bounds.second.row, bounds.second.col));
         }
     }
