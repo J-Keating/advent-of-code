@@ -88,13 +88,11 @@ d18: namespace = {
 
     Instruction: @struct type = {
         direction: DIRECTION;
-        steps: int;
-//        color: Color;
+        steps: longlong;
 
         constructor: (inout this, direction_in: DIRECTION, steps_in: int) = {
             this.direction = direction_in;
             this.steps = steps_in;
-//            this.color = color_in;
         }
     }
 
@@ -115,7 +113,6 @@ d18: namespace = {
     P1: namespace = {
         GroundState: @struct type = {
             state: char = (' ');
-            wall_colors: std::array<Color, 4> = ();
         }
 
         print: (lines: std::vector<std::vector<GroundState>>) = {
@@ -147,18 +144,13 @@ d18: namespace = {
 
                 std::regex_search(color_string, color_match, color_regex);
                 assert(color_match.size() == 4);
-                // color: Color = (Color(
-                //     std::stoi(color_match[1], nullptr, 16),
-                //     std::stoi(color_match[2], nullptr, 16),
-                //     std::stoi(color_match[3], nullptr, 16)
-                // ));
                 ret.push_back(Instruction(DIRECTION::from_char(direction_char), steps/*, color*/));
             }
             return ret;
         }
 
         part1: () = {
-            instructions := load_file(std::format("src/d{}/data_test.txt", DAY_NUM));
+            instructions := load_file(std::format("src/d{}/data.txt", DAY_NUM));
             bounds := compute_bounds(instructions);
             min_loc := bounds.first;
             max_loc := bounds.second;
@@ -188,7 +180,7 @@ d18: namespace = {
                     }
                 }
             }
-            map.print();
+            //map.print();
             total_cleared := 0;
             std::ranges::for_each(map, :(row) = {
                 total_cleared&$* += std::ranges::count_if(row, :(gs) -> bool = { return gs.state != '.'; });
@@ -242,27 +234,27 @@ d18: namespace = {
         }
 
         part2: () = {
-            instructions := P1::load_file(std::format("src/d{}/data_test.txt", DAY_NUM));
+            instructions := load_file(std::format("src/d{}/data.txt", DAY_NUM));
             bounds := compute_bounds(instructions);
-            vert_sum := 0;
-            horiz_sum := 0;
+            up_sum: longlong = 0;
+            down_sum: longlong = 0;
+            left_sum: longlong = 0;
+            right_sum: longlong = 0;
 
             horizontal_segments := std::vector<segment>();
             start_loc := Loc(-bounds.first.row, -bounds.first.col);
             cur_loc := start_loc;
             for instructions do (instruction) {
+                if instruction.direction == DIRECTION::UP { up_sum += instruction.steps; }
+                if instruction.direction == DIRECTION::DOWN { down_sum += instruction.steps; }
+                if instruction.direction == DIRECTION::LEFT { left_sum += instruction.steps; }
+                if instruction.direction == DIRECTION::RIGHT { right_sum += instruction.steps; }
+
                 step_dir := DIRECTION_STEPS[instruction.direction.to_int()];
                 next_loc := cur_loc + step_dir * instruction.steps;
-                if instruction.direction == DIRECTION::UP || instruction.direction == DIRECTION::DOWN {
-                    if (instruction.direction == DIRECTION::UP) { vert_sum -= instruction.steps; }
-                    else { vert_sum += instruction.steps; }
-                } else {
-                    assert(instruction.direction == DIRECTION::LEFT || instruction.direction == DIRECTION::RIGHT);
-                    if (instruction.direction == DIRECTION::LEFT) { horiz_sum -= instruction.steps; }
-                    else { horiz_sum += instruction.steps; }
+                if (instruction.direction == DIRECTION::LEFT || instruction.direction == DIRECTION::RIGHT) {
                     horizontal_segments.push_back(segment(cur_loc, next_loc, instruction.direction));
                 }
-
                 cur_loc = next_loc;
             }
             std::ranges::sort(horizontal_segments, :(a, b) -> bool = {
@@ -270,45 +262,29 @@ d18: namespace = {
                 return a.start.row < b.start.row;
             });
             assert(cur_loc == start_loc);
-            assert(vert_sum == 0 && horiz_sum == 0);
+            assert(up_sum == down_sum && left_sum == right_sum);
 
-            previous_row := -1;
-            previous_wall_count := 0;
-            total_volume := 0;
-            horizontal_span := 0;
+            previous_row: longlong = -1;
+            total_volume: longlong = 0;
+            horizontal_span: longlong = 0;
             segment_index := 0;
             while (segment_index < horizontal_segments.ssize()) {
                 current_row := horizontal_segments[segment_index].start.row;
                 if (previous_row >= 0) {
-                    total_volume += (horizontal_span + 1) * (current_row - previous_row);
-                    writeln(std::format("Row {}: added {}x{} ({}) : total = {}",
-                        current_row,
-                        (horizontal_span + 1),
-                        (current_row - previous_row),
-                        (horizontal_span + 1) * (current_row - previous_row),
-                        total_volume));
+                    total_volume += (horizontal_span) * (current_row - previous_row);
                 }
-                current_row_wall_count := 0;
                 while (segment_index < horizontal_segments.ssize() && horizontal_segments[segment_index].start.row == current_row) {
                     cur_segment := horizontal_segments[segment_index];
                     horizontal_span += cur_segment.end.col - cur_segment.start.col;
-                    // right-facing segments will be included in the next iteration.  left-facing segments are included in this iteration.
-                    if (cur_segment.direction == DIRECTION::LEFT) {
-                        left_wll_count := cur_segment.start.col - cur_segment.end.col;
-                        total_volume += left_wll_count;
-                        writeln(std::format("Row {}: adding {} for left wall: total = {}", current_row, left_wll_count, total_volume));
-                    }
-                    current_row_wall_count += std::abs(cur_segment.end.col - cur_segment.start.col);
                     segment_index += 1;
                 }
-                writeln(std::format("Row {}: Span = {}", current_row, horizontal_span));
                 previous_row = current_row;
-                previous_wall_count = current_row_wall_count;
-                //segment_index += 1;
             }
 
+            // Add the right sides, bottom sides, and the extra corner
+            total_volume += left_sum + down_sum + 1;
+
             writeln(std::format("Part {}: {}", 2, total_volume));
-            writeln(std::format("({},{}) -> ({},{})", bounds.first.row, bounds.first.col, bounds.second.row, bounds.second.col));
         }
     }
 
@@ -318,7 +294,7 @@ d18: namespace = {
         P2::part2();
     }
     // Part1: 48652
-    // Part2: 
+    // Part2: 45757884535661
 }
 
 
