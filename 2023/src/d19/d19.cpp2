@@ -1,0 +1,257 @@
+#include "d19-f.h2"
+
+d19: namespace = {
+
+    DAY_NUM: const int = 19;
+    writeln: (msg: _) = std::cout << msg << std::endl;
+
+    PartMember: @enum type = {
+        x;
+        m;
+        a;
+        s;
+
+        parse: (str: std::string) -> PartMember = {
+            if (str == "x") {
+                return x;
+            } else if (str == "m") {
+                return m;
+            } else if (str == "a") {
+                return a;
+            } else if (str == "s") {
+                return s;
+            } else {
+                assert(false, "Invalid PartMember");
+            }
+            return x;
+        }
+    }
+
+    Part: @struct type = {
+        x: int = 0;
+        m: int = 0;
+        a: int = 0;
+        s: int = 0;
+
+        constructor: (inout this, x_in: int, m_in: int, a_in: int, s_in: int) = {
+            this.x = x_in;
+            this.m = m_in;
+            this.a = a_in;
+            this.s = s_in;
+        }
+
+        get_member: (this, member: PartMember) -> int = {
+            if (member == PartMember::x) {
+                return this.x;
+            } else if (member == PartMember::m) {
+                return this.m;
+            } else if (member == PartMember::a) {
+                return this.a;
+            } else if (member == PartMember::s) {
+                return this.s;
+            } else {
+                assert(false, "Invalid PartMember");
+            }
+            return 0;
+        }
+
+        sum: (this) -> int = {
+            return this.x + this.m + this.a + this.s;
+        }
+    }
+
+    RuleTest: @enum type = {
+        gt;
+        lt;
+
+        parse: (str: std::string) -> RuleTest = {
+            if (str == ">") {
+                return gt;
+            } else if (str == "<") {
+                return lt;
+            } else {
+                assert(false, "Invalid RuleTest");
+            }
+            return gt;
+        }
+
+        run_test: (this, value: int, test_value: int) -> bool = {
+            if (this == RuleTest::gt) {
+                return value > test_value;
+            } else if (this == RuleTest::lt) {
+                return value < test_value;
+            } else {
+                assert(false, "Invalid RuleTest");
+            }
+            return false;
+        }
+    }
+
+    RulePassResult: @struct type = {
+        next_workflow: std::string = "";
+        accepted: bool = false;
+
+        parse: (str: std::string) -> RulePassResult = {
+            if (str == "A") {
+                return RulePassResult("", true);
+            } else if (str == "R") {
+                return RulePassResult("", false);
+            }
+            return RulePassResult(str, false);
+        }
+    }
+
+    Rule: @struct type = {
+        part_member: PartMember = PartMember::x;
+        test: RuleTest = RuleTest::gt;
+        value: int = 0;
+        pass_result: RulePassResult = RulePassResult("", false);
+
+        constructor: (inout this, part_member_in: PartMember, test_in: std::string, value_in: int, result: std::string) = {
+            this.part_member = part_member_in;
+            this.test = RuleTest::parse(test_in);
+            this.value = value_in;
+            this.pass_result = RulePassResult::parse(result);
+        }
+
+        run_on_part: (this, part: Part, inout result: RulePassResult) -> bool = {
+            part_value := part.get_member(this.part_member);
+            if (this.test.run_test(part_value, this.value)) {
+                result = this.pass_result;
+                return true;
+            }
+            return false;
+        }
+    }
+
+    WorkFlow: @struct type = {
+        name: std::string = "";
+        rules: std::vector<Rule> = ();
+        final_result: RulePassResult;
+
+        constructor: (inout this, name_in: std::string) = {
+            this.name = name_in;
+        }
+
+        constructor: (inout this, name_in: std::string, rules_in: std::vector<Rule>, final_result_in: RulePassResult) = {
+            this.name = name_in;
+            this.rules = rules_in;
+            this.final_result = final_result_in;
+        }
+
+        run_on_part: (this, part: Part) -> RulePassResult = {
+            result := RulePassResult("", false);
+            for this.rules do (rule) {
+                if (rule.run_on_part(part, result&*)) {
+                    return result;
+                }
+            }
+            return this.final_result;
+        }
+    }
+
+    load_file: (filename: std::string) -> std::pair<std::vector<WorkFlow>, std::vector<Part>> =
+    {
+        input_file: std::ifstream = (filename);
+        input_file.is_open();    // Do nothing but convnce the compiler that fb is used
+
+        // WorkFlows
+        workflows: std::vector<WorkFlow> = ();
+        workflow_regex: const std::regex = (R"((.+)\{(.+)\})");
+        workflow_matches: std::smatch = ();
+
+        line: std::string = ();
+        while (std::getline(input_file, line)) {
+            if (line == "") {
+                break;
+            }
+            std::regex_search(line, workflow_matches, workflow_regex);
+            assert(workflow_matches.ssize() == 3);
+            workflow_name: std::string = workflow_matches[1];
+            workflow := WorkFlow(workflow_name);
+            rules_str: std::string = workflow_matches[2];
+
+            rules_stream: std::stringstream = (rules_str);
+            rules_stream.gcount();    // Do nothing but convnce the compiler that this is used
+
+            rule_string: std::string = ();
+            while (std::getline(rules_stream, rule_string, ',')) {
+                rule_regex: const std::regex = (R"(^(\w+)([<>])(\d+):(\w+)|(\w+)$)");
+                rule_matches: std::smatch = ();
+
+                std::regex_search(rule_string, rule_matches, rule_regex);
+                assert(rule_matches.ssize() == 6);
+                if (rule_matches[5].length() == 0) {
+                    member := PartMember::parse(rule_matches[1]);
+                    rule_test := RuleTest::parse(rule_matches[2]);
+                    value := std::stoi(rule_matches[3]);
+                    rule_pass_result := RulePassResult::parse(rule_matches[4]);
+
+                    workflow.rules.push_back(Rule(member, rule_test, value, rule_pass_result));
+                }
+                else {
+                    workflow.final_result = RulePassResult::parse(rule_matches[5]);
+                }
+            }
+            workflows.push_back(workflow);
+        }
+        // Parts
+        parts: std::vector<Part> = ();
+        while (std::getline(input_file, line)) {
+            part_regex: const std::regex = (R"(^\{x=(\d+),m=(\d+),a=(\d+),s=(\d+)\}$)");
+            part_matches: std::smatch = ();
+
+            std::regex_search(line, part_matches, part_regex);
+            assert(part_matches.ssize() == 5);
+            x := std::stoi(part_matches[1]);
+            m := std::stoi(part_matches[2]);
+            a := std::stoi(part_matches[3]);
+            s := std::stoi(part_matches[4]);
+
+            parts.push_back(Part(x, m, a, s));
+        }
+
+        return make_pair(workflows, parts);
+    }
+
+    part1: () = {
+        input := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        workflow_array := input.first;
+        parts := input.second;
+
+        workflow_map: std::map<std::string, WorkFlow> = ();
+        for workflow_array do (workflow) {
+            workflow_map[workflow.name] = workflow;
+        }
+
+        total := 0;
+        for parts do (part) {
+            workflow_result := RulePassResult("in", false);
+            while (!workflow_result.next_workflow.empty()) {
+                workflow := workflow_map[workflow_result.next_workflow];
+                workflow_result = workflow.run_on_part(part);
+            }
+            //writeln(std::format(" {}: {}", workflow_result.accepted, part.sum()));
+            if (workflow_result.accepted) {
+                total += part.sum();
+            }
+        }
+
+        writeln(std::format("Part {}: {}", 1, total));
+    }
+
+    // part2: () = {
+    //     lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+    //     writeln(std::format("Part {}: {}", 2, lines.ssize()));
+    // }
+
+    run: () = {
+        writeln(std::format("Day {}", DAY_NUM));
+        part1();
+        //part2();
+    }
+    // Part1: 
+    // Part2: 
+}
+
+
