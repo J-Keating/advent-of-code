@@ -33,12 +33,12 @@ d19: namespace = {
         a: int = 0;
         s: int = 0;
 
-        constructor: (inout this, x_in: int, m_in: int, a_in: int, s_in: int) = {
-            this.x = x_in;
-            this.m = m_in;
-            this.a = a_in;
-            this.s = s_in;
-        }
+        // constructor: (inout this, x_in: int, m_in: int, a_in: int, s_in: int) = {
+        //     this.x = x_in;
+        //     this.m = m_in;
+        //     this.a = a_in;
+        //     this.s = s_in;
+        // }
 
         get_member: (this, member: PartMember) -> int = {
             if (member == PartMember::x) {
@@ -53,6 +53,20 @@ d19: namespace = {
                 assert(false, "Invalid PartMember");
             }
             return 0;
+        }
+
+        set_member: (inout this, member: PartMember, value: int) = {
+            if (member == PartMember::x) {
+                this.x = value;
+            } else if (member == PartMember::m) {
+                this.m = value;
+            } else if (member == PartMember::a) {
+                this.a = value;
+            } else if (member == PartMember::s) {
+                this.s = value;
+            } else {
+                assert(false, "Invalid PartMember");
+            }
         }
 
         sum: (this) -> int = {
@@ -107,11 +121,13 @@ d19: namespace = {
         value: int = 0;
         pass_result: RulePassResult = RulePassResult("", false);
 
-        constructor: (inout this, part_member_in: PartMember, test_in: std::string, value_in: int, result: std::string) = {
-            this.part_member = part_member_in;
-            this.test = RuleTest::parse(test_in);
-            this.value = value_in;
-            this.pass_result = RulePassResult::parse(result);
+        make: (part_member_in: std::string, test_in: std::string, value_in: std::string, pass_result_in: std::string) -> Rule = {
+            rule: Rule = ();
+            rule.part_member = PartMember::parse(part_member_in);
+            rule.test = RuleTest::parse(test_in);
+            rule.value = std::stoi(value_in);
+            rule.pass_result = RulePassResult::parse(pass_result_in);
+            return rule;
         }
 
         run_on_part: (this, part: Part, inout result: RulePassResult) -> bool = {
@@ -129,15 +145,15 @@ d19: namespace = {
         rules: std::vector<Rule> = ();
         final_result: RulePassResult;
 
-        constructor: (inout this, name_in: std::string) = {
-            this.name = name_in;
-        }
+        // operator=: (out this, name_in: std::string) = {
+        //     this.name = name_in;
+        // }
 
-        constructor: (inout this, name_in: std::string, rules_in: std::vector<Rule>, final_result_in: RulePassResult) = {
-            this.name = name_in;
-            this.rules = rules_in;
-            this.final_result = final_result_in;
-        }
+        // operator=: (out this, name_in: std::string, rules_in: std::vector<Rule>, final_result_in: RulePassResult) = {
+        //     this.name = name_in;
+        //     this.rules = rules_in;
+        //     this.final_result = final_result_in;
+        // }
 
         run_on_part: (this, part: Part) -> RulePassResult = {
             result := RulePassResult("", false);
@@ -182,12 +198,14 @@ d19: namespace = {
                 std::regex_search(rule_string, rule_matches, rule_regex);
                 assert(rule_matches.ssize() == 6);
                 if (rule_matches[5].length() == 0) {
-                    member := PartMember::parse(rule_matches[1]);
-                    rule_test := RuleTest::parse(rule_matches[2]);
-                    value := std::stoi(rule_matches[3]);
-                    rule_pass_result := RulePassResult::parse(rule_matches[4]);
+                    // member := PartMember::parse(rule_matches[1]);
+                    // rule_test := RuleTest::parse(rule_matches[2]);
+                    // value := std::stoi(rule_matches[3]);
+                    // rule_pass_result := RulePassResult::parse(rule_matches[4]);
 
-                    workflow.rules.push_back(Rule(member, rule_test, value, rule_pass_result));
+                    //workflow.rules.push_back(Rule(member, rule_test, value, rule_pass_result));
+                    rule := Rule::make(rule_matches[1], rule_matches[2], rule_matches[3], rule_matches[4]);
+                    workflow.rules.push_back(rule);
                 }
                 else {
                     workflow.final_result = RulePassResult::parse(rule_matches[5]);
@@ -240,18 +258,176 @@ d19: namespace = {
         writeln(std::format("Part {}: {}", 1, total));
     }
 
-    // part2: () = {
-    //     lines := load_file(std::format("src/d{}/data.txt", DAY_NUM));
-    //     writeln(std::format("Part {}: {}", 2, lines.ssize()));
-    // }
+    PartRange: @struct type = {
+        min: Part = Part(1, 1, 1, 1);
+        max: Part = Part(4001, 4001, 4001, 4001);
+
+        is_valid: (this) -> bool = {
+            return this.min.x < this.max.x && this.min.m < this.max.m && this.min.a < this.max.a && this.min.s < this.max.s;
+        }
+
+        split_by_rule: (this, rule: Rule, out pass_result_and_range_optional_out: std::optional<std::pair<RulePassResult, PartRange>>, out fail_range_optional_out: std::optional<PartRange>) = {
+            fail_range := PartRange(this.min, this.max);
+            pass_range := PartRange(this.min, this.max);
+
+            min_member_value := this.min.get_member(rule.part_member);
+            max_member_value := this.max.get_member(rule.part_member);
+
+            if (rule.test == RuleTest::gt) {
+                fail_range.max.set_member(rule.part_member, std::min(max_member_value, rule.value + 1));
+                pass_range.min.set_member(rule.part_member, std::max(min_member_value, rule.value + 1));
+            }
+            else if (rule.test == RuleTest::lt) {
+                pass_range.max.set_member(rule.part_member, std::min(max_member_value, rule.value));
+                fail_range.min.set_member(rule.part_member, std::max(min_member_value, rule.value));
+            }
+
+            pass_result_and_range_optional_out = std::nullopt;
+            if (pass_range.is_valid()) {
+                pass_result_and_range_optional_out = std::make_pair(rule.pass_result, pass_range);
+            }
+
+            fail_range_optional_out = std::nullopt;
+            if (fail_range.is_valid()) {
+                fail_range_optional_out = fail_range;
+            }
+        }
+
+        combinations: (this) -> longlong = {
+            ret: longlong = (this.max.x as longlong - this.min.x as longlong) * (this.max.m as longlong - this.min.m as longlong) * (this.max.a as longlong - this.min.a as longlong) * (this.max.s as longlong - this.min.s as longlong);
+            assert(ret >= 0);
+            return ret;
+        }
+    }
+
+    test_part_range: () = {
+
+        success: std::optional<std::pair<RulePassResult, PartRange>> = ();
+        fail: std::optional<PartRange> = ();
+        {
+            part_range: PartRange = ();
+            rule := Rule::make("x", ">", "10", "A");
+            part_range.split_by_rule(rule, success&, fail&);
+            assert(success.has_value());
+            assert(success.value().first.next_workflow == "");
+            assert(success.value().first.accepted == true);
+            assert(success.value().second.min.x == 11);
+            assert(success.value().second.max.x == 4001);
+            assert(fail.has_value());
+            assert(fail.value().min.x == 1);
+            assert(fail.value().max.x == 11);
+        }
+        {
+            part_range: PartRange = ();
+            rule := Rule::make("m", "<", "100", "abcd");
+            part_range.split_by_rule(rule, success&, fail&);
+            assert(success.has_value());
+            assert(success.value().first.next_workflow == "abcd");
+            assert(success.value().second.min.m == 1);
+            assert(success.value().second.max.m == 100);
+            assert(fail.has_value());
+            assert(fail.value().min.m == 100);
+            assert(fail.value().max.m == 4001);
+        }
+        {
+            part_range: PartRange = ();
+            rule := Rule::make("m", "<", "301", "R");
+            part_range.split_by_rule(rule, success&, fail&);
+            assert(success.has_value());
+            assert(success.value().first.next_workflow == "");
+            assert(success.value().first.accepted == false);
+            assert(success.value().second.min.m == 1);
+            assert(success.value().second.max.m == 301);
+            assert(fail.has_value());
+            assert(fail.value().min.m == 301);
+            assert(fail.value().max.m == 4001);
+        }
+        {
+            part_range: PartRange = (Part(1, 1, 1000, 1), Part(4001, 4001, 2001, 4001));
+            rule := Rule::make("a", "<", "300", "A");
+            part_range.split_by_rule(rule, success&, fail&);
+            assert(!success.has_value());
+            assert(fail.has_value());
+            assert(fail.value().min.a == 1000);
+            assert(fail.value().max.a == 2001);
+
+            rule = Rule::make("a", ">", "1999", "R");
+            part_range.split_by_rule(rule, success&, fail&);
+            assert(success.has_value());
+            assert(success.value().first.next_workflow == "");
+            assert(success.value().first.accepted == false);
+            assert(success.value().second.min.a == 2000);
+            assert(success.value().second.max.a == 2001);
+            assert(fail.has_value());
+            assert(fail.value().min.a == 1000);
+            assert(fail.value().max.a == 2000);
+
+            rule = Rule::make("a", ">", "2000", "R");
+            part_range.split_by_rule(rule, success&, fail&);
+            assert(!success.has_value());
+            assert(fail.has_value());
+            assert(fail.value().min.a == 1000);
+            assert(fail.value().max.a == 2001);
+
+            rule = Rule::make("a", ">", "3000", "A");
+            part_range.split_by_rule(rule, success&, fail&);
+            assert(!success.has_value());
+            assert(fail.has_value());
+            assert(fail.value().min.a == 1000);
+            assert(fail.value().max.a == 2001);
+        }
+    }
+
+    count_accepted_parts: (inout workflow_map: std::map<std::string, WorkFlow>, rule_result: RulePassResult, part_range_in: PartRange) -> longlong = {
+        total: longlong = 0;
+        if (!rule_result.next_workflow.empty()) {
+            workflow := workflow_map&*[rule_result.next_workflow];
+            part_range_reference: std::optional<PartRange> = part_range_in;
+            for workflow.rules do (rule) {
+                success: std::optional<std::pair<RulePassResult, PartRange>> = ();
+                fail: std::optional<PartRange> = ();
+                part_range_reference.value().split_by_rule(rule, success&, fail&);
+                if (success.has_value()) {
+                    total += count_accepted_parts(workflow_map, success.value().first, success.value().second);
+                }
+                part_range_reference = fail;
+            }
+            if (part_range_reference.has_value()) {
+                total += count_accepted_parts(workflow_map, workflow.final_result, part_range_reference.value());
+            }
+        }
+        else {
+            if (rule_result.accepted) {
+                total = part_range_in.combinations();
+            }
+        }
+        return total;
+    }
+
+    part2: () = {
+        //test_part_range();
+        input := load_file(std::format("src/d{}/data.txt", DAY_NUM));
+        workflow_array := input.first;
+
+        workflow_map: std::map<std::string, WorkFlow> = ();
+        for workflow_array do (workflow) {
+            workflow_map[workflow.name] = workflow;
+        }
+
+        in_workflow := RulePassResult("in", false);
+        all_parts_range := PartRange();
+        total := count_accepted_parts(workflow_map&*, in_workflow, all_parts_range);
+
+        writeln(std::format("Part {}: {}", 2, total));
+    }
 
     run: () = {
         writeln(std::format("Day {}", DAY_NUM));
         part1();
-        //part2();
+        part2();
     }
-    // Part1: 
-    // Part2: 
+    // Part1: 332145
+    // Part2: 136661579897555
 }
 
 
