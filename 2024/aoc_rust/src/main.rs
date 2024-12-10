@@ -1,5 +1,5 @@
-mod d4;
-// mod d5;
+// mod d4;
+mod d5;
 // mod d6;
 // mod d7;
 // mod d8;
@@ -8,7 +8,7 @@ mod d4;
 // mod d11;
 // mod d12;
 // mod d13;
-mod d14;
+// mod d14;
 // mod d15;
 // mod d16;
 // mod d17;
@@ -23,10 +23,10 @@ mod d14;
 // mod test;
 
 fn main() {
-    println!("Day4:");
-    d4::run();
-    // println!("Day5:");
-    // d5::run();
+    // println!("Day4:");
+    // d4::run();
+    println!("Day5:");
+    d5::run();
     // println!("Day6:");
     // d6::run();
     // println!("Day7:");
