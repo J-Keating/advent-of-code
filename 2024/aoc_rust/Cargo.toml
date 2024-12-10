@@ -1,0 +1,13 @@
+[package]
+name = "aoc_rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+utilities = { path = "utilities" }
+function_name = "0.3.0"
+itertools = "0.13.0"
+lazy_static = "1.5.0"
+num = "0.4.3"
+regex = "1.11.1"
+genawaiter = "0.99.1"
