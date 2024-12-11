@@ -1,8 +1,7 @@
-use std::fs;
+use std::{cmp::Ordering, fs};
 
 use ::function_name::named;
 use itertools::Itertools;
-use utilities::alloc_2d_vec;
 
 fn load_data(path: &str) -> (Vec<(i32, i32)>, Vec<Vec<i32>>) {
     let file_contents_as_string = fs::read_to_string(path).expect("Error loading file");
@@ -39,7 +38,21 @@ fn part1() {
 fn part2() {
     let (rules, page_lists) = load_data("src\\d5\\data.txt");
     let invalid_page_lists = find_valid_page_lists(&rules, &page_lists, false);
-    let sum = invalid_page_lists.iter().map(|page_list| page_list[(page_list.len()-1)/2]).sum::<i32>();
+    let page_sort = |a: &&i32, b: &&i32| -> Ordering {
+        if rules.contains(&(**a, **b)) {
+            Ordering::Less
+        } else if rules.contains(&(**b, **a)) {
+            Ordering::Greater
+        } else {
+            Ordering::Equal
+        }
+    };
+    let mut sorted_lists: Vec<Vec<i32>> = Vec::new();
+    for page_list in invalid_page_lists {
+        let sorted_list = page_list.iter().sorted_by(page_sort).cloned().collect();
+        sorted_lists.push(sorted_list);
+    }
+    let sum = sorted_lists.iter().map(|page_list| page_list[(page_list.len()-1)/2]).sum::<i32>();
     println!("{}: {}", function_name!(), sum);
 }
 
@@ -49,4 +62,4 @@ pub fn run() {
 }
 
 // part1: 5509
-// part2: 
+// part2: 4407
