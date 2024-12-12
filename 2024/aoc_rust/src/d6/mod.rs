@@ -99,7 +99,7 @@ fn load_data(path: &str) -> Board {
     let file_contents_as_string = fs::read_to_string(path).expect("Error loading file");
     let file_lines = file_contents_as_string.lines().collect::<Vec<&str>>();
     let height = file_lines.len();
-    let width = file_lines.iter().map(|x| x.len()).max().unwrap();
+    let width = file_lines[0].len();
     let mut board = Board::new(height, width);
     for (row, line) in file_lines.iter().enumerate() {
         for (col, state) in line.chars().enumerate() {

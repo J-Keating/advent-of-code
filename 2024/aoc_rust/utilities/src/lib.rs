@@ -1,4 +1,4 @@
-use std::{cmp, fmt};
+use std::{cmp, fmt, fs};
 use ::num::abs;
 
 pub fn valid_vec_index<T>(v: &Vec<T>, index: i32) -> bool {
@@ -120,6 +120,12 @@ impl PointRC {
     }
 }
 
+impl fmt::Display for PointRC {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.r, self.c)
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct Point3<T> {
     pub x: T,
@@ -149,4 +155,57 @@ impl<T> Point3<T> where T: num::PrimInt {
     }
 
     pub fn add(self, other: &Point3<T>) -> Point3<T> { Point3 { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z } }
+}
+
+
+pub struct Board {
+    pub data: Vec<Vec<char>>,
+    pub height: usize,
+    pub width: usize,
+}
+
+impl Board {
+    pub fn new(height: usize, width: usize) -> Board {
+        Board {
+            data: alloc_2d_vec::<char>(height, width, ' '),
+            width,
+            height,
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn print(&self) {
+        for line in &self.data {
+            println!("{}", line.iter().collect::<String>());
+        }
+    }
+
+    pub fn find(&self, target: char) -> Option<PointRC> {
+        for r in 0..self.height {
+            for c in 0..self.width {
+                if self.data[r][c] == target {
+                    return Some(PointRC { r: r as i32, c: c as i32 });
+                }
+            }
+        }
+        None
+    }
+
+    pub fn in_bounds(&self, loc: PointRC) -> bool {
+        loc.r >= 0 && loc.r < self.height as i32 && loc.c >= 0 && loc.c < self.width as i32
+    }
+
+    pub fn load_data(path: &str) -> Board {
+        let file_contents_as_string = fs::read_to_string(path).expect("Error loading file");
+        let file_lines = file_contents_as_string.lines().collect::<Vec<&str>>();
+        let height = file_lines.len();
+        let width = file_lines[0].len();
+        let mut board = Board::new(height, width);
+        for (row, line) in file_lines.iter().enumerate() {
+            for (col, state) in line.chars().enumerate() {
+                board.data[row][col] = state;
+            }
+        }
+        board
+    }
 }
