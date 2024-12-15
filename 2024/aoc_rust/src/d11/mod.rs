@@ -1,4 +1,5 @@
 //use itertools::Itertools;
+use memoize::memoize;
 use std::fs;
 //use std::collections::{HashMap, HashSet};
 use ::function_name::named;
@@ -6,6 +7,7 @@ use itertools::Itertools;
 
 const DAY: &str = "d11";
 
+#[memoize]
 fn total_stones_after_blinks(num: i64, blinks_remaining: usize) -> i64 {
     if blinks_remaining == 0 {
         //println!("{}", num);
@@ -24,7 +26,7 @@ fn total_stones_after_blinks(num: i64, blinks_remaining: usize) -> i64 {
 
 #[named]
 fn part1() {
-    let file_contents_as_string = fs::read_to_string(&("src\\".to_string() + DAY + "\\data_test.txt")).expect("Error loading file");
+    let file_contents_as_string = fs::read_to_string(&("src\\".to_string() + DAY + "\\data.txt")).expect("Error loading file");
     let stones = file_contents_as_string.split(" ").map(|n| { n.parse::<i64>().unwrap() }).collect_vec();
     let total = stones.iter().map(|s| { total_stones_after_blinks(*s, 25) } ).sum::<i64>();
     println!("{}: {}", function_name!(), total);
@@ -32,8 +34,10 @@ fn part1() {
 
 #[named]
 fn part2() {
-    let file_contents_as_string = fs::read_to_string(&("src\\".to_string() + DAY + "\\data_test.txt")).expect("Error loading file");
-    println!("{}: {}", function_name!(), file_contents_as_string);
+    let file_contents_as_string = fs::read_to_string(&("src\\".to_string() + DAY + "\\data.txt")).expect("Error loading file");
+    let stones = file_contents_as_string.split(" ").map(|n| { n.parse::<i64>().unwrap() }).collect_vec();
+    let total = stones.iter().map(|s| { total_stones_after_blinks(*s, 75) } ).sum::<i64>();
+    println!("{}: {}", function_name!(), total);
 }
 
 pub fn run() {
@@ -41,5 +45,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 327
-// part2: 1233
+// part1: 209412
+// part2: 248967696501656

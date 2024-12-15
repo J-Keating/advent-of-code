@@ -29,6 +29,7 @@ fn expand_disk(map: &str) -> Vec<Option<i32>> {
     buffer
 }
 
+#[allow(dead_code)]
 fn print_disk(buffer: &Vec<Option<i32>>) {
     buffer.iter().for_each(|&x| match x {
         Some(x) => print!("{:x}", x),
@@ -38,6 +39,7 @@ fn print_disk(buffer: &Vec<Option<i32>>) {
 }
 
 #[named]
+#[allow(dead_code)]
 fn compute_checksum(buffer: &[Option<i32>]) -> i64 {
     let mut checksum = 0;
     for (i, val) in buffer.iter().enumerate() {
@@ -95,5 +97,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 1928
-// part2: 1233
+// part1: 6216544403458
+// part2: 2333133121414131402
