@@ -1,4 +1,4 @@
-use std::{cmp, fmt, fs};
+use std::{cmp, collections::HashSet, fmt::{self, Display}, fs};
 use ::num::abs;
 
 pub fn valid_vec_index<T>(v: &Vec<T>, index: i32) -> bool {
@@ -106,6 +106,15 @@ impl PointRC {
         abs(diff.r) + abs(diff.c)
     }
 
+    pub fn neighbors_cardinal(&self) -> Vec<PointRC> {
+        vec![
+            PointRC { r: self.r - 1, c: self.c },
+            PointRC { r: self.r + 1, c: self.c },
+            PointRC { r: self.r, c: self.c - 1 },
+            PointRC { r: self.r, c: self.c + 1 }
+        ]
+    }
+
     pub fn interpolate<F>(self, other: &PointRC, mut callback: F) where F: FnMut(&PointRC)
     {
         let diff = other.sub(&self);
@@ -121,6 +130,12 @@ impl PointRC {
 }
 
 impl fmt::Display for PointRC {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.r, self.c)
+    }
+}
+
+impl fmt::Debug for PointRC {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({}, {})", self.r, self.c)
     }
@@ -158,29 +173,37 @@ impl<T> Point3<T> where T: num::PrimInt {
 }
 
 
-pub struct Board {
-    pub data: Vec<Vec<char>>,
+pub struct Board<T: Clone> {
+    pub data: Vec<Vec<T>>,
     pub height: usize,
     pub width: usize,
 }
 
-impl Board {
-    pub fn new(height: usize, width: usize) -> Board {
+impl<T> Board<T> where T: Clone {
+    pub fn new(height: usize, width: usize, val: T) -> Board<T> where T: Clone {
         Board {
-            data: alloc_2d_vec::<char>(height, width, ' '),
+            data: alloc_2d_vec::<T>(height, width, val),
             width,
             height,
         }
     }
 
+    pub fn at(&self, loc: &PointRC) -> &T where T: Clone {
+        &self.data[loc.r as usize][loc.c as usize]
+    }
+
     #[allow(dead_code)]
-    pub fn print(&self) {
+    pub fn print(&self) where T: Display {
         for line in &self.data {
-            println!("{}", line.iter().collect::<String>());
+            //println!("{}", line.iter().collect::<String>());
+            for v in line.iter() {
+                print!("{}", v);
+            }
+            println!("");
         }
     }
 
-    pub fn find(&self, target: char) -> Option<PointRC> {
+    pub fn find_first(&self, target: T) -> Option<PointRC> where T: Clone + std::cmp::PartialEq {
         for r in 0..self.height {
             for c in 0..self.width {
                 if self.data[r][c] == target {
@@ -191,19 +214,46 @@ impl Board {
         None
     }
 
-    pub fn in_bounds(&self, loc: PointRC) -> bool {
+    pub fn find_all(&self, target: T) -> HashSet<PointRC> where T: Clone + std::cmp::PartialEq {
+        let mut ret = HashSet::new();
+        for r in 0..self.height {
+            for c in 0..self.width {
+                if self.data[r][c] == target {
+                    ret.insert(PointRC { r: r as i32, c: c as i32 });
+                }
+            }
+        }
+        ret
+    }
+
+    pub fn in_bounds(&self, loc: &PointRC) -> bool {
         loc.r >= 0 && loc.r < self.height as i32 && loc.c >= 0 && loc.c < self.width as i32
     }
 
-    pub fn load_data(path: &str) -> Board {
+    pub fn load_data_chars(path: &str) -> Board<char> {
         let file_contents_as_string = fs::read_to_string(path).expect("Error loading file");
         let file_lines = file_contents_as_string.lines().collect::<Vec<&str>>();
         let height = file_lines.len();
         let width = file_lines[0].len();
-        let mut board = Board::new(height, width);
+        let mut board = Board::<char>::new(height, width, ' ');
         for (row, line) in file_lines.iter().enumerate() {
-            for (col, state) in line.chars().enumerate() {
-                board.data[row][col] = state;
+            for (col, c) in line.chars().enumerate() {
+                board.data[row][col] = c;
+            }
+        }
+        board
+    }
+
+    pub fn load_data_int(path: &str) -> Board<i32> {
+        let file_contents_as_string = fs::read_to_string(path).expect("Error loading file");
+        let file_lines = file_contents_as_string.lines().collect::<Vec<&str>>();
+        let height = file_lines.len();
+        let width = file_lines[0].len();
+        let mut board = Board::<i32>::new(height, width, 0);
+        for (row, line) in file_lines.iter().enumerate() {
+            for (col, c) in line.chars().enumerate() {
+                let num = c.to_digit(10);
+                board.data[row][col] = if num.is_some() { num.unwrap() as i32 } else { -1 };
             }
         }
         board

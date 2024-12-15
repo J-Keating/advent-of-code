@@ -5,7 +5,7 @@ use ::function_name::named;
 
 const DAY: &str = "d8";
 
-fn find_char_locations(board: &Board) -> HashMap<char, Vec<PointRC>> {
+fn find_char_locations(board: &Board<char>) -> HashMap<char, Vec<PointRC>> {
     let mut ret = HashMap::new();
     for r in 0..board.height {
         for c in 0..board.width {
@@ -23,7 +23,7 @@ fn find_char_locations(board: &Board) -> HashMap<char, Vec<PointRC>> {
 
 #[named]
 fn part1() {
-    let board = Board::load_data(&("src\\".to_string() + DAY + "\\data.txt"));
+    let board = Board::<char>::load_data_chars(&("src\\".to_string() + DAY + "\\data.txt"));
     let locs = find_char_locations(&board);
     let mut antinode_locs = HashSet::<PointRC>::new();
     for (_, locs) in locs.iter() {
@@ -34,13 +34,13 @@ fn part1() {
             antinode_locs.insert(b.sub(&diff));
         }
     }
-    antinode_locs = antinode_locs.into_iter().filter(|p| board.in_bounds(*p)).collect();
+    antinode_locs = antinode_locs.into_iter().filter(|p| board.in_bounds(p)).collect();
     println!("{}: {}", function_name!(), antinode_locs.len());
 }
 
 #[named]
 fn part2() {
-    let board = Board::load_data(&("src\\".to_string() + DAY + "\\data.txt"));
+    let board = Board::<char>::load_data_chars(&("src\\".to_string() + DAY + "\\data.txt"));
     let locs = find_char_locations(&board);
     let mut antinode_locs = HashSet::<PointRC>::new();
     for (_, locs) in locs.iter() {
@@ -48,18 +48,18 @@ fn part2() {
             let mut diff = a.sub(b);
             diff = diff.div(num::integer::gcd(diff.r, diff.c));
             let mut loc = a.clone();
-            while board.in_bounds(loc) {
+            while board.in_bounds(&loc) {
                 antinode_locs.insert(loc);
                 loc = loc.add(&diff);
             }
             loc = a.sub(&diff);
-            while board.in_bounds(loc) {
+            while board.in_bounds(&loc) {
                 antinode_locs.insert(loc);
                 loc = loc.sub(&diff);
             }
         }
     }
-    antinode_locs = antinode_locs.into_iter().filter(|p| board.in_bounds(*p)).collect();
+    antinode_locs = antinode_locs.into_iter().filter(|p| board.in_bounds(p)).collect();
     println!("{}: {}", function_name!(), antinode_locs.len());
 }
 
