@@ -40,7 +40,7 @@ fn print_disk(buffer: &Vec<Option<i32>>) {
 
 #[named]
 #[allow(dead_code)]
-fn compute_checksum(buffer: &[Option<i32>]) -> i64 {
+fn compute_checksum_old(buffer: &[Option<i32>]) -> i64 {
     let mut checksum = 0;
     for (i, val) in buffer.iter().enumerate() {
         if val.is_some() {
@@ -52,7 +52,7 @@ fn compute_checksum(buffer: &[Option<i32>]) -> i64 {
 }
 
 #[named]
-fn compute_checksum_2(buffer: &[Option<i32>]) -> i64 {
+fn compute_checksum(buffer: &[Option<i32>]) -> i64 {
     let checksum = buffer.iter().enumerate().filter(|(_, val)| { val.is_some() }).map(|(i, val)| { i as i64 * val.unwrap() as i64 }).sum();
     println!("{}: {}", function_name!(), checksum);
     checksum
@@ -76,7 +76,7 @@ fn defrag_disk(map: &str) -> i64 {
     }
     //print_disk(&buffer);
     //compute_checksum(&buffer[0..start]);
-    compute_checksum_2(&buffer[0..start])
+    compute_checksum(&buffer[0..start])
 }
 
 #[named]
@@ -86,9 +86,30 @@ fn part1() {
     println!("{}: {}", function_name!(), checksum);
 }
 
+fn expand_disk_2(map: &str) -> Vec<(Option<i32>, usize)> {
+    let buffer = map.chars().enumerate().map(|(i, c)| {
+        let val = if i % 2 == 1 { None } else { Some(i as i32 / 2) };
+        let count = c.to_digit(10).unwrap() as usize;
+        (val, count)
+    }).collect();
+    buffer
+}
+
+fn compute_checksum_2(buffer: Vec<(Option<i32>, usize)>) -> i64 {
+    buffer.iter().enumerate().map(|(i, (val, count))| {
+        if val.is_some() {
+            i as i64 * val.unwrap() as i64
+        } else {
+            0
+        }
+    }).sum()
+}
+
 #[named]
 fn part2() {
     let file_contents_as_string = fs::read_to_string(&("src\\".to_string() + DAY + "\\data_test.txt")).expect("Error loading file");
+    let buffer = expand_disk_2(&file_contents_as_string);
+
     println!("{}: {}", function_name!(), file_contents_as_string);
 }
 
