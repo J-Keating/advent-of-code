@@ -95,11 +95,31 @@ fn expand_disk_2(map: &str) -> Vec<(Option<i32>, usize)> {
     buffer
 }
 
-fn compute_checksum_2(buffer: Vec<(Option<i32>, usize)>) -> i64 {
-    buffer.iter().enumerate().map(|(i, (val, count))| {
+fn print_disk_2(buffer: &Vec<(Option<i32>, usize)>) {
+    buffer.iter().for_each(|(val, count)| {
+        for _ in 0..*count {
+            if val.is_some() {
+                print!("{:x}", val.unwrap());
+            } else {
+                print!(".");
+            }
+        }
+    });
+    println!();
+}
+
+fn compute_checksum_2(buffer: &Vec<(Option<i32>, usize)>) -> i64 {
+    let mut index: usize = 0;
+    buffer.iter().map(|(val, count)| {
         if val.is_some() {
-            i as i64 * val.unwrap() as i64
+            let actual_val = val.unwrap() as i64;
+            let run_sum = (0..*count).into_iter().map(|i| {
+                (index + i) as i64 * actual_val
+            }).sum();
+            index += *count;
+            run_sum
         } else {
+            index += *count;
             0
         }
     }).sum()
@@ -108,9 +128,13 @@ fn compute_checksum_2(buffer: Vec<(Option<i32>, usize)>) -> i64 {
 #[named]
 fn part2() {
     let file_contents_as_string = fs::read_to_string(&("src\\".to_string() + DAY + "\\data_test.txt")).expect("Error loading file");
-    let buffer = expand_disk_2(&file_contents_as_string);
+    let buffer = expand_disk(&file_contents_as_string);
+    let checksum = compute_checksum(&buffer[0..buffer.len()]);
+    let buffer2 = expand_disk_2(&file_contents_as_string);
+    print_disk_2(&buffer2);
+    let checksum2 = compute_checksum_2(&buffer2);
 
-    println!("{}: {}", function_name!(), file_contents_as_string);
+    println!("{}: {}, {}", function_name!(), checksum, checksum2);
 }
 
 pub fn run() {
