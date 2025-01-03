@@ -3,12 +3,12 @@
 // mod d6;
 // mod d7;
 // mod d8;
-mod d9;
+// mod d9;
 // mod d10;
 // mod d11;
 // mod d12;
 // mod d13;
-// mod d14;
+mod d14;
 // mod d15;
 // mod d16;
 // mod d17;
@@ -33,8 +33,8 @@ fn main() {
     // d7::run();
     // println!("Day8:");
     // d8::run();
-    println!("Day9:");
-    d9::run();
+    // println!("Day9:");
+    // d9::run();
     // println!("Day10:");
     // d10::run(); 
     // println!("Day11:");
@@ -43,8 +43,7 @@ fn main() {
     // d12::run();
     // println!("Day13:");
     // d13::run();
-    // println!("Day14:");
-    // d14::run();
+    d14::run();
     // println!("Day15:");
     // d15::run();
     // println!("Day16:");
