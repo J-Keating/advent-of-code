@@ -1,11 +1,5 @@
-//use std::{fs, fmt};
-
-use std::collections::HashMap;
-
 use ::function_name::named;
 //use itertools::Itertools;
-//use itertools::Itertools;
-//use lazy_static::lazy_static;
 use utilities::{Board, PointRC};
 
 const DAY: &str = "d14";
@@ -31,9 +25,7 @@ fn gather(board: &Board<char>, visited: &mut Board<bool>, plot: &mut Plot, row: 
     plot.area += 1;
     plot.permimeter += count_permimiter(board, row, col);
     let locs = vec![PointRC { r: row, c: col - 1 }, PointRC { r: row, c: col + 1 }, PointRC { r: row - 1, c: col }, PointRC { r: row + 1, c: col }];
-    for loc in locs {
-        gather(board, visited, plot, loc.r, loc.c);
-    }
+    locs.iter().for_each(|loc| gather(board, visited, plot, loc.r, loc.c));
 }
 
 fn do_part_1(filename: &str) {
@@ -50,7 +42,7 @@ fn do_part_1(filename: &str) {
         }
     }
     let total_cost = plot_list.iter().fold(0, |acc, plot| acc + plot.area * plot.permimeter);
-    println!("{:?}", plot_list);
+    //println!("{:?}", plot_list);
     println!("part1: {}: {}", filename, total_cost);
 }
 
@@ -60,7 +52,7 @@ fn part1() {
     // do_part_1(&("src\\".to_string() + DAY + "\\data_test_2.txt"));
     // do_part_1(&("src\\".to_string() + DAY + "\\data_test_3.txt"));
     do_part_1(&("src\\".to_string() + DAY + "\\data.txt"));
-    println!("{}: {}", function_name!(), "done");
+    //println!("{}: {}", function_name!(), "done");
 }
 
 #[named]
