@@ -19,6 +19,7 @@ fn part2() {
 }
 
 pub fn run() {
+    println!("{}:", DAY);
     part1();
     part2();
 }
