@@ -40,8 +40,8 @@ fn main() {
     // println!("Day11:");
     // d11::run();
     d12::run();
-    d13::run();
-    d14::run();
+    // d13::run();
+    // d14::run();
     // println!("Day15:");
     // d15::run();
     // println!("Day16:");
