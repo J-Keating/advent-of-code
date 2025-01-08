@@ -1,6 +1,6 @@
 # Advent of Code Solutions
 
-* [2015](https://adventofcode.com/2015) - (_Started in 2023_.) - Going back and doing (much) earlier years.  Using [Rust](https://www.rust-lang.org/) (now that I've learned a bit from 2022).
+* [2015](https://adventofcode.com/2015) - (_Started in 2023_.) - Having fun playing with [Rust](https://www.rust-lang.org/) after doing 2022 in it.  _Incomplete._
 * [2016](https://adventofcode.com/2016) - _Someday?_
 * [2017](https://adventofcode.com/2017) - _Someday?_
 * [2018](https://adventofcode.com/2018) - _Someday?_
