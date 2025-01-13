@@ -42,6 +42,7 @@ impl PointXY {
 
     pub fn add(self, other: &PointXY) -> PointXY { PointXY { x: self.x + other.x, y: self.y + other.y } }
     pub fn sub(self, other: &PointXY) -> PointXY { PointXY { x: self.x - other.x, y: self.y - other.y } }
+    pub fn mul(self, multiplier: i32) -> PointXY { PointXY { x: self.x * multiplier, y: self.y * multiplier } }
     pub fn div(self, divisor: i32) -> PointXY { PointXY { x: self.x / divisor, y: self.y / divisor } }
 
     pub fn neg(self) -> PointXY { PointXY { x: -self.x, y: -self.y } }
@@ -92,6 +93,7 @@ impl PointRC {
 
     pub fn add(self, other: &PointRC) -> PointRC { PointRC { r: self.r + other.r, c: self.c + other.c } }
     pub fn sub(self, other: &PointRC) -> PointRC { PointRC { r: self.r - other.r, c: self.c - other.c } }
+    pub fn mul(self, multiplier: i32) -> PointRC { PointRC { r: self.r * multiplier, c: self.c * multiplier } }
     pub fn div(self, divisor: i32) -> PointRC { PointRC { r: self.r / divisor, c: self.c / divisor } }
 
     pub fn neg(self) -> PointRC { PointRC { r: -self.r, c: -self.c } }
