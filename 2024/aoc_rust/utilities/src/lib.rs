@@ -28,50 +28,50 @@ pub fn alloc_3d_vec<T: Clone>(max_x: usize, max_y: usize, max_z: usize, val: T) 
 
 #[allow(dead_code)]
 #[derive(Eq, Hash, PartialEq, Clone, Copy)]
-pub struct PointXY {
-    pub x: i32,
-    pub y: i32
+pub struct PointXY<T> {
+    pub x: T,
+    pub y: T
 }
 
 #[allow(dead_code)]
-impl PointXY {
-    pub fn new() -> PointXY { PointXY { x: 0, y: 0 } }
+impl<T> PointXY<T> where T: num::PrimInt + num::Signed + num::Zero + std::ops::Neg<Output = T>  {
+    pub fn new() -> PointXY<T> { PointXY { x: T::zero(), y: T::zero() } }
 
-    pub fn min(self, other: &PointXY) -> PointXY { PointXY { x: cmp::min(self.x, other.x), y: cmp::min(self.y, other.y) } }
-    pub fn max(self, other: &PointXY) -> PointXY { PointXY { x: cmp::max(self.x, other.x), y: cmp::max(self.y, other.y) } }
+    pub fn min(self, other: &PointXY<T>) -> PointXY<T> { PointXY { x: cmp::min(self.x, other.x), y: cmp::min(self.y, other.y) } }
+    pub fn max(self, other: &PointXY<T>) -> PointXY<T> { PointXY { x: cmp::max(self.x, other.x), y: cmp::max(self.y, other.y) } }
 
-    pub fn add(self, other: &PointXY) -> PointXY { PointXY { x: self.x + other.x, y: self.y + other.y } }
-    pub fn sub(self, other: &PointXY) -> PointXY { PointXY { x: self.x - other.x, y: self.y - other.y } }
-    pub fn mul(self, multiplier: i32) -> PointXY { PointXY { x: self.x * multiplier, y: self.y * multiplier } }
-    pub fn div(self, divisor: i32) -> PointXY { PointXY { x: self.x / divisor, y: self.y / divisor } }
+    pub fn add(self, other: &PointXY<T>) -> PointXY<T> { PointXY { x: self.x + other.x, y: self.y + other.y } }
+    pub fn sub(self, other: &PointXY<T>) -> PointXY<T> { PointXY { x: self.x - other.x, y: self.y - other.y } }
+    pub fn mul(self, multiplier: T) -> PointXY<T> { PointXY { x: self.x * multiplier, y: self.y * multiplier } }
+    pub fn div(self, divisor: T) -> PointXY<T> { PointXY { x: self.x / divisor, y: self.y / divisor } }
 
-    pub fn neg(self) -> PointXY { PointXY { x: -self.x, y: -self.y } }
+    pub fn neg(self) -> PointXY<T> { PointXY { x: -self.x, y: -self.y } }
 
-    pub fn move_by(&mut self, other: &PointXY) -> &PointXY {
+    pub fn move_by(&mut self, other: &PointXY<T>) -> &PointXY<T> {
         *self = self.add(&other);
         self
     }
 
-    pub fn manhattan_dist(self, other: &PointXY) -> i32 {
+    pub fn manhattan_dist(self, other: &PointXY<T>) -> T {
         let diff = other.sub(&self);
         abs(diff.x) + abs(diff.y)
     }
 
-    pub fn interpolate<F>(self, other: &PointXY, mut callback: F) where F: FnMut(&PointXY)
+    pub fn interpolate<F>(self, other: &PointXY<T>, mut callback: F) where F: FnMut(&PointXY<T>)
     {
         let diff = other.sub(&self);
-        assert!((diff.x == 0 || diff.y == 0) && (diff.x != 0  || diff.y != 0));
-        let len = abs(diff.x + diff.y);
+        assert!((diff.x == T::zero() || diff.y == T::zero()) && (diff.x != T::zero()  || diff.y != T::zero()));
+        let len = (diff.x + diff.y).abs();
         let step = diff.div(len);
         let mut curr = self;
-        for _ in 0..=len {
+        for _ in 0..=len.to_i64().unwrap() {
             callback(&curr);
             curr.move_by(&step);
         }
     }
 }
 
-impl fmt::Display for PointXY {
+impl<T> fmt::Display for PointXY<T> where T: Display {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
     }
