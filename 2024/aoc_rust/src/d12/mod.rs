@@ -30,7 +30,7 @@ fn gather(board: &Board<char>, visited: &mut Board<bool>, plot: &mut Plot, row: 
 }
 
 fn do_part_1(filename: &str) {
-    let board = Board::<char>::load_data_chars(filename);
+    let board = Board::<char>::load_data_chars_from_file(filename);
     let mut visited: Board<bool> = Board::<bool>::new(board.height, board.width, false);
     let mut plot_list = Vec::<Plot>::new();
     for r in 0..board.height {
@@ -131,7 +131,7 @@ fn count_sides(fences: &Vec<FenceSegment>) -> (usize, usize, usize, usize) {
 }
 
 fn do_part_2(filename: &str) {
-    let board = Board::<char>::load_data_chars(filename);
+    let board = Board::<char>::load_data_chars_from_file(filename);
     let mut visited: Board<bool> = Board::<bool>::new(board.height, board.width, false);
     let mut plot_list = Vec::<Plot2>::new();
     for r in 0..board.height {

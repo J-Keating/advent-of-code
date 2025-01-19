@@ -1,4 +1,4 @@
-use std::{cmp, collections::HashSet, fmt::{self, Display}, fs};
+use std::{char, cmp, collections::HashSet, fmt::{self, Display}, fs, ops::{Index, IndexMut}};
 use ::num::abs;
 
 pub fn valid_vec_index<T>(v: &Vec<T>, index: i32) -> bool {
@@ -194,12 +194,21 @@ impl<T> Board<T> where T: Clone {
         &self.data[loc.r as usize][loc.c as usize]
     }
 
-    #[allow(dead_code)]
     pub fn print(&self) where T: Display {
         for line in &self.data {
             //println!("{}", line.iter().collect::<String>());
             for v in line.iter() {
                 print!("{}", v);
+            }
+            println!("");
+        }
+    }
+
+    pub fn print_with_actor(&self, loc: &PointRC, actor: T) where T: Display {
+        for (r, line) in self.data.iter().enumerate() {
+            //println!("{}", line.iter().collect::<String>());
+            for (c, v) in line.iter().enumerate() {
+                print!("{}", if r == loc.r as usize && c == loc.c as usize { &actor } else { v });
             }
             println!("");
         }
@@ -232,9 +241,8 @@ impl<T> Board<T> where T: Clone {
         loc.r >= 0 && loc.r < self.height as i32 && loc.c >= 0 && loc.c < self.width as i32
     }
 
-    pub fn load_data_chars(path: &str) -> Board<char> {
-        let file_contents_as_string = fs::read_to_string(path).expect("Error loading file");
-        let file_lines = file_contents_as_string.lines().collect::<Vec<&str>>();
+    pub fn load_data_chars_from_string(data: &str) -> Board<char> {
+        let file_lines = data.lines().collect::<Vec<&str>>();
         let height = file_lines.len();
         let width = file_lines[0].len();
         let mut board = Board::<char>::new(height, width, ' ');
@@ -244,6 +252,11 @@ impl<T> Board<T> where T: Clone {
             }
         }
         board
+    }
+
+    pub fn load_data_chars_from_file(path: &str) -> Board<char> {
+        let file_contents_as_string = fs::read_to_string(path).expect("Error loading file");
+        Board::<char>::load_data_chars_from_string(&file_contents_as_string)
     }
 
     pub fn load_data_int(path: &str) -> Board<i32> {
@@ -259,5 +272,21 @@ impl<T> Board<T> where T: Clone {
             }
         }
         board
+    }
+}
+
+impl<T> Index<PointRC> for Board<T> where T: Clone {
+    type Output = T;
+
+    fn index(&self, loc: PointRC) -> &T {
+        assert!(self.in_bounds(&loc));
+        &self.data[loc.r as usize][loc.c as usize]
+    }
+}
+
+impl<T> IndexMut<PointRC> for Board<T> where T: Clone {
+    fn index_mut(&mut self, loc: PointRC) -> &mut T {
+        assert!(self.in_bounds(&loc));
+        &mut self.data[loc.r as usize][loc.c as usize]
     }
 }
