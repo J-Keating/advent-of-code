@@ -73,11 +73,6 @@ fn part1() {
             board[new_loc] = '.';
             robot_loc = new_loc;
         }
-        //println!("{}: {:?}", i, direction);
-        //board.print_with_actor(&robot_loc, '@');
-        // if i > 10 {
-        //     break;
-        // }
     }
     //board.print_with_actor(&robot_loc, '@');
     let res = board
@@ -126,25 +121,24 @@ fn attempt_move(
     second_half: bool,
     all_move_locations: &mut Vec<PointRC>,
 ) -> bool {
-    //let step = get_step(dir);
     let horizontal = step.c != 0;
     let ret = match board[loc] {
         '.' => true,
         '#' => false,
         c @ '[' | c @ ']' => {
             let new_loc = loc.add(&step);
-            let neighbor_loc = loc.add(&neighbor_step(c));
-            assert!(board[neighbor_loc] == '[' || board[neighbor_loc] == ']');
-            if (second_half || attempt_move(board, neighbor_loc, step, true, all_move_locations))
-                && (horizontal || attempt_move(board, new_loc, step, false, all_move_locations))
-            {
-                if !all_move_locations.contains(&loc) {
-                    all_move_locations.push(loc);
-                }
-                true
+            let success = if horizontal {
+                attempt_move(board, new_loc, step, false, all_move_locations)
             } else {
-                false
+                let neighbor_loc = loc.add(&neighbor_step(c));
+                assert!(board[neighbor_loc] == '[' || board[neighbor_loc] == ']');
+                (second_half || attempt_move(board, neighbor_loc, step, true, all_move_locations))
+                && attempt_move(board, new_loc, step, false, all_move_locations)
+            };
+            if success && !all_move_locations.contains(&loc) {
+                all_move_locations.push(loc);
             }
+            success
         }
         _ => panic!("Invalid character"),
     };
@@ -153,17 +147,14 @@ fn attempt_move(
 
 #[named]
 fn part2() {
-    use test_data as data;
+    use real_data as data;
 
     let (mut board, moves) = load_data(data::FILENAME, board_expander);
     let mut robot_loc = board.find_first('@').unwrap();
     board[robot_loc] = '.';
-    //robot_loc = PointRC { r: 4, c: 5 };
-    for (i, direction) in moves.iter().enumerate() {
-        //let direction = Direction::Left;
+    for (_, direction) in moves.iter().enumerate() {
         let step = get_step(*direction);
         let new_robot_loc = robot_loc.add(&step);
-        //board.print_with_actor(&robot_loc, '@');
         let mut all_move_locations = Vec::<PointRC>::new();
         let could_move = attempt_move(
             &board,
@@ -174,21 +165,31 @@ fn part2() {
         );
         if could_move {
             all_move_locations.iter().for_each(|loc| {
-                let mut new_loc = loc.add(&step);
+                let new_loc = loc.add(&step);
                 board[new_loc] = board[*loc];
                 board[*loc] = '.';
             });
             robot_loc = new_robot_loc;
         }
-        println!("{}: {:?}", i, direction);
-        board.print_with_actor(&robot_loc, '@');
-        println!("{}: {}:{:?}", function_name!(), could_move, all_move_locations);
+        // println!("{}: {:?}", i, direction);
+        // board.print_with_actor(&robot_loc, '@');
     }
-}
+    //board.print_with_actor(&robot_loc, '@');
 
-#[test]
-fn test_part2() {
-    part2();
+    let res = board
+    .data
+    .iter()
+    .enumerate()
+    .map(|(r, row)| {
+        row.iter()
+            .enumerate()
+            .filter(|(_, &value)| value == '[')
+            .map(|(c, _)| 100 * r + c)
+            .sum::<usize>()
+    })
+    .sum::<usize>();
+    
+    println!("{}: {}", function_name!(), res);
 }
 
 pub fn run() {
@@ -198,4 +199,4 @@ pub fn run() {
 }
 
 // part1: 1436690
-// part2: 😱
+// part2: 1482350
