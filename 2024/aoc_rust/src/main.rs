@@ -9,9 +9,9 @@
 // mod d12;
 // mod d13;
 // mod d14;
-mod d15;
+// mod d15;
 // mod d16;
-// mod d17;
+mod d17;
 // mod d18;
 // mod d19;
 // mod d20;
@@ -42,9 +42,9 @@ fn main() {
     // d12::run();
     // d13::run();
     // d14::run();
-    d15::run();
+    // d15::run();
     // d16::run();
-    // d17::run();
+    d17::run();
     // d18::run();
     // d19::run();
     // d20::run();
