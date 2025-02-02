@@ -5,9 +5,11 @@ use std::fs;
 
 const DAY: &str = "d17";
 
+#[allow(dead_code)]
 mod test_data {
     pub const FILENAME: &str = r"src\d17\data_test2.txt";
 }
+#[allow(dead_code)]
 mod real_data {
     pub const FILENAME: &str = r"src\d17\data.txt";
 }
@@ -130,23 +132,110 @@ fn part1() {
     println!("{}: {}", function_name!(), output.iter().join(","));
 }
 
-#[named]
-fn part2() {
+fn get_output_from_starting_a_value(program: &Vec<i8>, a: i64, output: &mut Vec<i8>) {
+    let mut c = Computer {
+        ip: 0,
+        a: a,
+        b: 0,
+        c: 0,
+    };
+    output.clear();
+    while c.ip < program.len() {
+        run_one_instruction(&mut c, &program, output);
+    }
+}
+
+#[allow(dead_code)]
+fn test_one_a_value(_: &mut Computer, program: &Vec<i8>, a: i64) {
+    let mut output = Vec::<i8>::new();
+    get_output_from_starting_a_value(program, a, &mut output);
+    println!("{:6o}: {}", a, output.iter().join(","));
+}
+
+#[test]
+fn test() {
     use real_data as data;
     let (mut c, program) = load_data(data::FILENAME);
-    let mut output = Vec::<i8>::new();
+    test_one_a_value(&mut c, &program, 0o770717);
+    test_one_a_value(&mut c, &program, 0o771717);
+    test_one_a_value(&mut c, &program, 0o772717);
+    test_one_a_value(&mut c, &program, 0o773717);
+    test_one_a_value(&mut c, &program, 0o774717);
+    test_one_a_value(&mut c, &program, 0o775717);
+    test_one_a_value(&mut c, &program, 0o776717);
+    test_one_a_value(&mut c, &program, 0o777717);
+}
 
-    for i in 0..=60 {
-        c.a = i;
-        c.b = 0;
-        c.c = 0;
-        c.ip = 0;
-        output.clear();
-        while c.ip < program.len() {
-            run_one_instruction(&mut c, &program, &mut output);
-        }
-        println!("{}: {}", i, output.iter().join(","));
+#[test]
+fn test2() {
+    use real_data as data;
+    let (mut c, program) = load_data(data::FILENAME);
+    // test_one_a_value(&mut c, &program, 0o7200000000000000);
+    // test_one_a_value(&mut c, &program, 0o7210000000000000);
+    // test_one_a_value(&mut c, &program, 0o7220000000000000);
+    // test_one_a_value(&mut c, &program, 0o7230000000000000);
+    // test_one_a_value(&mut c, &program, 0o7240000000000000);
+    // test_one_a_value(&mut c, &program, 0o7250000000000000);
+    // test_one_a_value(&mut c, &program, 0o7260000000000000);
+    // test_one_a_value(&mut c, &program, 0o7270000000000000);
+
+    // test_one_a_value(&mut c, &program, 0o7400000000000000);
+    // test_one_a_value(&mut c, &program, 0o7410000000000000);
+    // test_one_a_value(&mut c, &program, 0o7420000000000000);
+    // test_one_a_value(&mut c, &program, 0o7430000000000000);
+    // test_one_a_value(&mut c, &program, 0o7440000000000000);
+    // test_one_a_value(&mut c, &program, 0o7450000000000000);
+    // test_one_a_value(&mut c, &program, 0o7460000000000000);
+    // test_one_a_value(&mut c, &program, 0o7470000000000000);
+
+    for i in 0..=7 {
+        test_one_a_value(&mut c, &program, 0o7260000000000000 | i << (12 * 3));
     }
+    // 7260000000000000: 0,0,0,0,0,0,0,0,0,0,0,3,5,5,3,0
+    for i in 0..=7 {
+        test_one_a_value(&mut c, &program, 0o7260000000000000 | i << (11 * 3));
+    }
+    // 7260100000000000: 0,0,0,0,0,0,0,0,4,0,0,7,5,5,3,0
+    for i in 0..=7 {
+        test_one_a_value(&mut c, &program, 0o7260100000000000 | i << (10 * 3));
+    }
+    // 7260110000000000: 0,0,0,0,0,0,0,4,4,0,1,7,5,5,3,0
+    for i in 0..=7 {
+        test_one_a_value(&mut c, &program, 0o7260110000000000 | i << (9 * 3));
+    }
+    // None ends with 4,1,7,5,5,3,0
+
+    //test_one_a_value(&mut c, &program, 0o7260000000000000);
+}
+
+fn test_octects(program: &Vec<i8>, so_far: i64, octet: i64) -> bool {
+    let mut output = Vec::<i8>::new();
+    for i in 0..=7 {
+        let a = so_far | i << (octet * 3);
+        let start_index = octet as usize;
+        get_output_from_starting_a_value(program, a, &mut output);
+        if program.len() == output.len()
+            && program[start_index..output.len()] == output[start_index..output.len()]
+        {
+            //println!("{:16o}: {}", a, output.iter().join(","));
+            if octet > 0 {
+                if test_octects(program, a, octet - 1) {
+                    return true;
+                }
+            } else {
+                println!("Found!: {} (0o{:o}): {}", a, a, output.iter().join(","));
+                return true;
+            }
+        }
+    }
+    false
+}
+
+//#[named]
+fn part2() {
+    use real_data as data;
+    let (_, program) = load_data(data::FILENAME);
+    test_octects(&program, 0, program.len() as i64 - 1);
 }
 
 pub fn run() {
@@ -155,6 +244,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 1436690
-// part2: 1482350
-// part2: 1482350
+// part1: 2,1,0,1,7,2,5,0,3
+// Found!: 267265166222235 (0o7461160522621633): 2,4,1,7,7,5,0,3,4,4,1,7,5,5,3,0
