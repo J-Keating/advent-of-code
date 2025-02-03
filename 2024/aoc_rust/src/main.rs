@@ -11,8 +11,8 @@
 // mod d14;
 // mod d15;
 // mod d16;
-mod d17;
-// mod d18;
+// mod d17;
+mod d18;
 // mod d19;
 // mod d20;
 // mod d21;
@@ -36,7 +36,7 @@ fn main() {
     // println!("Day9:");
     // d9::run();
     // println!("Day10:");
-    // d10::run(); 
+    // d10::run();
     // println!("Day11:");
     // d11::run();
     // d12::run();
@@ -44,8 +44,8 @@ fn main() {
     // d14::run();
     // d15::run();
     // d16::run();
-    d17::run();
-    // d18::run();
+    // d17::run();
+    d18::run();
     // d19::run();
     // d20::run();
     // d21::run();
