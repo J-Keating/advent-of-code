@@ -9,13 +9,13 @@ const DAY: &str = "d18";
 mod test_data {
     pub const FILENAME: &str = r"src\d18\data_test.txt";
     pub const DIMS: usize = 7;
-    pub const dropped: usize = 12;
+    pub const DROPPED: usize = 12;
 }
 #[allow(dead_code)]
 mod real_data {
     pub const FILENAME: &str = r"src\d18\data.txt";
     pub const DIMS: usize = 71;
-    pub const dropped: usize = 1024;
+    pub const DROPPED: usize = 1024;
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -89,7 +89,7 @@ fn part1() {
     let end_loc = PointRC { r: data::DIMS as i32 - 1, c: data::DIMS as i32 - 1 };
 
     let mut board = Board::<TileState>::new(data::DIMS, data::DIMS, TileState::Open);
-    points[0..data::dropped].iter().for_each(|&f| board[f] = TileState::Blocked);
+    points[0..data::DROPPED].iter().for_each(|&f| board[f] = TileState::Blocked);
 
     let found_dist = solve_board(&mut board, start_loc, end_loc);
 
@@ -98,9 +98,21 @@ fn part1() {
 
 #[named]
 fn part2() {
-    use test_data as data;
-    let _ = load_data(data::FILENAME);
-    println!("{}: {}", function_name!(), data::DIMS);
+    use real_data as data;
+    let points = load_data(data::FILENAME);
+    let start_loc = PointRC { r: 0, c: 0 };
+    let end_loc = PointRC { r: data::DIMS as i32 - 1, c: data::DIMS as i32 - 1 };
+
+    let mut end_index = data::DROPPED;
+    loop {
+        let mut board = Board::<TileState>::new(data::DIMS, data::DIMS, TileState::Open);
+        points[0..=end_index].iter().for_each(|&f| board[f] = TileState::Blocked);
+        if None == solve_board(&mut board, start_loc, end_loc) {
+            break;
+        }
+        end_index += 1;
+    };    
+    println!("{}: {},{}", function_name!(), points[end_index].c, points[end_index].r);
 }
 
 pub fn run() {
@@ -109,5 +121,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 2,1,0,1,7,2,5,0,3
-// Found!: 267265166222235 (0o7461160522621633): 2,4,1,7,7,5,0,3,4,4,1,7,5,5,3,0
+// part1: 372
+// part2: 25,6
