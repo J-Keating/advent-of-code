@@ -1,5 +1,6 @@
 use function_name::named;
 use itertools::Itertools;
+use memoize::memoize;
 use std::{fs};
 
 const DAY: &str = "d19";
@@ -27,18 +28,48 @@ fn load_data(path: &str) -> (Vec<String>, Vec<String>) {
     (towels, desired_designs)
 }
 
+fn does_match(design: &str, towels: &Vec<String>) -> bool {
+    if design.is_empty() {
+        return true;
+    }
+    for towel in towels {
+        if design.starts_with(towel) {
+            if does_match(&design[towel.len()..], towels) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 #[named]
 fn part1() {
-    use test_data as data;
+    use real_data as data;
     let (towels, desired_designs) = load_data(data::FILENAME);
-    println!("{}: {:?}, {:?}", function_name!(), towels, desired_designs);
+    let count = desired_designs.iter().filter(|d| does_match(d, &towels)).count();
+    println!("{}: {}", function_name!(), count);
+}
+
+#[memoize]
+fn count_possible_matches(design: String, towels: Vec<String>) -> usize {
+    if design.is_empty() {
+        return 1;
+    }
+    let mut count = 0;
+    for towel in &towels {
+        if design.starts_with(towel.as_str()) {
+            count += count_possible_matches(design[towel.len()..].to_string(), towels.clone());
+        }
+    }
+    count
 }
 
 #[named]
 fn part2() {
     use real_data as data;
     let (towels, desired_designs) = load_data(data::FILENAME);
-    println!("{}: {}", function_name!(), towels.len() + desired_designs.len());
+    let count = desired_designs.iter().map(|d| count_possible_matches(d.clone(), towels.clone())).sum::<usize>();
+    println!("{}: {}", function_name!(), count);
 }
 
 pub fn run() {
@@ -47,5 +78,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 372
-// part2: 25,6
+// part1: 315
+// part2: 625108891232249
