@@ -241,6 +241,16 @@ impl<T> Board<T> where T: Clone {
         loc.r >= 0 && loc.r < self.height as i32 && loc.c >= 0 && loc.c < self.width as i32
     }
 
+    pub fn remap<U>(&self, map_fn: fn(&T)->U) -> Board<U> where T: Clone, U: Clone + Default {
+        let mut ret = Board::<U>::new(self.height, self.width, U::default());
+        for r in 0..self.height {
+            for c in 0..self.width {
+                ret.data[r][c] = map_fn(&self.data[r][c]);
+            }
+        }
+        ret
+    }
+
     pub fn load_data_chars_from_string(data: &str) -> Board<char> {
         let file_lines = data.lines().collect::<Vec<&str>>();
         let height = file_lines.len();
