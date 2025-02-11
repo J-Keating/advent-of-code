@@ -26,6 +26,38 @@ pub fn alloc_3d_vec<T: Clone>(max_x: usize, max_y: usize, max_z: usize, val: T) 
     ret
 }
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right
+}
+
+impl Direction {
+    pub fn all() -> Vec<Direction> {
+        vec![Direction::Up, Direction::Down, Direction::Left, Direction::Right]
+    }
+    
+    pub fn turn_left(&self) -> Direction {
+        match self {
+            Direction::Up => Direction::Left,
+            Direction::Down => Direction::Right,
+            Direction::Left => Direction::Down,
+            Direction::Right => Direction::Up,
+        }
+    }
+
+    pub fn turn_right(&self) -> Direction {
+        match self {
+            Direction::Up => Direction::Right,
+            Direction::Down => Direction::Left,
+            Direction::Left => Direction::Up,
+            Direction::Right => Direction::Down,
+        }
+    }
+}
+
 #[allow(dead_code)]
 #[derive(Eq, Hash, PartialEq, Clone, Copy)]
 pub struct PointXY<T> {
@@ -47,11 +79,6 @@ impl<T> PointXY<T> where T: num::PrimInt + num::Signed + num::Zero + std::ops::N
 
     pub fn neg(self) -> PointXY<T> { PointXY { x: -self.x, y: -self.y } }
 
-    pub fn move_by(&mut self, other: &PointXY<T>) -> &PointXY<T> {
-        *self = self.add(&other);
-        self
-    }
-
     pub fn manhattan_dist(self, other: &PointXY<T>) -> T {
         let diff = other.sub(&self);
         abs(diff.x) + abs(diff.y)
@@ -66,7 +93,7 @@ impl<T> PointXY<T> where T: num::PrimInt + num::Signed + num::Zero + std::ops::N
         let mut curr = self;
         for _ in 0..=len.to_i64().unwrap() {
             callback(&curr);
-            curr.move_by(&step);
+            curr = curr.add(&step);
         }
     }
 }
@@ -98,9 +125,13 @@ impl PointRC {
 
     pub fn neg(self) -> PointRC { PointRC { r: -self.r, c: -self.c } }
 
-    pub fn move_by(&mut self, other: &PointRC) -> &PointRC {
-        *self = self.add(&other);
-        self
+    pub fn step_in_direction(self, dir: Direction) -> PointRC {
+        match dir {
+            Direction::Up => PointRC { r: self.r - 1, c: self.c },
+            Direction::Down => PointRC { r: self.r + 1, c: self.c },
+            Direction::Left => PointRC { r: self.r, c: self.c - 1 },
+            Direction::Right => PointRC { r: self.r, c: self.c + 1 },
+        }
     }
 
     pub fn manhattan_dist(self, other: &PointRC) -> i32 {
@@ -126,7 +157,7 @@ impl PointRC {
         let mut curr = self;
         for _ in 0..=len {
             callback(&curr);
-            curr.move_by(&step);
+            curr = curr.add(&step);
         }
     }
 }
@@ -173,7 +204,6 @@ impl<T> Point3<T> where T: num::PrimInt {
 
     pub fn add(self, other: &Point3<T>) -> Point3<T> { Point3 { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z } }
 }
-
 
 pub struct Board<T: Clone> {
     pub data: Vec<Vec<T>>,
