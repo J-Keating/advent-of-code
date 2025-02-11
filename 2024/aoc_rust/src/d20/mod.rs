@@ -37,10 +37,17 @@ impl fmt::Display for MapState {
     }
 }
 
-fn load_data(path: &str) -> (Board<char>, PointRC, PointRC) {
-    let board = Board::<char>::load_data_chars_from_file(path);
-    let start = board.find_first('S').unwrap();
-    let end = board.find_first('E').unwrap();
+fn load_data(path: &str) -> (Board<MapState>, PointRC, PointRC) {
+    let board_in = Board::<char>::load_data_chars_from_file(path);
+    let start = board_in.find_first('S').unwrap();
+    let end = board_in.find_first('E').unwrap();
+
+    let board = board_in.remap(|c| match c {
+        '#' => MapState::Blocked,
+        '.' | 'S' | 'E' => MapState::Open,
+        _ => panic!("Unexpected char"),
+    });
+
     (board, start, end)
 }
 
@@ -63,61 +70,37 @@ fn find_path(board: &mut Board<MapState>, start: PointRC, end: PointRC) -> Vec<P
     path
 }
 
+fn count_successful_cheats(path: &[PointRC], max_cheat: usize, min_savings: usize) -> usize {
+    //let min_savings = 100;
+    let mut count = 0;
+    for i in 0..(path.len() - min_savings) {
+        for j in (i + min_savings + 1)..path.len() {
+            let path_cost = j - i;
+            let cheat_cost = path[i].manhattan_dist(&path[j]) as usize;
+            if cheat_cost <= max_cheat && (path_cost - cheat_cost) >= min_savings {
+                count += 1;
+            }
+        }
+    }
+    count
+}
+
 #[named]
 fn part1() {
     use real_data as data;
-    let (board_in, start, end) = load_data(data::FILENAME);
-    let mut board = board_in.remap(|c| match c {
-        '#' => MapState::Blocked,
-        '.' | 'S' | 'E' => MapState::Open,
-        _ => panic!("Unexpected char"),
-    });
-
+    let (mut board, start, end) = load_data(data::FILENAME);
     let path = find_path(&mut board, start, end);
-
-    let is_cheat = |i: usize, j: usize| {
-        let p: &PointRC = &path[i];
-        let q: &PointRC = &path[j];
-        (p.r == q.r || p.c == q.c)
-            && (*p).manhattan_dist(&q) == 2
-            && board[p.add(&q).div(2)] == MapState::Blocked
-    };
-
-    /* Test Data
-    for diff in 3..=70 {
-        let mut count = 0;
-        for i in 0..(path.len() - diff) {
-            let j = i + diff;
-            if is_cheat(i, j) {
-                //println!("{}: {}=>{}", diff - 2, path[i], path[j]);
-                count += 1;
-            }
-        }
-        if count > 0 {
-            println!("{}: {}", diff - 2, count);
-        }
-    }
-    */
-
-    let min_savings = 100;
-    let mut count = 0;
-    for i in 0..(path.len() - min_savings) {
-        for j in (i + min_savings + 2)..path.len() {
-            if is_cheat(i, j) {
-                //println!("{}: {}=>{}", diff - 2, path[i], path[j]);
-                count += 1;
-            }
-        }
-    }
-
+    let count = count_successful_cheats(&path, 2, 100);
     println!("{}: {}", function_name!(), count);
 }
 
 #[named]
 fn part2() {
-    use test_data as data;
-    let _ = load_data(data::FILENAME);
-    println!("{}: {}", function_name!(), 0);
+    use real_data as data;
+    let (mut board, start, end) = load_data(data::FILENAME);
+    let path = find_path(&mut board, start, end);
+    let count = count_successful_cheats(&path, 20, 100);
+    println!("{}: {}", function_name!(), count);
 }
 
 pub fn run() {
@@ -127,4 +110,4 @@ pub fn run() {
 }
 
 // part1: 1375
-// part2: 0
+// part2: 983054
