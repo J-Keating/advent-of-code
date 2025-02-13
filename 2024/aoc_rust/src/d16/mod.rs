@@ -7,7 +7,7 @@ const DAY: &str = "d16";
 
 #[allow(dead_code)]
 mod test_data {
-    pub const FILENAME: &str = r"src\d16\data_test.txt";
+    pub const FILENAME: &str = r"src\d16\data_test2.txt";
 }
 #[allow(dead_code)]
 mod real_data {
@@ -92,11 +92,6 @@ fn shortest_path(board: &mut Board<MapState>, start: PointRC, end: PointRC) -> O
             return Some(cost);
         }
 
-        if board[loc] == MapState::Visited {
-            continue;
-        }
-        assert!(board[loc] == MapState::Open);
-
         board[loc] = MapState::Visited;
         let front = loc.step_in_direction(direction);
         if board[front] == MapState::Open {
@@ -129,7 +124,7 @@ fn shortest_path(board: &mut Board<MapState>, start: PointRC, end: PointRC) -> O
 
 #[named]
 fn part1() {
-    use test_data as data;
+    use real_data as data;
     let (mut board, start, end) = load_data(data::FILENAME);
     let result = shortest_path(&mut board, start, end).unwrap();
     println!("{}: {}", function_name!(), result);
