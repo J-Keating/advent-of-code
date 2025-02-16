@@ -133,6 +133,7 @@ fn shortest_path(board: &mut Board<MapState>, start: PointRC, end: PointRC) -> O
         if board[front] == MapState::Open {
             queue.push(front_progress);
         }
+        // This is the crazy part 2 logic.
         else if queue.iter().find(|p| p.can_combine(&front_progress)).is_some() {
             let mut new_queue = BinaryHeap::new();
             for p in queue.drain() {
