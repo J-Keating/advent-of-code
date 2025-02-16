@@ -42,7 +42,7 @@ fn load_data(path: &str) -> (Board<MapState>, PointRC, PointRC) {
     let start = board_in.find_first('S').unwrap();
     let end = board_in.find_first('E').unwrap();
 
-    let board = board_in.remap(|c| match c {
+    let board = board_in.remap(|_, c| match c {
         '#' => MapState::Blocked,
         '.' | 'S' | 'E' => MapState::Open,
         _ => panic!("Unexpected char"),

@@ -1,6 +1,6 @@
 use function_name::named;
 //use itertools::Itertools;
-use std::{cmp::Ordering, collections::BinaryHeap, fmt};
+use std::{cmp::Ordering, collections::{BinaryHeap, HashSet}, fmt};
 use utilities::{Board, Direction, PointRC};
 
 const DAY: &str = "d16";
@@ -37,11 +37,30 @@ impl fmt::Display for MapState {
     }
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 struct Progress {
     loc: PointRC,
     direction: Direction,
     cost: usize,
+    dupe_count: usize,
+    path: HashSet<PointRC>,
+}
+
+impl Progress {
+    fn can_combine(&self, other: &Self) -> bool {
+        self.loc == other.loc && self.direction == other.direction && self.cost == other.cost
+    }
+
+    fn combine(&self, other: &Self) -> Progress {
+        assert!(self.can_combine(other));
+        Progress {
+            loc: self.loc,
+            direction: self.direction,
+            cost: self.cost,
+            dupe_count: self.dupe_count + other.dupe_count,
+            path: self.path.union(&other.path).copied().collect(),
+        }
+    }
 }
 
 // The priority queue depends on `Ord`.
@@ -70,7 +89,7 @@ fn load_data(path: &str) -> (Board<MapState>, PointRC, PointRC) {
     let start = board_in.find_first('S').unwrap();
     let end = board_in.find_first('E').unwrap();
 
-    let board = board_in.remap(|c| match c {
+    let board = board_in.remap(|_, c| match c {
         '#' => MapState::Blocked,
         '.' | 'S' | 'E' => MapState::Open,
         _ => panic!("Unexpected char"),
@@ -79,44 +98,59 @@ fn load_data(path: &str) -> (Board<MapState>, PointRC, PointRC) {
     (board, start, end)
 }
 
-fn shortest_path(board: &mut Board<MapState>, start: PointRC, end: PointRC) -> Option<usize> {
+#[allow(dead_code)]
+fn print_with_progress(board: &Board<MapState>, progress: &BinaryHeap<Progress>) {
+    let mut board_display = board.remap(|_, map_state| match map_state {
+        MapState::Blocked => '#',
+        MapState::Open => '.',
+        MapState::Visited => '0',
+    });
+    for p in progress {
+        board_display[p.loc] = p.direction.to_char();
+    }
+    board_display.print();
+}
+
+fn shortest_path(board: &mut Board<MapState>, start: PointRC, end: PointRC) -> Option<(usize, usize)> {
     let mut queue = BinaryHeap::new();
     queue.push(Progress {
         loc: start,
         direction: Direction::Right,
         cost: 0,
+        dupe_count: 1,
+        path: HashSet::new(),
     });
 
-    while let Some(Progress { loc, direction, cost }) = queue.pop() {
+    while let Some(Progress { loc, direction, cost, dupe_count, mut path }) = queue.pop() {
         if loc == end {
-            return Some(cost);
+            return Some((cost, path.len() + 1));
         }
 
         board[loc] = MapState::Visited;
+        path.insert(loc);
         let front = loc.step_in_direction(direction);
+        let front_progress = Progress { loc: front, direction, cost: cost + 1, dupe_count, path: path.clone() };
         if board[front] == MapState::Open {
-            queue.push(Progress {
-                loc: front,
-                direction,
-                cost: cost + 1,
-            });
+            queue.push(front_progress);
+        }
+        else if queue.iter().find(|p| p.can_combine(&front_progress)).is_some() {
+            let mut new_queue = BinaryHeap::new();
+            for p in queue.drain() {
+                new_queue.push(if p.can_combine(&front_progress) { p.combine(&front_progress) } else { p } );
+            }
+            queue = new_queue;
         }
         let right_dir = direction.turn_right();
         if board[loc.step_in_direction(right_dir)] == MapState::Open {
-            queue.push(Progress {
-                loc,
-                direction: right_dir,
-                cost: cost + 1000,
-            });
+            queue.push(Progress { loc, direction: right_dir, cost: cost + 1000, dupe_count, path: path.clone() });
         }
         let left_dir = direction.turn_left();
         if board[loc.step_in_direction(left_dir)] == MapState::Open {
-            queue.push(Progress {
-                loc,
-                direction: left_dir,
-                cost: cost + 1000,
-            });
+            queue.push(Progress { loc, direction: left_dir, cost: cost + 1000, dupe_count, path: path.clone() });
         }
+        // print_with_progress(board, &queue);
+        // println!("{:?}", queue);
+        // println!();
     }
 
     None
@@ -126,15 +160,16 @@ fn shortest_path(board: &mut Board<MapState>, start: PointRC, end: PointRC) -> O
 fn part1() {
     use real_data as data;
     let (mut board, start, end) = load_data(data::FILENAME);
-    let result = shortest_path(&mut board, start, end).unwrap();
-    println!("{}: {}", function_name!(), result);
+    let (cost, _) = shortest_path(&mut board, start, end).unwrap();
+    println!("{}: {}", function_name!(), cost);
 }
 
 #[named]
 fn part2() {
-    use test_data as data;
+    use real_data as data;
     let (mut board, start, end) = load_data(data::FILENAME);
-    println!("{}: {}", function_name!(), 1);
+    let (_, tile_count) = shortest_path(&mut board, start, end).unwrap();
+    println!("{}: {}", function_name!(), tile_count);
 }
 
 pub fn run() {
@@ -143,5 +178,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 1375
-// part2: 983054
+// part1: 93436
+// part2: 486

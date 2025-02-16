@@ -56,8 +56,22 @@ impl Direction {
             Direction::Right => Direction::Down,
         }
     }
+
+    pub fn to_char(&self) -> char {
+        match self {
+            Direction::Up => '^',
+            Direction::Down => 'v',
+            Direction::Left => '<',
+            Direction::Right => '>',
+        }
+    }
 }
 
+impl fmt::Debug for Direction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_char())
+    }
+}
 #[allow(dead_code)]
 #[derive(Eq, Hash, PartialEq, Clone, Copy)]
 pub struct PointXY<T> {
@@ -271,11 +285,11 @@ impl<T> Board<T> where T: Clone {
         loc.r >= 0 && loc.r < self.height as i32 && loc.c >= 0 && loc.c < self.width as i32
     }
 
-    pub fn remap<U>(&self, map_fn: fn(&T)->U) -> Board<U> where T: Clone, U: Clone + Default {
+    pub fn remap<U>(&self, map_fn: fn(&PointRC, &T)->U) -> Board<U> where T: Clone, U: Clone + Default {
         let mut ret = Board::<U>::new(self.height, self.width, U::default());
         for r in 0..self.height {
             for c in 0..self.width {
-                ret.data[r][c] = map_fn(&self.data[r][c]);
+                ret.data[r][c] = map_fn(&PointRC { r: r as i32, c: c as i32 }, &self.data[r][c]);
             }
         }
         ret
