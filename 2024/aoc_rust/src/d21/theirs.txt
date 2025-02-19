@@ -1,0 +1,46 @@
+Theirs:
+
+<v<A   <
+>>^A   A
+vA     >
+^A     A
+<vA    v
+<A     <
+A      <
+>>^A   A
+A      A
+vA     >
+<^A    ^
+>A     A
+A      A
+vA     >
+^A     A
+<vA    v
+>^A    A
+A      A
+<A     ^
+>A     A
+<v<A   <
+>A     v
+>^A    A
+A      A
+A      A
+vA     >
+<^A    ^
+>A     A
+
+
+<A     ^    
+>A     A
+v<<A   <
+A      <
+>^A    ^
+A      ^
+>A     A
+vA     >
+A      >
+^A     A
+<vA    v
+A      v
+A      v
+>^A    A

@@ -1,7 +1,6 @@
 use function_name::named;
 //use itertools::Itertools;
-use std::fmt;
-use utilities::{Board, PointXY};
+use utilities::PointXY;
 
 const DAY: &str = "d21";
 
@@ -154,7 +153,7 @@ fn test_case_1() {
     assert!(next_string == answer);
 }
 
-fn through_all_keypads(code: &str) -> String {
+fn through_all_keypads(code: &str, directional_pad_depth: usize) -> String {
     let mut curr_string = code.to_string();
     let mut next_string = String::new();
     let mut prev_char = 'A';
@@ -166,7 +165,7 @@ fn through_all_keypads(code: &str) -> String {
         prev_char = c;
     }
     //println!("{}", next_string);
-    for _ in 1..=2 {
+    for _i in 1..=directional_pad_depth {
         // println!("{}", next_string);
         curr_string = next_string;
         next_string = String::new();
@@ -178,7 +177,7 @@ fn through_all_keypads(code: &str) -> String {
             next_string.push_str(&seq.to_dir_string(&start, PadType::Direction));
             prev_char = c;
         }
-        //println!("{}", next_string);
+        //println!("{}: {}", _i, next_string.len());
     }
     next_string
 }
@@ -187,7 +186,7 @@ fn through_all_keypads(code: &str) -> String {
 fn test_case_2() {
     let code = "379A";
     let correct = "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A";
-    let actual = through_all_keypads(code);
+    let actual = through_all_keypads(code, 2);
     println!("actual : {}", actual);
     println!("correct: {}", correct);
     //assert!(actual == correct);
@@ -203,7 +202,7 @@ fn part1() {
     let codes = load_data(data::FILENAME);
     let final_sum = codes.iter().map(|code| 
         {
-            let result = through_all_keypads(code);
+            let result = through_all_keypads(code, 2);
             let num: i32 = code[0..code.len() - 1].parse().unwrap();
             let len = result.len() as i32;
             let complexity = num * len;
@@ -215,9 +214,18 @@ fn part1() {
 
 #[named]
 fn part2() {
-    use test_data as data;
+    use real_data as data;
     let codes = load_data(data::FILENAME);
-    println!("{}: {:?}", function_name!(), codes);
+    let final_sum = codes.iter().map(|code| 
+        {
+            let result = through_all_keypads(code, 25);
+            let num: i32 = code[0..code.len() - 1].parse().unwrap();
+            let len = result.len() as i32;
+            let complexity = num * len;
+            println!("{}: {}, {}*{} = {}", code, result, num, len, complexity);
+            complexity
+        }).sum::<i32>();
+    println!("{}: {:?}", function_name!(), final_sum);
 }
 
 pub fn run() {
