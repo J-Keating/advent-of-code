@@ -23,16 +23,16 @@ Down > Left
 
 
 actual :
-v<<A>>^AvA^Av<<A>>^AAv<A<A>>^AAvAA^<A>Av<A>^AA<A>Av<A<A>>^AAAvA^<A>A
-<A>A<AAv<AA>>^AvAA^Av<AAA>^A
-^A^^<<A>>AvvvA
 379A
+^A^^<<A>>AvvvA
+<A>A<AAv<AA>>^AvAA^Av<AAA>^A
+v<<A>>^AvA^Av<<A>>^AAv<A<A>>^AAvAA^<A>Av<A>^AA<A>Av<A<A>>^AAAvA^<A>A
 
 correct:
-<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A
-<A>Av<<AA>^AA>AvAA^A<vAAA>^A
-^A<<^^A>>AvvvA
 379A
+^A<<^^A>>AvvvA
+<A>Av<<AA>^AA>AvAA^A<vAAA>^A
+<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A
 
 
 

@@ -153,11 +153,10 @@ fn test_case_1() {
     assert!(next_string == answer);
 }
 
-fn through_all_keypads(code: &str, directional_pad_depth: usize) -> String {
-    let mut curr_string = code.to_string();
+fn num_code_to_dirs(code: &str) -> String {
     let mut next_string = String::new();
     let mut prev_char = 'A';
-    for c in curr_string.chars() {
+    for c in code.chars() {
         let start: PointXY<i32> = num_to_loc(prev_char);
         let seq = Sequence::from_points(&start, &num_to_loc(c));
         //println!("{}: {:?}", seq.to_dir_string(), seq);
@@ -165,17 +164,34 @@ fn through_all_keypads(code: &str, directional_pad_depth: usize) -> String {
         prev_char = c;
     }
     //println!("{}", next_string);
+    next_string
+}
+
+fn dirs_to_press(current: char, press: char) -> String {
+    let start: PointXY<i32> = dir_to_loc(current);
+    let seq = Sequence::from_points(&start, &dir_to_loc(press));
+    //println!("{}: {:?}", seq.to_dir_string(), seq);
+    seq.to_dir_string(&start, PadType::Direction)
+}
+
+fn through_all_keypads(code: &str, directional_pad_depth: usize) -> String {
+    let mut next_string = num_code_to_dirs(code);
+    //println!("{}", next_string);
     for _i in 1..=directional_pad_depth {
         // println!("{}", next_string);
-        curr_string = next_string;
+        let curr_string = next_string;
         next_string = String::new();
-        prev_char = 'A';
-        for c in curr_string.chars() {
-            let start: PointXY<i32> = dir_to_loc(prev_char);
-            let seq = Sequence::from_points(&start, &dir_to_loc(c));
-            //println!("{} - {}   {}: {:?}", prev_char, c, seq.to_dir_string(&start, PadType::Direction), seq);
-            next_string.push_str(&seq.to_dir_string(&start, PadType::Direction));
-            prev_char = c;
+        // let mut prev_char = 'A';
+        // for c in curr_string.chars() {
+        //     // let start: PointXY<i32> = dir_to_loc(prev_char);
+        //     // let seq = Sequence::from_points(&start, &dir_to_loc(c));
+        //     // //println!("{} - {}   {}: {:?}", prev_char, c, seq.to_dir_string(&start, PadType::Direction), seq);
+        //     // next_string.push_str(&seq.to_dir_string(&start, PadType::Direction));
+        //     next_string.push_str(&dirs_to_press(prev_char, c));
+        //     prev_char = c;
+        // }
+        for (curr, next) in ("A".to_string().chars().chain(curr_string.chars()).tuple_windows()) {
+            next_string.push_str(&dirs_to_press(curr, next));
         }
         //println!("{}: {}", _i, next_string.len());
     }
@@ -214,11 +230,11 @@ fn part1() {
 
 #[named]
 fn part2() {
-    use real_data as data;
+    use test_data as data;
     let codes = load_data(data::FILENAME);
     let final_sum = codes.iter().map(|code| 
         {
-            let result = through_all_keypads(code, 25);
+            let result = through_all_keypads(code, 2);
             let num: i32 = code[0..code.len() - 1].parse().unwrap();
             let len = result.len() as i32;
             let complexity = num * len;
@@ -234,5 +250,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 
+// part1: 154208 / test=126384
 // part2: 
