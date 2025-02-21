@@ -1,5 +1,6 @@
 use function_name::named;
-//use itertools::Itertools;
+use memoize::memoize;
+use itertools::Itertools;
 use utilities::PointXY;
 
 const DAY: &str = "d21";
@@ -181,21 +182,44 @@ fn through_all_keypads(code: &str, directional_pad_depth: usize) -> String {
         // println!("{}", next_string);
         let curr_string = next_string;
         next_string = String::new();
-        // let mut prev_char = 'A';
-        // for c in curr_string.chars() {
-        //     // let start: PointXY<i32> = dir_to_loc(prev_char);
-        //     // let seq = Sequence::from_points(&start, &dir_to_loc(c));
-        //     // //println!("{} - {}   {}: {:?}", prev_char, c, seq.to_dir_string(&start, PadType::Direction), seq);
-        //     // next_string.push_str(&seq.to_dir_string(&start, PadType::Direction));
-        //     next_string.push_str(&dirs_to_press(prev_char, c));
-        //     prev_char = c;
-        // }
-        for (curr, next) in ("A".to_string().chars().chain(curr_string.chars()).tuple_windows()) {
+        for (curr, next) in "A".to_string().chars().chain(curr_string.chars()).tuple_windows() {
             next_string.push_str(&dirs_to_press(curr, next));
         }
         //println!("{}: {}", _i, next_string.len());
     }
     next_string
+}
+
+#[memoize]
+fn through_all_keypads_len_recursive(start: char, end: char, depth: usize) -> i64 {
+    if depth == 0 {
+        return 1;
+    }
+    let expanded = dirs_to_press(start, end);
+    let mut ret = 0;
+    for (curr, next) in "A".to_string().chars().chain(expanded.chars()).tuple_windows() {
+        ret += through_all_keypads_len_recursive(curr, next, depth - 1);
+    }
+    ret
+}
+
+fn through_all_keypads_len(code: &str, directional_pad_depth: usize) -> i64 {
+    let expanded = num_code_to_dirs(code);
+    let mut ret = 0;
+    for (curr, next) in "A".to_string().chars().chain(expanded.chars()).tuple_windows() {
+        ret += through_all_keypads_len_recursive(curr, next, directional_pad_depth);
+    }
+    ret
+}
+
+#[test]
+fn test_case_1_len() {
+    let code = "379A";
+    let correct = through_all_keypads(code, 3).len() as i64;
+    let actual = through_all_keypads_len(code, 3);
+    println!("actual : {}", actual);
+    println!("correct: {}", correct);
+    assert!(actual == correct);
 }
 
 #[test]
@@ -222,7 +246,7 @@ fn part1() {
             let num: i32 = code[0..code.len() - 1].parse().unwrap();
             let len = result.len() as i32;
             let complexity = num * len;
-            println!("{}: {}, {}*{} = {}", code, result, num, len, complexity);
+            //println!("{}: {}, {}*{} = {}", code, result, num, len, complexity);
             complexity
         }).sum::<i32>();
     println!("{}: {:?}", function_name!(), final_sum);
@@ -230,17 +254,16 @@ fn part1() {
 
 #[named]
 fn part2() {
-    use test_data as data;
+    use real_data as data;
     let codes = load_data(data::FILENAME);
     let final_sum = codes.iter().map(|code| 
         {
-            let result = through_all_keypads(code, 2);
-            let num: i32 = code[0..code.len() - 1].parse().unwrap();
-            let len = result.len() as i32;
+            let len = through_all_keypads_len(code, 25);
+            let num: i64 = code[0..code.len() - 1].parse().unwrap();
             let complexity = num * len;
-            println!("{}: {}, {}*{} = {}", code, result, num, len, complexity);
+            //println!("{}: {}*{} = {}", code, num, len, complexity);
             complexity
-        }).sum::<i32>();
+        }).sum::<i64>();
     println!("{}: {:?}", function_name!(), final_sum);
 }
 
@@ -251,4 +274,4 @@ pub fn run() {
 }
 
 // part1: 154208 / test=126384
-// part2: 
+// part2: 188000493837892
