@@ -16,8 +16,8 @@
 // mod d19;
 // mod d20;
 // mod d21;
-mod d22;
-// mod d23;
+// mod d22;
+mod d23;
 // mod d24;
 // mod d25;
 // mod test;
@@ -49,8 +49,8 @@ fn main() {
     // d19::run();
     // d20::run();
     // d21::run();
-    d22::run();
-    // d23::run();
+    // d22::run();
+    d23::run();
     // d24::run();
     // d25::run();
     // println!("Test:");
