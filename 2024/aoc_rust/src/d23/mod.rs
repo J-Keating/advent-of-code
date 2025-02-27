@@ -1,7 +1,5 @@
 use function_name::named;
-use utilities::alloc_2d_vec;
-//use itertools::Itertools;
-use std::fs;
+use std::{collections::HashSet, fs, mem::swap};
 
 const DAY: &str = "d23";
 
@@ -45,8 +43,7 @@ fn test_encode_computer() {
 
 struct ComputerGenerator {
     key_char: char,
-    first_char_counter: i32,
-    second_char_counter: i32,
+    char_counter: i32,
 }
 
 // Generate all combinations of a key character with the other 25 characters
@@ -56,12 +53,9 @@ impl Iterator for ComputerGenerator {
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut result = None;
-        if self.second_char_counter < 26 {
-            result = Some((self.key_char as i32 - 'a' as i32) * 26 + self.second_char_counter as i32);
-            self.second_char_counter += 1;
-        } else if self.first_char_counter < 26 {
-            result = Some(self.first_char_counter * 26 + (self.key_char as i32 - 'a' as i32));
-            self.first_char_counter += 1;
+        if self.char_counter < 26 {
+            result = Some((self.key_char as i32 - 'a' as i32) * 26 + self.char_counter as i32);
+            self.char_counter += 1;
         }
         result
     }
@@ -71,8 +65,7 @@ impl Iterator for ComputerGenerator {
 fn computer_generator(key_char: char) -> ComputerGenerator {
     ComputerGenerator {
         key_char,
-        first_char_counter: 0,
-        second_char_counter: 0,
+        char_counter: 0,
     }
 }
 
@@ -93,24 +86,37 @@ fn load_data(path: &str) -> Vec<Edge> {
     }).collect()
 }
 
-fn other_computer(computer: i32, edge: &Edge) -> i32 {
-    if edge.0 == computer {
-        edge.1
-    } else {
-        edge.0
-    }
-}
-
 #[named]
 fn part1() {
-    use test_data as data;
+    use real_data as data;
     let edges = load_data(data::FILENAME);
-    let mut computer_grid = alloc_2d_vec::<Vec<i32>>(26*26, 26*26, vec![]);
-    for (index, (a, b)) in edges.iter().enumerate() {
-        computer_grid[*a as usize][*b as usize].push(index as i32);
-        computer_grid[*b as usize][*a as usize].push(index as i32);
+    let mut computer_grid = vec![vec![]; 26 * 26];
+    for (a, b) in edges {
+        computer_grid[a as usize].push(b);
+        computer_grid[b as usize].push(a);
     }
-    println!("{}: {}, {:?}", function_name!(), edges.len(), edges[0..2].to_vec());
+    //println!("{}: {}, {:?}", function_name!(), edges.len(), edges[0..2].to_vec());
+    let mut unique_sets = HashSet::<Vec<i32>>::new();
+    for c1 in computer_generator('t') {
+        for c2 in computer_grid[c1 as usize].iter() {
+            for c3 in computer_grid[*c2 as usize].iter() {
+                for c4 in computer_grid[*c3 as usize].iter() {
+                    if c4 == &c1 {
+                        //println!("{}: {} -> {} -> {} -> {}", function_name!(), decode_computer(c1), decode_computer(*c2), decode_computer(*c3), decode_computer(*c4));
+                        let (mut s1, mut s2, mut s3) = (c1, *c2, *c3);
+                        if s1 > s2 { swap(&mut s1, &mut s2);}
+                        if s2 > s3 { swap(&mut s2, &mut s3);}
+                        if s1 > s2 { swap(&mut s1, &mut s2);}
+                        unique_sets.insert(vec![s1, s2, s3]);
+                    }
+                }
+            }
+        }
+    }
+    // for s in &unique_sets {
+    //     println!("{}: {} -> {} -> {}", function_name!(), decode_computer(s[0]), decode_computer(s[1]), decode_computer(s[2]));
+    // }
+    println!("{}: {}", function_name!(), unique_sets.len());
 }
 
 #[named]
