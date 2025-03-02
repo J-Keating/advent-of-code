@@ -1,6 +1,6 @@
 use function_name::named;
 use itertools::Itertools;
-use std::{collections::HashSet, fs, mem::swap};
+use std::{collections::HashSet, fs, mem::swap, time::Instant};
 
 const DAY: &str = "d23";
 
@@ -89,6 +89,8 @@ fn load_data(path: &str) -> Vec<Edge> {
 
 #[named]
 fn part1() {
+    let start = Instant::now();
+
     use real_data as data;
     let edges = load_data(data::FILENAME);
     let mut computer_grid = vec![vec![]; 26 * 26];
@@ -117,7 +119,8 @@ fn part1() {
     // for s in &unique_sets {
     //     println!("{}: {} -> {} -> {}", function_name!(), decode_computer(s[0]), decode_computer(s[1]), decode_computer(s[2]));
     // }
-    println!("{}: {}", function_name!(), unique_sets.len());
+    let duration = start.elapsed();
+    println!("{}: {} ({}ms)", function_name!(), unique_sets.len(), duration.as_millis());
 }
 
 fn full_connectivity(computer_grid: &Vec<Vec<i32>>, computers: &Vec<&i32>) -> bool {
@@ -132,6 +135,8 @@ fn full_connectivity(computer_grid: &Vec<Vec<i32>>, computers: &Vec<&i32>) -> bo
 
 #[named]
 fn part2() {
+    let start = Instant::now();
+
     use real_data as data;
     let edges = load_data(data::FILENAME);
     let mut computer_grid = vec![vec![]; 26 * 26];
@@ -139,32 +144,36 @@ fn part2() {
         computer_grid[a as usize].push(b);
         computer_grid[b as usize].push(a);
     }
+    // Get the full connectivity for each computer, including itself, sorted
     for (i, c) in computer_grid.iter_mut().enumerate() {
         c.push(i as i32);
         c.sort();
     }
+    // Find maximum number of computers connected to a single computer.  No set of fully connected
+    // computers can be larger than this.
     let mut size_to_test = computer_grid.iter().map(|c| c.len()).max().unwrap();
     let mut largest_set: Vec<i32> = vec![];
     while largest_set.is_empty() && size_to_test > 0 {
+        // Start with known connectivity to build unique sets of computers that are all connected to 
+        // one particular computer.  Then check if they are fully connected to each other.
         let mut candidates = HashSet::new();
         for c in computer_grid.iter() {
-            if c.len() == size_to_test {
-                candidates.insert(c.clone());
-            }
-            else if c.len() > size_to_test {
+            if c.len() >= size_to_test {
                 c.iter().combinations(size_to_test).for_each(|p| {
-                    if full_connectivity(&computer_grid, &p) {
-                        largest_set = p.iter().map(|c| **c).collect();
-                    }
+                    candidates.insert(p.clone());
                 });
             }
-            if !largest_set.is_empty() {
+        }
+        for p in candidates.iter() {
+            if full_connectivity(&computer_grid, p) {
+                largest_set = p.iter().map(|c| **c).collect();
                 break;
             }
         }
         size_to_test -= 1;
     }
-    println!("{}: {}", function_name!(), largest_set.iter().map(|c| decode_computer(*c)).collect::<Vec<_>>().join(","));
+    let duration = start.elapsed();
+    println!("{}: {} ({}ms)", function_name!(), largest_set.iter().map(|c| decode_computer(*c)).collect::<Vec<_>>().join(","), duration.as_millis());
 }
 
 pub fn run() {
@@ -173,5 +182,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 1308
-// part2: bu,fq,fz,pn,rr,st,sv,tr,un,uy,zf,zi,zy
+// part1: 1308 (9ms)
+// part2: bu,fq,fz,pn,rr,st,sv,tr,un,uy,zf,zi,zy (40ms)
