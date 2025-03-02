@@ -6,7 +6,7 @@ const DAY: &str = "d24";
 
 #[allow(dead_code)]
 mod test_data {
-    pub const FILENAME: &str = r"src\d24\data_test.txt";
+    pub const FILENAME: &str = r"src\d24\data_test2.txt";
 }
 #[allow(dead_code)]
 mod real_data {
@@ -56,15 +56,41 @@ fn load_data(path: &str) -> (HashMap<String, bool>, Vec<Gate>) {
     (start_values, gates)
 }
 
+fn get_value(values: &mut HashMap<String, bool>, gates: &Vec<Gate>, key: &String) -> bool {
+    if let Some(value) = values.get(key) {
+        *value
+    } else {
+        let gate = gates.iter().find(|g| g.out == *key).unwrap();
+        let a = get_value(values, gates, &gate.a);
+        let b = get_value(values, gates, &gate.b);
+        let value = match gate.op {
+            Operator::AND => a && b,
+            Operator::OR => a || b,
+            Operator::XOR => a ^ b,
+        };
+        values.insert(key.clone(), value);
+        value
+    }
+}
+
 #[named]
 fn part1() {
     let start = Instant::now();
 
-    use test_data as data;
+    use real_data as data;
     let (start_values, gates) = load_data(data::FILENAME);
-
+    let mut values = start_values.clone();
+    let mut all_necessary_outputs = gates.iter().filter(|g| g.out.starts_with("z")).map(|g| g.out.clone()).collect::<Vec<String>>();
+    all_necessary_outputs.sort();
+    let mut output_as_string = String::new();
+    for wire in all_necessary_outputs.iter().rev() {
+        let value = get_value(&mut values, &gates, wire);
+        output_as_string += if value { "1" } else { "0" };
+    }
+    let output = u64::from_str_radix(&output_as_string, 2).unwrap();
+    
     let duration = start.elapsed();
-    println!("{}: {} ({}ms)", function_name!(), start_values.len() + gates.len(), duration.as_millis());
+    println!("{}: {} ==> {} ({}ms)", function_name!(), output_as_string, output, duration.as_millis());
 }
 
 #[named]
