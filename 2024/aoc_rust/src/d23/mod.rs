@@ -1,4 +1,5 @@
 use function_name::named;
+use itertools::Itertools;
 use std::{collections::HashSet, fs, mem::swap};
 
 const DAY: &str = "d23";
@@ -119,11 +120,51 @@ fn part1() {
     println!("{}: {}", function_name!(), unique_sets.len());
 }
 
+fn full_connectivity(computer_grid: &Vec<Vec<i32>>, computers: &Vec<&i32>) -> bool {
+    for c in computers {
+        let connected_computers = &computer_grid[**c as usize];
+        if !computers.iter().all(|c2| connected_computers.contains(c2)) {
+            return false;
+        }
+    }
+    true
+}
+
 #[named]
 fn part2() {
     use real_data as data;
     let edges = load_data(data::FILENAME);
-    println!("{}: {}", function_name!(), edges.len());
+    let mut computer_grid = vec![vec![]; 26 * 26];
+    for (a, b) in edges {
+        computer_grid[a as usize].push(b);
+        computer_grid[b as usize].push(a);
+    }
+    for (i, c) in computer_grid.iter_mut().enumerate() {
+        c.push(i as i32);
+        c.sort();
+    }
+    let mut size_to_test = computer_grid.iter().map(|c| c.len()).max().unwrap();
+    let mut largest_set: Vec<i32> = vec![];
+    while largest_set.is_empty() && size_to_test > 0 {
+        let mut candidates = HashSet::new();
+        for c in computer_grid.iter() {
+            if c.len() == size_to_test {
+                candidates.insert(c.clone());
+            }
+            else if c.len() > size_to_test {
+                c.iter().combinations(size_to_test).for_each(|p| {
+                    if full_connectivity(&computer_grid, &p) {
+                        largest_set = p.iter().map(|c| **c).collect();
+                    }
+                });
+            }
+            if !largest_set.is_empty() {
+                break;
+            }
+        }
+        size_to_test -= 1;
+    }
+    println!("{}: {}", function_name!(), largest_set.iter().map(|c| decode_computer(*c)).collect::<Vec<_>>().join(","));
 }
 
 pub fn run() {
@@ -132,5 +173,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 315
-// part2: 625108891232249
+// part1: 1308
+// part2: bu,fq,fz,pn,rr,st,sv,tr,un,uy,zf,zi,zy
