@@ -9,4 +9,4 @@
 * [2021](https://adventofcode.com/2021) - (_Started in 2021_.) - Done to learn [TypeScript](https://www.typescriptlang.org/).  _Incomplete._
 * [2022](https://adventofcode.com/2022) - (_Started in 2022_.) - Done to learn [Rust](https://www.rust-lang.org/).   _Completed `50*` on 1/15/23._
 * [2023](https://adventofcode.com/2023) - (_Started in 2023_.) - Started experimenting with Herb Sutter's [CPP2](https://github.com/hsutter/cppfront).  _Incomplete._
-* [2024](https://adventofcode.com/2024) - (_Started in 2024_.) - Started experimenting [Gleam](https://gleam.run/) and was *not* a fan.  Fell back to [Rust](https://www.rust-lang.org/) on Day 4.  _Incomplete._
+* [2024](https://adventofcode.com/2024) - (_Started in 2024_.) - Started experimenting [Gleam](https://gleam.run/) and was *not* a fan.  Fell back to [Rust](https://www.rust-lang.org/) on Day 4.  _Completed `50*` on 3/5/23._
