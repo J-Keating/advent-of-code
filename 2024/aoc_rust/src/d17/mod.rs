@@ -208,7 +208,7 @@ fn test2() {
     //test_one_a_value(&mut c, &program, 0o7260000000000000);
 }
 
-fn test_octects(program: &Vec<i8>, so_far: i64, octet: i64) -> bool {
+fn test_octets(program: &Vec<i8>, so_far: i64, octet: i64) -> bool {
     let mut output = Vec::<i8>::new();
     for i in 0..=7 {
         let a = so_far | i << (octet * 3);
@@ -219,7 +219,7 @@ fn test_octects(program: &Vec<i8>, so_far: i64, octet: i64) -> bool {
         {
             //println!("{:16o}: {}", a, output.iter().join(","));
             if octet > 0 {
-                if test_octects(program, a, octet - 1) {
+                if test_octets(program, a, octet - 1) {
                     return true;
                 }
             } else {
@@ -235,7 +235,7 @@ fn test_octects(program: &Vec<i8>, so_far: i64, octet: i64) -> bool {
 fn part2() {
     use real_data as data;
     let (_, program) = load_data(data::FILENAME);
-    test_octects(&program, 0, program.len() as i64 - 1);
+    test_octets(&program, 0, program.len() as i64 - 1);
 }
 
 pub fn run() {
