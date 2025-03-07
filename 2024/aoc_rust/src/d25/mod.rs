@@ -1,5 +1,4 @@
 use function_name::named;
-//use itertools::Itertools;
 use std::fs;
 
 const DAY: &str = "d25";
@@ -30,24 +29,15 @@ fn load_data(path: &str) -> Vec<[[char; 5]; 7]> {
 
 fn compute_heights(schematics: [[char; 5]; 7]) -> (bool, [i32; 5]) {
     let mut heights = [0; 5];
-    for c in 0..5 {
-        for r in 0..7 {
-            if schematics[r][c] == '#' {
-                heights[c] += 1;
-            }
-        }
+    for r in schematics.iter() {
+        r.iter().enumerate().filter(|(_, &c)| c == '#').for_each(|(c, _)| heights[c] += 1);
     }
     // Its a lock if the top row is all '#'
     (schematics[0][0] == '#', heights)
 }
 
 fn key_fits_lock(key: [i32; 5], lock: [i32; 5]) -> bool {
-    for i in 0..5 {
-        if key[i] + lock[i] > 7 {
-            return false;
-        }
-    }
-    true
+    key.iter().zip(lock.iter()).all(|(k, l)| k + l <= 7)
 }
 
 #[named]
@@ -56,31 +46,25 @@ fn part1() {
     let mut lock_heights = Vec::<[i32; 5]>::new();
     let mut keys_heights = Vec::<[i32; 5]>::new();
     let schematics = load_data(data::FILENAME);
+    // Sort heights into locks and keys
     for schematic in schematics.iter() {
         let (is_lock, heights) = compute_heights(*schematic);
-        if is_lock {
-            lock_heights.push(heights);
-        } else {
-            keys_heights.push(heights);
-        }
+        match is_lock {
+            true => &mut lock_heights,
+            false => &mut keys_heights,
+        }.push(heights)
     }
-    let mut fit_count = 0;
-    for lock in lock_heights.iter() {
-        for key in keys_heights.iter() {
-            if key_fits_lock(*key, *lock) {
-                fit_count += 1;
-            }
-        }
-    }
+    // Count all combinations of keys that fit into locks    
+    let fit_count = lock_heights.iter().map(|&lock| {
+        keys_heights.iter().filter(|&&key| key_fits_lock(key, lock)).count()
+    }).sum::<usize>();
 
     println!("{}: {}", function_name!(), fit_count);
 }
 
 #[named]
 fn part2() {
-    use test_data as data;
-    let lines = load_data(data::FILENAME);
-    println!("{}: {}", function_name!(), lines.len());
+    println!("{}: {}", function_name!(), "Wheeee!");
 }
 
 pub fn run() {
@@ -89,5 +73,5 @@ pub fn run() {
     part2();
 }
 
-// part1: 315
-// part2: 625108891232249
+// part1: 3508
+// part2: Wheeee!
