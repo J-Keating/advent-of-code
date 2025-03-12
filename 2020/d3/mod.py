@@ -1,5 +1,4 @@
-from functools import reduce, total_ordering
-from itertools import product
+from functools import reduce
 from operator import mul
 from typing import List
 
