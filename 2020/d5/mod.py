@@ -1,16 +1,5 @@
 DAY = 'd5'
 
-fields = [
-    "byr",
-    "iyr",
-    "eyr",
-    "hgt",
-    "hcl",
-    "ecl",
-    "pid",
-    "cid"
-]
-
 def load_data(file_path):
     with open(file_path, 'r') as file:
         content = file.read()
@@ -40,10 +29,10 @@ def part2():
     seat_ids.sort()
     for first, second in zip(seat_ids, seat_ids[1:]):
         if second - first > 1:
-            print(f"part1: {first + 1}")
+            print(f"part2: {first + 1}")
 
 part1()
 part2()
 
 # part1: 904
-# part1: 669
+# part2: 669
