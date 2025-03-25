@@ -1,7 +1,3 @@
-from email.policy import default
-from itertools import accumulate
-import re
-
 DAY = 'd8'
 
 def load_data(file_path):
