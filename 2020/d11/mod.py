@@ -106,4 +106,4 @@ part1()
 part2()
 
 # part1: 2261
-# part2: 
+# part2: 2039
