@@ -9,41 +9,49 @@ class TEST_DATA:
 class REAL_DATA:
     FILE_NAME = 'data_real.txt'
 
+class Directions:
+    N = 0
+    E = 1
+    S = 2
+    W = 3
+    COUNT = 4
+    to_vec = {
+        N: (0, -1),
+        S: (0, 1),
+        E: (1, 0),
+        W: (-1, 0)
+    }
+    to_dir = {
+        'N': N,
+        'E': E,
+        'S': S,
+        'W': W
+    }
+
 def load_data(file_path):
     with open(file_path, 'r') as file:
-        return [list(line.strip()) for line in file]
+        return [line.strip() for line in file]
 
 def part1():
     start_time = time.perf_counter()
     data = REAL_DATA
     instructions = load_data(DAY + '\\' + data.FILE_NAME)
     loc = (0, 0)
-    direction = 0
+    face_direction = Directions.E
     for instruction in instructions:
         action = instruction[0]
         value = int(instruction[1:])
+        move_direction = (0, 0)
         match action:
-            case 'N':
-                loc = (loc[0] - value, loc[1])
-            case 'S':
-                loc = (loc[0] + value, loc[1])
-            case 'E':
-                loc = (loc[0], loc[1] + value)
-            case 'W':
-                loc = (loc[0], loc[1] - value)
+            case 'N' | 'S' | 'E' | 'W':
+                move_direction = Directions.to_vec[Directions.to_dir[action]]
             case 'L':
-                direction = (direction - value // 90) % 4
+                face_direction = (face_direction - value // 90) % Directions.COUNT
             case 'R':
-                direction = (direction + value // 90) % 4
+                face_direction = (face_direction + value // 90) % Directions.COUNT
             case 'F':
-                if direction == 0:
-                    loc = (loc[0] - value, loc[1])
-                elif direction == 1:
-                    loc = (loc[0], loc[1] + value)
-                elif direction == 2:
-                    loc = (loc[0] + value, loc[1])
-                elif direction == 3:
-                    loc = (loc[0], loc[1] - value)
+                move_direction = Directions.to_vec[face_direction]
+        loc = (loc[0] + move_direction[0] * value, loc[1] + move_direction[1] * value)
     manhattan_dist = abs(loc[0]) + abs(loc[1])                   
     elapsed_time = time.perf_counter() - start_time
     print(f"{inspect.currentframe().f_code.co_name} ({elapsed_time:.2f} sec) : {manhattan_dist}")
