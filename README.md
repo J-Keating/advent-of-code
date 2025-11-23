@@ -10,3 +10,4 @@
 * [2022](https://adventofcode.com/2022) - Learning [Rust](https://www.rust-lang.org/).   _`50*` on 1/15/23._
 * [2023](https://adventofcode.com/2023) - Experimenting with Herb Sutter's [CPP2](https://github.com/hsutter/cppfront).  _Incomplete._
 * [2024](https://adventofcode.com/2024) - Experimented with [Gleam](https://gleam.run/) and *not* a fan.  Switched to [Rust](https://www.rust-lang.org/) on Day 4.  _`50*` on 3/5/25._
+* [2025](https://adventofcode.com/2025) - Dusting off my [C#](https://dotnet.microsoft.com/en-us/languages/csharp) skills using [VS2026](https://learn.microsoft.com/en-us/visualstudio/releases/2026/release-notes).
