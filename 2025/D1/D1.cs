@@ -41,7 +41,7 @@ void Part2(string filename)
         var move = _move;
         Debug.Assert(current >= 0 && current < 100);
         zeroCount += Math.Abs(move / 100);
-        move = move % 100;
+        move %= 100;
         Debug.Assert(-99 <= move && move <= 99 && move != 0);
         var next = current + move;
         if (current != 0 && (next <= 0) || (next >= 100))
@@ -62,6 +62,11 @@ void Run()
 }
 
 Run();
+
+public static class Config
+{
+    public static readonly string? Name = Assembly.GetExecutingAssembly()?.GetName()?.Name;
+}
 
 //D1: Part1: Final position: 11, zero crossings: 1129
 //completed in 15ms

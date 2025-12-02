@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="D1/D1.csproj" />
+  <Project Path="D2/D2.csproj" Id="833e9bae-c324-4eaa-aaa9-885af721a9b5" />
   <Project Path="Dx/Dx.csproj" />
   <Project Path="Util/AOC_Util.csproj" Id="7e4129d4-237f-41c4-b835-f69ea8eed7a4" />
 </Solution>

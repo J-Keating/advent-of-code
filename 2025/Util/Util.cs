@@ -2,11 +2,6 @@
 
 namespace AOC
 {
-    public static class Config
-    {
-        public static readonly string Name = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
-    }
-
     public static class DataFull
     {
         public static readonly string Filename = "input.txt";
@@ -30,7 +25,7 @@ namespace AOC
 
         public static void Time(Action action)
         {
-            Stopwatch sw = new Stopwatch();
+            Stopwatch sw = new();
             sw.Start();
             action();
             sw.Stop();

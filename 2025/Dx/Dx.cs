@@ -27,3 +27,8 @@ void Run()
 }
 
 Run();
+
+public static class Config
+{
+    public static readonly string? Name = Assembly.GetExecutingAssembly()?.GetName()?.Name;
+}
