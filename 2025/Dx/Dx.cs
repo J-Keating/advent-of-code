@@ -1,30 +1,29 @@
 ﻿using System.Data;
 using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
-//using DataSet = DataFull;
-using DataSet = DataTest;
+using AOC;
 
-Stopwatch watch = new Stopwatch();
-watch.Start();
-var input = File.ReadAllLines(DataSet.Filename);
-Run(input);
-watch.Stop();
-Console.WriteLine($"Completed in {watch.ElapsedMilliseconds}ms");
+//using DataSet = AOC.DataFull;
+using DataSet = AOC.DataTest;
 
-void Run(string[] data)
+void Part1(string filename)
 {
-    Console.WriteLine($"Hello, {Config.Name} : {String.Join(", ", data)}!");
+    Util.LogLine($"{filename}");
 }
 
-static class Config
+void Part2(string filename)
 {
-    public static readonly string Name = "Dx";
+    Util.LogLine($"{filename}");
 }
-static class DataFull
+
+void Run()
 {
-    public static readonly string Filename = "input.txt";
+    Util.Log($"{Config.Name}: Part1: ");
+    Util.Time(() => Part1(DataSet.Filename));
+    Util.Log($"{Config.Name}: Part2: ");
+    Util.Time(() => Part2(DataSet.Filename));
 }
-static class  DataTest
-{
-    public static readonly string Filename = "input_test.txt";
-}
+
+Run();

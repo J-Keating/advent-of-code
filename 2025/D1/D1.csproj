@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Util\AOC_Util.csproj" />
+  </ItemGroup>
+
 </Project>
