@@ -45,12 +45,18 @@ void Part1(string filename)
 Int64 Voltage(char[] chars, bool[] flags, int test_pos)
 {
     Int64 voltage = 0;
-    for (int i = 0; i < chars.Length; i++)
+    //for (int i = 0; i < chars.Length; i++)
+    //{
+    //    if (flags[i] || i == test_pos)
+    //    {
+    //        voltage = voltage * 10 + (chars[i] - '0');
+    //    }
+    //}
+    foreach(var tuple in chars.Zip(flags, (ch, flag) => (ch, flag))
+        .Select((pair, i) => (pair.ch, pair.flag, i))
+        .Where(t => t.flag || t.i == test_pos ))
     {
-        if (flags[i] || i == test_pos)
-        {
-            voltage = voltage * 10 + (chars[i] - '0');
-        }
+        voltage = voltage * 10 + (tuple.ch - '0');
     }
     return voltage;
 }

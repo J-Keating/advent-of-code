@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "D4": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)"
+    }
+  }
+}
