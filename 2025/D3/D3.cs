@@ -36,10 +36,10 @@ void Part1(string filename)
             }
         }
         var joltage = 10 * (line[d1] - '0') + (line[d2] - '0');
-        //Util.LogLine($"Line: {line}  D1: {d1}  D2: {d2}  Joltage: {joltage}");
+        //LogUtil.LogLine($"Line: {line}  D1: {d1}  D2: {d2}  Joltage: {joltage}");
         total += joltage;
     }
-    Util.LogLine($"Total: {total}");
+    LogUtil.LogLine($"Total: {total}");
 }
 
 Int64 Voltage(char[] chars, bool[] flags, int test_pos)
@@ -86,17 +86,17 @@ void Part2(string filename)
         }
         var voltage_final = Voltage(chars, flags, -1);
         total += voltage_final;
-        //Util.LogLine($"Line: {line}  Voltage: {voltage_final}");
+        //LogUtil.LogLine($"Line: {line}  Voltage: {voltage_final}");
     }
-    Util.LogLine($"Total: {total}");
+    LogUtil.LogLine($"Total: {total}");
 }
 
 void Run()
 {
-    Util.Log($"{Config.Name}: Part1: ");
-    Util.Time(() => Part1(DataSet.Filename));
-    Util.Log($"{Config.Name}: Part2: ");
-    Util.Time(() => Part2(DataSet.Filename));
+    LogUtil.Log($"{Config.Name}: Part1: ");
+    LogUtil.Time(() => Part1(DataSet.Filename));
+    LogUtil.Log($"{Config.Name}: Part2: ");
+    LogUtil.Time(() => Part2(DataSet.Filename));
 }
 
 Run();

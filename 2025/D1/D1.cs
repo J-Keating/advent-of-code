@@ -29,7 +29,7 @@ void Part1(string filename)
             zeroCount++;
         }
     }
-    Util.LogLine($"Final position: {current}, zero crossings: {zeroCount}");
+    LogUtil.LogLine($"Final position: {current}, zero crossings: {zeroCount}");
 }
 
 void Part2(string filename)
@@ -50,15 +50,15 @@ void Part2(string filename)
         }
         current = (next + 100) % 100;
     }
-    Util.LogLine($"Final position: {current}, zero crossings: {zeroCount}");
+    LogUtil.LogLine($"Final position: {current}, zero crossings: {zeroCount}");
 }
 
 void Run()
 {
-    Util.Log($"{Config.Name}: Part1: ");
-    Util.Time(() => Part1(DataSet.Filename));
-    Util.Log($"{Config.Name}: Part2: ");
-    Util.Time(() => Part2(DataSet.Filename));
+    LogUtil.Log($"{Config.Name}: Part1: ");
+    LogUtil.Time(() => Part1(DataSet.Filename));
+    LogUtil.Log($"{Config.Name}: Part2: ");
+    LogUtil.Time(() => Part2(DataSet.Filename));
 }
 
 Run();

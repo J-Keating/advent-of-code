@@ -10,20 +10,20 @@ using DataSet = AOC.DataTest;
 
 void Part1(string filename)
 {
-    Util.LogLine($"{filename}");
+    LogUtil.LogLine($"{filename}");
 }
 
 void Part2(string filename)
 {
-    Util.LogLine($"{filename}");
+    LogUtil.LogLine($"{filename}");
 }
 
 void Run()
 {
-    Util.Log($"{Config.Name}: Part1: ");
-    Util.Time(() => Part1(DataSet.Filename));
-    Util.Log($"{Config.Name}: Part2: ");
-    Util.Time(() => Part2(DataSet.Filename));
+    LogUtil.Log($"{Config.Name}: Part1: ");
+    LogUtil.Time(() => Part1(DataSet.Filename));
+    LogUtil.Log($"{Config.Name}: Part2: ");
+    LogUtil.Time(() => Part2(DataSet.Filename));
 }
 
 Run();

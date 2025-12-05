@@ -39,12 +39,12 @@ void Part1(string filename)
     foreach (var move in lines[0].Split(','))
     {
         (Int64 low, Int64 high) = SplitRange(move);
-        //Util.Log($"{low} to {high}  :");
+        //LogUtil.Log($"{low} to {high}  :");
         int lowDigits = DigitCount(low);
         int highDigits = DigitCount(high);
         if (lowDigits % 2 == 1 && highDigits % 2 == 1)
         {
-            //Util.LogLine("  -> Odd digit counts only, skipping");
+            //LogUtil.LogLine("  -> Odd digit counts only, skipping");
             continue;
         }
         Debug.Assert(highDigits - lowDigits <= 1);
@@ -62,13 +62,13 @@ void Part1(string filename)
             }
             if (test >= low && test <= high)
             {
-                //Util.Log($"{test},");
+                //LogUtil.Log($"{test},");
                 total += test;
             }
         }
-        //Util.LogLine($"  -> Total: {total}");
+        //LogUtil.LogLine($"  -> Total: {total}");
     }
-    Util.LogLine($"Total: {total}");
+    LogUtil.LogLine($"Total: {total}");
 }
 
 bool IsRepeatedDigits(Int64 number)
@@ -124,27 +124,27 @@ void Part2(string filename)
     foreach (var move in lines[0].Split(','))
     {
         (Int64 low, Int64 high) = SplitRange(move);
-        //Util.Log($"{low} to {high} : diff={high-low} : ");
+        //LogUtil.Log($"{low} to {high} : diff={high-low} : ");
         for (Int64 test = low; test <= high; test++)
         {
             if (IsRepeatedDigits(test))
             {
-                //Util.Log($"{test},");
+                //LogUtil.Log($"{test},");
                 total += test;
             }
         }
-        //Util.LogLine($"  -> Total: {total}");
+        //LogUtil.LogLine($"  -> Total: {total}");
     }
-    Util.LogLine($"Total: {total}");
+    LogUtil.LogLine($"Total: {total}");
 }
 
 void Run()
 {
     //TestIsRepeatedDigits();
-    Util.Log($"{Config.Name}: Part1: ");
-    Util.Time(() => Part1(DataSet.Filename));
-    Util.Log($"{Config.Name}: Part2: ");
-    Util.Time(() => Part2(DataSet.Filename));
+    LogUtil.Log($"{Config.Name}: Part1: ");
+    LogUtil.Time(() => Part1(DataSet.Filename));
+    LogUtil.Log($"{Config.Name}: Part2: ");
+    LogUtil.Time(() => Part2(DataSet.Filename));
 }
 
 Run();
