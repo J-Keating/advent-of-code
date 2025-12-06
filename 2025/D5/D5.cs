@@ -66,18 +66,12 @@ void Part2(string filename)
     for (int e = 0; e < edges.Length - 1; e++)
     {
         depth += (int)edges[e].type;
-        Debug.Assert(depth >= 0);
-        if (depth > 0)
+        ingredient_count += depth switch
         {
-            ingredient_count += (edges[e + 1].val - edges[e].val);
-            //LogUtil.LogLine($"{edges[e].val}->{edges[e + 1].val}  ==> +{(edges[e + 1].val - edges[e].val)} => {ingredient_count}");
-        }
-        else if (depth == 0)
-        {
-            ingredient_count += 1;
-            //LogUtil.LogLine($"End {edges[e].val}  ==> +1 => {ingredient_count}");
-
-        }
+            >0 => (edges[e + 1].val - edges[e].val),
+            0 => 1,
+            _ => throw new InvalidDataException()
+        };
     }
     ingredient_count++;
     LogUtil.LogLine($"{ingredient_count}");
