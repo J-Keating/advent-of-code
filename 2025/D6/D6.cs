@@ -1,10 +1,10 @@
-﻿using System.Data;
+﻿using AOC;
+using System;
+using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using AOC;
-
 using DataSet = AOC.DataFull;
 //using DataSet = AOC.DataTest;
 
@@ -18,37 +18,53 @@ void Part1(string filename)
         Debug.Assert(row.Length == ops.Length);
     }
     Int64 final = 0;
-    Int64 current = 0;
     for (int i = 0; i < ops.Length; i++)
     {
-        switch (ops[i]) {
-            case "+":
-                current = 0;
-                for (int j = 0; j < rows.Length; j++)
-                {
-                    current += rows[j][i];
-                }
-                break;
-            case "*":
-                current = 1;
-                for (int j = 0; j < rows.Length; j++)
-                {
-                    current *= rows[j][i];
-                }
-                break;
-            default:
-                throw new InvalidOperationException($"Unknown operator: {ops[i]}");
-
-        }
-        final += current;
+        final += ops[i] switch
+        {
+            "+" => GridUtil.ColumnData_AA(rows, i, (0..rows.Length)).Aggregate((acc, x) => acc + x),
+            "*" => GridUtil.ColumnData_AA(rows, i, (0..rows.Length)).Aggregate(1L, (acc, x) => acc * x),
+            _ => throw new InvalidDataException()
+        };
     }
     LogUtil.LogLine($"{final}");
 }
 
-
 void Part2(string filename)
 {
-    LogUtil.LogLine($"{filename}");
+    var data = FileUtil.LoadAsCharArray(filename);
+    int opRow = data.GetLength(0) - 1;
+    Int64 final = 0;
+    int currCol = 0;
+    while (currCol < data.GetLength(1))
+    {
+        char op = data[opRow, currCol];
+        Int64 currOpResult = op switch
+        {
+            '+' => 0,
+            '*' => 1,
+            _ => throw new InvalidDataException()
+        };
+        while (currCol < data.GetLength(1))
+        {
+            Int64 currNum = GridUtil.ColumnData2d(data, currCol, (0..opRow)).Where(c => c != ' ').Aggregate(0L, (res, c) => res * 10 + (c - '0'));
+            currCol++;
+            if (currNum == 0)
+            {
+                break;
+            }
+            //LogUtil.Log($"{currNum} {op}");
+            currOpResult = op switch
+            {
+                '+' => currOpResult + currNum,
+                '*' => currOpResult * currNum,
+                _ => throw new InvalidDataException()
+            };
+        }
+        //LogUtil.LogLine($" = {currOpResult}");
+        final += currOpResult;
+    }
+    LogUtil.LogLine($"{final}");
 }
 
 void Run()
@@ -61,20 +77,12 @@ void Run()
 
 Run();
 
-enum EdgeType {
-    Start = 1,
-    Stop = -1
-};
-class Edge {
-    public Int64 val;
-    public EdgeType type;
-};
 public static class Config
 {
     public static readonly string? Name = Assembly.GetExecutingAssembly()?.GetName()?.Name;
 }
 
-//D5: Part1: 509
-//completed in 22ms
-//D5: Part2: 336790092076620
-//completed in 44ms
+//D6: Part1: 5667835681547
+//completed in 5ms
+//D6: Part2: 9434900032651
+//completed in 2ms

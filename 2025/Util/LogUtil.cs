@@ -98,5 +98,23 @@ namespace AOC
         {
             return Get8NeighborsPos(grid, r, c).Select(pos => grid[pos.Item1, pos.Item2]);
         }
+
+        public static IEnumerable<T> ColumnData_AA<T>(T[][] data, int col, Range rows)
+        {
+            //for (var r = rows.Start; r < rows.End; r++)
+            foreach (int r in Enumerable.Range(rows.Start.Value, rows.End.Value - rows.Start.Value))
+            {
+                yield return data[r][col];
+            }
+        }
+
+        public static IEnumerable<T> ColumnData2d<T>(T[,] data, int col, Range rows)
+        {
+            //for (var r = rows.Start; r < rows.End; r++)
+            foreach (int r in Enumerable.Range(rows.Start.Value, rows.End.Value - rows.Start.Value))
+            {
+                yield return data[r, col];
+            }
+        }
     }
 }
