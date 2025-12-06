@@ -17,16 +17,41 @@ void Part1(string filename)
     {
         Debug.Assert(row.Length == ops.Length);
     }
+    // Readable
     Int64 final = 0;
     for (int i = 0; i < ops.Length; i++)
     {
-        final += ops[i] switch
+        Int64 current = 0;
+        switch (ops[i])
         {
-            "+" => GridUtil.ColumnData_AA(rows, i, (0..rows.Length)).Aggregate((acc, x) => acc + x),
-            "*" => GridUtil.ColumnData_AA(rows, i, (0..rows.Length)).Aggregate(1L, (acc, x) => acc * x),
-            _ => throw new InvalidDataException()
-        };
+            case "+":
+                current = 0;
+                for (int j = 0; j < rows.Length; j++)
+                {
+                    current += rows[j][i];
+                }
+                break;
+            case "*":
+                current = 1;
+                for (int j = 0; j < rows.Length; j++)
+                {
+                    current *= rows[j][i];
+                }
+                break;
+            default:
+                throw new InvalidOperationException($"Unknown operator: {ops[i]}");
+
+        }
+        final += current;
     }
+    // Not readable, but fewer lines, so it must be better, right?  Right????
+    Int64 final2 = ops.Select((op, col) => (op, col)).Aggregate(0L,(acc, d) => acc + d.op switch
+        {
+            "+" => GridUtil.ColumnData_AA(rows, d.col, (0..rows.Length)).Aggregate((acc, x) => acc + x),
+            "*" => GridUtil.ColumnData_AA(rows, d.col, (0..rows.Length)).Aggregate(1L, (acc, x) => acc * x),
+            _ => throw new InvalidDataException()
+        });
+    Debug.Assert(final == final2);
     LogUtil.LogLine($"{final}");
 }
 
