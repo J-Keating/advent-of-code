@@ -1,12 +1,17 @@
 <Solution>
   <Folder Name="/Solution Items/" />
   <Project Path="D1/D1.csproj" />
+  <Project Path="D10/D10.csproj" />
+  <Project Path="D11/D11.csproj" />
+  <Project Path="D12/D12.csproj" />
   <Project Path="D2/D2.csproj" Id="833e9bae-c324-4eaa-aaa9-885af721a9b5" />
   <Project Path="D3/D3.csproj" />
   <Project Path="D4/D4.csproj" Id="27063609-88f9-40fa-8122-3d913d1d3c3f" />
   <Project Path="D5/D5.csproj" />
   <Project Path="D6/D6.csproj" />
   <Project Path="D7/D7.csproj" />
+  <Project Path="D8/D8.csproj" />
+  <Project Path="D9/D9.csproj" />
   <Project Path="Dx/Dx.csproj" />
   <Project Path="Util/AOC_Util.csproj" Id="7e4129d4-237f-41c4-b835-f69ea8eed7a4" />
 </Solution>
