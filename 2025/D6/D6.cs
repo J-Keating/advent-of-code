@@ -1,12 +1,11 @@
-﻿using AOC;
-using System;
+﻿using AOC_Util;
 using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using DataSet = AOC.DataFull;
-//using DataSet = AOC.DataTest;
+using DataSet = AOC_Util.DataFull;
+//using DataSet = AOC_Util.DataTest;
 
 void Part1(string filename)
 {

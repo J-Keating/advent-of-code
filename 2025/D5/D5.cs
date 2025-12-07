@@ -3,10 +3,10 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using AOC;
+using AOC_Util;
 
-using DataSet = AOC.DataFull;
-//using DataSet = AOC.DataTest;
+using DataSet = AOC_Util.DataFull;
+//using DataSet = AOC_Util.DataTest;
 
 static (List<(Int64, Int64)>, List<Int64>) LoadRangesAndNumbers(string filename)
 {

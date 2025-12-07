@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace AOC
+namespace AOC_Util
 {
     public static class DataFull
     {

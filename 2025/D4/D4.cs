@@ -4,10 +4,10 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-using AOC;
+using AOC_Util;
 
-using DataSet = AOC.DataFull;
-//using DataSet = AOC.DataTest;
+using DataSet = AOC_Util.DataFull;
+//using DataSet = AOC_Util.DataTest;
 
 void Part1(string filename)
 {

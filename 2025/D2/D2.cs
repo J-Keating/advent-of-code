@@ -3,10 +3,10 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-using AOC;
+using AOC_Util;
 
-using DataSet = AOC.DataFull;
-//using DataSet = AOC.DataTest;
+using DataSet = AOC_Util.DataFull;
+//using DataSet = AOC_Util.DataTest;
 
 (Int64, Int64) SplitRange(string range)
 {
