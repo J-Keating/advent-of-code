@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Dx": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)"
+    }
+  }
+}

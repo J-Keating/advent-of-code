@@ -6,6 +6,7 @@
   <Project Path="D4/D4.csproj" Id="27063609-88f9-40fa-8122-3d913d1d3c3f" />
   <Project Path="D5/D5.csproj" />
   <Project Path="D6/D6.csproj" />
+  <Project Path="D7/D7.csproj" />
   <Project Path="Dx/Dx.csproj" />
   <Project Path="Util/AOC_Util.csproj" Id="7e4129d4-237f-41c4-b835-f69ea8eed7a4" />
 </Solution>

@@ -47,8 +47,8 @@ void Part1(string filename)
     // Not readable, but fewer lines, so it must be better, right?  Right????
     Int64 final2 = ops.Select((op, col) => (op, col)).Aggregate(0L,(acc, d) => acc + d.op switch
         {
-            "+" => GridUtil.ColumnData_AA(rows, d.col, (0..rows.Length)).Aggregate((acc, x) => acc + x),
-            "*" => GridUtil.ColumnData_AA(rows, d.col, (0..rows.Length)).Aggregate(1L, (acc, x) => acc * x),
+            "+" => GridUtil.ColumnData_AA(rows, d.col).Aggregate((acc, x) => acc + x),
+            "*" => GridUtil.ColumnData_AA(rows, d.col).Aggregate(1L, (acc, x) => acc * x),
             _ => throw new InvalidDataException()
         });
     Debug.Assert(final == final2);

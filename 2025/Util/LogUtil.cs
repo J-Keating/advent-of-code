@@ -99,21 +99,30 @@ namespace AOC
             return Get8NeighborsPos(grid, r, c).Select(pos => grid[pos.Item1, pos.Item2]);
         }
 
-        public static IEnumerable<T> ColumnData_AA<T>(T[][] data, int col, Range rows)
+        public static IEnumerable<T> ColumnData_AA<T>(T[][] data, int col, Range? rowRangeIn = null)
         {
-            //for (var r = rows.Start; r < rows.End; r++)
-            foreach (int r in Enumerable.Range(rows.Start.Value, rows.End.Value - rows.Start.Value))
+            Range rowRange = rowRangeIn ?? (0..data.Length);
+            foreach (int row in Enumerable.Range(rowRange.Start.Value, rowRange.End.Value - rowRange.Start.Value))
             {
-                yield return data[r][col];
+                yield return data[row][col];
             }
         }
 
-        public static IEnumerable<T> ColumnData2d<T>(T[,] data, int col, Range rows)
+        public static IEnumerable<T> ColumnData2d<T>(T[,] data, int col, Range? rowRangeIn = null)
         {
-            //for (var r = rows.Start; r < rows.End; r++)
-            foreach (int r in Enumerable.Range(rows.Start.Value, rows.End.Value - rows.Start.Value))
+            Range rowRange = rowRangeIn ?? (0..data.GetLength(0));
+            foreach (int row in Enumerable.Range(rowRange.Start.Value, rowRange.End.Value - rowRange.Start.Value))
             {
-                yield return data[r, col];
+                yield return data[row, col];
+            }
+        }
+
+        public static IEnumerable<T> RowData2d<T>(T[,] data, int row, Range? colRangeIn = null)
+        {
+            Range colRange = colRangeIn ?? (0..data.GetLength(1));
+            foreach (int col in Enumerable.Range(colRange.Start.Value, colRange.End.Value - colRange.Start.Value))
+            {
+                yield return data[row, col];
             }
         }
     }
