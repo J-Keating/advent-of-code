@@ -2,12 +2,16 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Reflection;
-
+using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using AOC_Util;
 //using DataSet = AOC_Util.DataFull;
+//using DataSetProblem = DataFullProblem;
 using DataSet = AOC_Util.DataTest;
+using DataSetProblem = DataTestProblem;
 
 using SegmentDesc = (int from, int to, float distance);
+
 
 static Vector3[] LoadPoints(string filename)
 {
@@ -33,8 +37,27 @@ void Part1(string filename)
     }
     sortedSegments.Sort((a, b) => a.distance.CompareTo(b.distance));
 
-    LogUtil.LogLine($"{sortedSegments[0]},  {points[sortedSegments[0].from]} -> {points[sortedSegments[0].to]}");
-    LogUtil.LogLine($"{sortedSegments[1]},  {points[sortedSegments[1].from]} -> {points[sortedSegments[1].to]}");
+    //LogUtil.LogLine($"{sortedSegments[0]},  {points[sortedSegments[0].from]} -> {points[sortedSegments[0].to]}");
+    //LogUtil.LogLine($"{sortedSegments[1]},  {points[sortedSegments[1].from]} -> {points[sortedSegments[1].to]}");
+    var circuits = new List<HashSet<int>>();
+    foreach (var segment in sortedSegments[0..DataSetProblem.ConnectionCount])
+    {
+        var touchedCircuits = circuits.Where((c) => c.Contains(segment.from) || c.Contains(segment.to)).ToArray();
+        switch (touchedCircuits.Length)
+        {
+            case 0:
+                circuits.Add(new HashSet<int>([ segment.from, segment.to ] ));
+                break;
+            case 1:
+                touchedCircuits[0].Add(segment.from);
+                touchedCircuits[0].Add(segment.to);
+                break;
+            case 2:
+                break;
+            default:
+                throw new InvalidDataException();
+        }
+    }
 }
 
 void Part2(string filename)
@@ -51,6 +74,15 @@ void Run()
 }
 
 Run();
+
+static class DataTestProblem
+{
+    public static readonly int ConnectionCount = 10;
+}
+static class DataFullProblem
+{
+    public static readonly int ConnectionCount = 1000;
+}
 
 public static class Config
 {
