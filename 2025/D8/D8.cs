@@ -1,80 +1,45 @@
 ﻿using System.Data;
 using System.Diagnostics;
+using System.Numerics;
 using System.Reflection;
 
 using AOC_Util;
 //using DataSet = AOC_Util.DataFull;
 using DataSet = AOC_Util.DataTest;
 
-using BeamSet = System.Collections.Generic.Dictionary<int, System.Int64>;
+using SegmentDesc = (int from, int to, float distance);
+
+static Vector3[] LoadPoints(string filename)
+{
+    Vector3 Vec3FromString(string s)
+    {
+        var parts = s.Split(',').Select(p => Int64.Parse(p.Trim())).ToArray();
+        return new Vector3(parts[0], parts[1], parts[2]);
+    }
+    var lines = File.ReadAllLines(filename);
+    return lines.Select(l => Vec3FromString(l)).ToArray();
+}
 
 void Part1(string filename)
 {
-    int totalSplits = 0;
-    var grid = FileUtil.LoadAsCharArray(filename);
-    var startLocs = GridUtil.RowData2d(grid, 0).Select((c, i) => (c, i)).Where(p => p.c == 'S').Select(p => p.i).ToArray();
-    Debug.Assert(startLocs.Length == 1);
-    var beams = new HashSet<int> { startLocs[0] };
-    for (var row = 1; row < grid.GetLength(0); row++)
+    var points = LoadPoints(filename);
+    var sortedSegments = new List<SegmentDesc>((points.Length * (points.Length + 1)) / 2);
+    for (int i = 0; i < points.Length; i++)
     {
-        var newBeams = new HashSet<int>();
-        foreach (var beam in beams)
+        for (int j = i+1; j < points.Length; j++)
         {
-            switch(grid[row, beam])
-            {
-                case '.':
-                    newBeams.Add(beam);
-                    break;
-                case '^':
-                    totalSplits++;
-                    if ((beam - 1) > 0) { newBeams.Add(beam - 1); }
-                    if ((beam + 1) < grid.GetLength(1)) { newBeams.Add(beam + 1); }
-                    break;
-                default:
-                    throw new InvalidDataException();
-            }
+            sortedSegments.Add(new SegmentDesc { from = i, to = j, distance = Vector3.DistanceSquared(points[i], points[j]) });
         }
-        beams = newBeams;
     }
-    LogUtil.LogLine($"{totalSplits}");
+    sortedSegments.Sort((a, b) => a.distance.CompareTo(b.distance));
+
+    LogUtil.LogLine($"{sortedSegments[0]},  {points[sortedSegments[0].from]} -> {points[sortedSegments[0].to]}");
+    LogUtil.LogLine($"{sortedSegments[1]},  {points[sortedSegments[1].from]} -> {points[sortedSegments[1].to]}");
 }
 
 void Part2(string filename)
 {
-    var grid = FileUtil.LoadAsCharArray(filename);
-    var startLocs = GridUtil.RowData2d(grid, 0).Select((c, i) => (c, i)).Where(p => p.c == 'S').Select(p => p.i).ToArray();
-    Debug.Assert(startLocs.Length == 1);
-    var beams = new BeamSet { { startLocs[0], 1L } };
-    for (var row = 1; row < grid.GetLength(0); row++)
-    {
-        var newBeams = new BeamSet();
-        void InsertOrAddIfInRange(int pos, Int64 count)
-        {
-            if (0 <= pos && pos < grid.GetLength(1))
-            {
-                newBeams[pos] = newBeams.TryGetValue(pos, out var currCount) ? currCount + count : count;
-            }
-        }
-
-        foreach ((int pos, Int64 count) in beams)
-        {
-            switch (grid[row, pos])
-            {
-                case '.':
-                    InsertOrAddIfInRange(pos, count);
-                    break;
-                case '^':
-                    InsertOrAddIfInRange(pos - 1, count);
-                    InsertOrAddIfInRange(pos + 1, count);
-                    break;
-                default:
-                    throw new InvalidDataException();
-            }
-        }
-        beams = newBeams;
-    }
-    Int64 totalPaths = beams.Values.Aggregate((count, acc) => acc + count);
-    LogUtil.LogLine($"{totalPaths}");
+    LogUtil.LogLine($"{filename}");
 }
 
 void Run()
