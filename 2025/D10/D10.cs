@@ -1,14 +1,14 @@
-﻿using System.Data;
+﻿using AOC_Util; 
+using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+//using DataSet = AOC_Util.DataFull;
+using DataSet = AOC_Util.DataTest;
 
-using AOC_Util;
-
-using DataSet = AOC_Util.DataFull;
-//using DataSet = AOC_Util.DataTest;
-
-static char Press(char old, char flips)
+static char FlipSwitches(char old, char flips)
 {
     return (char)((int)old ^ (int)flips);
 }
@@ -17,22 +17,19 @@ void Part1(string filename)
 {
     var lines = File.ReadAllLines(filename);
     var computers = lines.Select(l => Computer.Load(l)).ToList();
-    LogUtil.LogLine($"{lines[0]}");
-    var b = computers[0].buttonFlips;
-    Debug.Assert(computers[0].target == Press(Press(Press('\0', b[0]), b[1]), b[2]));
 
     var totalPressCount = 0;
     foreach (var c in computers)
     {
         var minPressCount = 0;
-        var work = new Queue<(int depth, char val)>( [(0, '\0')]);
+        var work = new Queue<(int depth, char val)>([ (0, '\0') ]);
         while (minPressCount == 0)
         {
             (var depth, var val) = work.Dequeue();
             foreach (var bf in c.buttonFlips)
             {
-                var newVal = Press(val, bf);
-                if (newVal == c.target)
+                var newVal = FlipSwitches(val, bf);
+                if (newVal == c.switchTarget)
                 {
                     minPressCount = depth + 1;
                     break;
@@ -47,6 +44,41 @@ void Part1(string filename)
 
 void Part2(string filename)
 {
+    var lines = File.ReadAllLines(filename);
+    var computers = lines.Select(l => Computer.Load(l)).ToList();
+
+    var totalPressCount = 0;
+    foreach (var c in computers)
+    {
+        var minPressCount = 0;
+        var work = new Queue<(int depth, Int64 val)>([ (0, '\0') ]);
+        while (minPressCount == 0)
+        {
+            (var depth, var val) = work.Dequeue();
+            foreach (var inc in c.buttonJoltageIncrements)
+            {
+                // For each 
+                var newVal = val + inc;
+                if (newVal == c.joltageTarget)
+                {
+                    minPressCount = depth + 1;
+                    break;
+                }
+                bool stillPossible = true;
+                for (int b = 0; b < 8 && stillPossible; b++)
+                {
+                    Int64 mask = (Int64)0xff << (8 *b);
+                    stillPossible = stillPossible && ((c.joltageTarget & mask) >= (inc & mask));
+                }
+                if (stillPossible && work.Where((depth, val) => val == newVal).Count() == 0)
+                {
+                    work.Enqueue((depth + 1, newVal));
+                }
+            }
+        }
+        totalPressCount += minPressCount;
+    }
+    LogUtil.LogLine($"{totalPressCount}");
 }
 
 void Run()
@@ -61,8 +93,10 @@ Run();
 
 partial class Computer
 {
-    public char target;
-    public char[] buttonFlips;
+    public char switchTarget;
+    public required char[] buttonFlips;
+    public required Int64[] buttonJoltageIncrements;
+    public Int64 joltageTarget;
 
     public static Computer Load(string line)
     {
@@ -72,19 +106,23 @@ partial class Computer
         Regex regex = ComputerLineRegex();
         var match = regex.Match(line);
         Debug.Assert(match.Success && match.Groups.Count == 4);
-        string targetString = match.Groups[1].Value;
-        string buttonString = match.Groups[2].Value;
-        string joltageString = match.Groups[3].Value;
+        string switchTargetString = match.Groups[1].Value;
+        string buttonStrings = match.Groups[2].Value;
+        string joltageTargetString = match.Groups[3].Value;
 
-        char target = targetString.ToCharArray().Reverse().Aggregate('\0', (res, c) => (char)((int)res << 1 | (c == '#' ? 1 : 0)));
-        List<char> buttons = new();
-        foreach (string oneButtonString in buttonString.Split().Select(s => s.Trim()))
+        char switchTarget = switchTargetString.ToCharArray().Reverse().Aggregate('\0', (res, c) => (char)((int)res << 1 | (c == '#' ? 1 : 0)));
+        List<char> buttonFlips = new();
+        List<Int64> buttonJoltageIncrements = new();
+        foreach (string buttonString in buttonStrings.Split().Select(s => s.Trim()))
         {
-            Debug.Assert(oneButtonString[0] == '(' && oneButtonString[^1] == ')');
-            char oneButton = oneButtonString[1..^1].Split(',').Aggregate('\0', (res, s) => (char)((int)res | (1 << s[0] - '0')));
-            buttons.Add(oneButton);
+            Debug.Assert(buttonString[0] == '(' && buttonString[^1] == ')');
+            char buttonFlip = buttonString[1..^1].Split(',').Aggregate('\0', (res, s) => (char)((int)res | (1 << (s[0] - '0'))));
+            buttonFlips.Add(buttonFlip);
+            Int64 buttonJoltageIncrement = buttonString[1..^1].Split(',').Aggregate(0L, (res, s) => res + (1 << (8 * (s[0] - '0'))));
+            buttonJoltageIncrements.Add(buttonJoltageIncrement);
         }
-        return new Computer { target = target, buttonFlips = buttons.ToArray() };
+        Int64 joltageTarget = joltageTargetString.Split(',').Select(s => Int64.Parse(s)).Aggregate((res, i) => (res << 8) + i);
+        return new Computer { switchTarget = switchTarget, buttonFlips = [..buttonFlips], buttonJoltageIncrements = [.. buttonJoltageIncrements], joltageTarget = joltageTarget };
     }
 
     [GeneratedRegex("""\[([\.#]+)\] (.+) \{([\d,]+)\}""")]
