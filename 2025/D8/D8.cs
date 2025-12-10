@@ -1,17 +1,15 @@
 ﻿using System.Data;
-using System.Diagnostics;
 using System.Numerics;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
+
 using AOC_Util;
+
 //using DataSet = AOC_Util.DataFull;
 //using DataSetProblem = DataFullProblem;
 using DataSet = AOC_Util.DataTest;
 using DataSetProblem = DataTestProblem;
 
 using SegmentDesc = (int from, int to, float distance);
-
 
 static Vector3[] LoadPoints(string filename)
 {
@@ -37,8 +35,6 @@ void Part1(string filename)
     }
     sortedSegments.Sort((a, b) => a.distance.CompareTo(b.distance));
 
-    //LogUtil.LogLine($"{sortedSegments[0]},  {points[sortedSegments[0].from]} -> {points[sortedSegments[0].to]}");
-    //LogUtil.LogLine($"{sortedSegments[1]},  {points[sortedSegments[1].from]} -> {points[sortedSegments[1].to]}");
     var circuits = new List<HashSet<int>>();
     foreach (var segment in sortedSegments[0..DataSetProblem.ConnectionCount])
     {
@@ -53,11 +49,18 @@ void Part1(string filename)
                 touchedCircuits[0].Add(segment.to);
                 break;
             case 2:
+                circuits.Remove(touchedCircuits[0]);
+                circuits.Remove(touchedCircuits[1]);
+                circuits.Add(new HashSet<int>(Enumerable.Union(touchedCircuits[0], touchedCircuits[1])));
                 break;
             default:
                 throw new InvalidDataException();
         }
     }
+    var sortedCircuitSizes = circuits.Select(c => c.Count).ToList();
+    sortedCircuitSizes.Sort((a, b) => b.CompareTo(a));
+    var result = sortedCircuitSizes.Take(3).Aggregate(1, (a, s) => a * s);
+    LogUtil.LogLine($"{result}");
 }
 
 void Part2(string filename)
