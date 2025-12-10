@@ -4,10 +4,10 @@ using System.Reflection;
 
 using AOC_Util;
 
-//using DataSet = AOC_Util.DataFull;
-//using DataSetProblem = DataFullProblem;
-using DataSet = AOC_Util.DataTest;
-using DataSetProblem = DataTestProblem;
+using DataSet = AOC_Util.DataFull;
+using DataSetProblem = DataFullProblem;
+//using DataSet = AOC_Util.DataTest;
+//using DataSetProblem = DataTestProblem;
 
 using SegmentDesc = (int from, int to, float distance);
 
@@ -22,40 +22,50 @@ static Vector3[] LoadPoints(string filename)
     return lines.Select(l => Vec3FromString(l)).ToArray();
 }
 
-void Part1(string filename)
+static List<SegmentDesc> GetSortedSegments(Vector3[] points)
 {
-    var points = LoadPoints(filename);
     var sortedSegments = new List<SegmentDesc>((points.Length * (points.Length + 1)) / 2);
     for (int i = 0; i < points.Length; i++)
     {
-        for (int j = i+1; j < points.Length; j++)
+        for (int j = i + 1; j < points.Length; j++)
         {
             sortedSegments.Add(new SegmentDesc { from = i, to = j, distance = Vector3.DistanceSquared(points[i], points[j]) });
         }
     }
     sortedSegments.Sort((a, b) => a.distance.CompareTo(b.distance));
+    return sortedSegments;
+}
 
+void AddSegmentToCircuits(SegmentDesc segment, ref List<HashSet<int>> circuits)
+{
+    var touchedCircuits = circuits.Where((c) => c.Contains(segment.from) || c.Contains(segment.to)).ToArray();
+    switch (touchedCircuits.Length)
+    {
+        case 0:
+            circuits.Add(new HashSet<int>([ segment.from, segment.to ] ));
+            break;
+        case 1:
+            touchedCircuits[0].Add(segment.from);
+            touchedCircuits[0].Add(segment.to);
+            break;
+        case 2:
+            circuits.Remove(touchedCircuits[0]);
+            circuits.Remove(touchedCircuits[1]);
+            circuits.Add(new HashSet<int>(Enumerable.Union(touchedCircuits[0], touchedCircuits[1])));
+            break;
+        default:
+            throw new InvalidDataException();
+    }
+}
+
+void Part1(string filename)
+{
+    var points = LoadPoints(filename);
+    var sortedSegments = GetSortedSegments(points);
     var circuits = new List<HashSet<int>>();
     foreach (var segment in sortedSegments[0..DataSetProblem.ConnectionCount])
     {
-        var touchedCircuits = circuits.Where((c) => c.Contains(segment.from) || c.Contains(segment.to)).ToArray();
-        switch (touchedCircuits.Length)
-        {
-            case 0:
-                circuits.Add(new HashSet<int>([ segment.from, segment.to ] ));
-                break;
-            case 1:
-                touchedCircuits[0].Add(segment.from);
-                touchedCircuits[0].Add(segment.to);
-                break;
-            case 2:
-                circuits.Remove(touchedCircuits[0]);
-                circuits.Remove(touchedCircuits[1]);
-                circuits.Add(new HashSet<int>(Enumerable.Union(touchedCircuits[0], touchedCircuits[1])));
-                break;
-            default:
-                throw new InvalidDataException();
-        }
+        AddSegmentToCircuits(segment, ref circuits);
     }
     var sortedCircuitSizes = circuits.Select(c => c.Count).ToList();
     sortedCircuitSizes.Sort((a, b) => b.CompareTo(a));
@@ -65,7 +75,20 @@ void Part1(string filename)
 
 void Part2(string filename)
 {
-    LogUtil.LogLine($"{filename}");
+    var points = LoadPoints(filename);
+    var sortedSegments = GetSortedSegments(points);
+    var circuits = new List<HashSet<int>>();
+    float lastSegmentKey = 0;
+    foreach(var segment in sortedSegments)
+    {
+        AddSegmentToCircuits(segment, ref circuits);
+        if (circuits.Count == 1 && circuits[0].Count == points.Length)
+        {
+            lastSegmentKey = points[segment.from].X * points[segment.to].X;
+            break;
+        }
+    }
+    LogUtil.LogLine($"{lastSegmentKey}");
 }
 
 void Run()
@@ -92,7 +115,7 @@ public static class Config
     public static readonly string? Name = Assembly.GetExecutingAssembly()?.GetName()?.Name;
 }
 
-//D7: Part1: 1678
-//completed in 6ms
-//D7: Part2: 357525737893560
-//completed in 6ms
+//D8: Part1: 50568
+//completed in 197ms
+//D8: Part2: 36045012
+//completed in 129ms
