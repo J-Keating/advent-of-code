@@ -1,80 +1,52 @@
 ﻿using System.Data;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 using AOC_Util;
-//using DataSet = AOC_Util.DataFull;
-using DataSet = AOC_Util.DataTest;
 
-using BeamSet = System.Collections.Generic.Dictionary<int, System.Int64>;
+using DataSet = AOC_Util.DataFull;
+//using DataSet = AOC_Util.DataTest;
+
+static char Press(char old, char flips)
+{
+    return (char)((int)old ^ (int)flips);
+}
 
 void Part1(string filename)
 {
-    int totalSplits = 0;
-    var grid = FileUtil.LoadAsCharArray(filename);
-    var startLocs = GridUtil.RowData2d(grid, 0).Select((c, i) => (c, i)).Where(p => p.c == 'S').Select(p => p.i).ToArray();
-    Debug.Assert(startLocs.Length == 1);
-    var beams = new HashSet<int> { startLocs[0] };
-    for (var row = 1; row < grid.GetLength(0); row++)
+    var lines = File.ReadAllLines(filename);
+    var computers = lines.Select(l => Computer.Load(l)).ToList();
+    LogUtil.LogLine($"{lines[0]}");
+    var b = computers[0].buttonFlips;
+    Debug.Assert(computers[0].target == Press(Press(Press('\0', b[0]), b[1]), b[2]));
+
+    var totalPressCount = 0;
+    foreach (var c in computers)
     {
-        var newBeams = new HashSet<int>();
-        foreach (var beam in beams)
+        var minPressCount = 0;
+        var work = new Queue<(int depth, char val)>( [(0, '\0')]);
+        while (minPressCount == 0)
         {
-            switch(grid[row, beam])
+            (var depth, var val) = work.Dequeue();
+            foreach (var bf in c.buttonFlips)
             {
-                case '.':
-                    newBeams.Add(beam);
+                var newVal = Press(val, bf);
+                if (newVal == c.target)
+                {
+                    minPressCount = depth + 1;
                     break;
-                case '^':
-                    totalSplits++;
-                    if ((beam - 1) > 0) { newBeams.Add(beam - 1); }
-                    if ((beam + 1) < grid.GetLength(1)) { newBeams.Add(beam + 1); }
-                    break;
-                default:
-                    throw new InvalidDataException();
+                }
+                work.Enqueue((depth + 1, newVal));
             }
         }
-        beams = newBeams;
+        totalPressCount += minPressCount;
     }
-    LogUtil.LogLine($"{totalSplits}");
+    LogUtil.LogLine($"{totalPressCount}");
 }
 
 void Part2(string filename)
 {
-    var grid = FileUtil.LoadAsCharArray(filename);
-    var startLocs = GridUtil.RowData2d(grid, 0).Select((c, i) => (c, i)).Where(p => p.c == 'S').Select(p => p.i).ToArray();
-    Debug.Assert(startLocs.Length == 1);
-    var beams = new BeamSet { { startLocs[0], 1L } };
-    for (var row = 1; row < grid.GetLength(0); row++)
-    {
-        var newBeams = new BeamSet();
-        void InsertOrAddIfInRange(int pos, Int64 count)
-        {
-            if (0 <= pos && pos < grid.GetLength(1))
-            {
-                newBeams[pos] = newBeams.TryGetValue(pos, out var currCount) ? currCount + count : count;
-            }
-        }
-
-        foreach ((int pos, Int64 count) in beams)
-        {
-            switch (grid[row, pos])
-            {
-                case '.':
-                    InsertOrAddIfInRange(pos, count);
-                    break;
-                case '^':
-                    InsertOrAddIfInRange(pos - 1, count);
-                    InsertOrAddIfInRange(pos + 1, count);
-                    break;
-                default:
-                    throw new InvalidDataException();
-            }
-        }
-        beams = newBeams;
-    }
-    Int64 totalPaths = beams.Values.Aggregate((count, acc) => acc + count);
-    LogUtil.LogLine($"{totalPaths}");
 }
 
 void Run()
@@ -86,6 +58,38 @@ void Run()
 }
 
 Run();
+
+partial class Computer
+{
+    public char target;
+    public char[] buttonFlips;
+
+    public static Computer Load(string line)
+    {
+        //[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+        //[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
+        //[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}
+        Regex regex = ComputerLineRegex();
+        var match = regex.Match(line);
+        Debug.Assert(match.Success && match.Groups.Count == 4);
+        string targetString = match.Groups[1].Value;
+        string buttonString = match.Groups[2].Value;
+        string joltageString = match.Groups[3].Value;
+
+        char target = targetString.ToCharArray().Reverse().Aggregate('\0', (res, c) => (char)((int)res << 1 | (c == '#' ? 1 : 0)));
+        List<char> buttons = new();
+        foreach (string oneButtonString in buttonString.Split().Select(s => s.Trim()))
+        {
+            Debug.Assert(oneButtonString[0] == '(' && oneButtonString[^1] == ')');
+            char oneButton = oneButtonString[1..^1].Split(',').Aggregate('\0', (res, s) => (char)((int)res | (1 << s[0] - '0')));
+            buttons.Add(oneButton);
+        }
+        return new Computer { target = target, buttonFlips = buttons.ToArray() };
+    }
+
+    [GeneratedRegex("""\[([\.#]+)\] (.+) \{([\d,]+)\}""")]
+    private static partial Regex ComputerLineRegex();
+}
 
 public static class Config
 {
