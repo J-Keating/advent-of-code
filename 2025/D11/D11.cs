@@ -3,78 +3,60 @@ using System.Diagnostics;
 using System.Reflection;
 
 using AOC_Util;
-//using DataSet = AOC_Util.DataFull;
-using DataSet = AOC_Util.DataTest;
+using DataSet = AOC_Util.DataFull;
+//using DataSet = AOC_Util.DataTest;
 
-using BeamSet = System.Collections.Generic.Dictionary<int, System.Int64>;
+using ConnectionList = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
+Dictionary<string, List<string>> LoadFile(string filename)
+{
+    var lines = File.ReadAllLines(filename);
+    List<(string inputString, List<string> outputStrings)> linesParsed = lines.Select(l =>
+    {
+        var splits = l.Split(':');
+        Debug.Assert(splits.Length == 2);
+        var inputString = splits[0].Trim();
+        var outputStrings = splits[1].Trim().Split().ToList();
+        return (inputString, outputStrings);
+    }).ToList();
+    var ret = new Dictionary<string, List<string>>();
+    foreach (var line in linesParsed)
+    {
+        ret.Add(line.inputString, line.outputStrings);
+    }
+    return ret;
+}
+int CountPathsFrom(ConnectionList connections, string current, HashSet<string> visited, Func<HashSet<string>, bool> shouldCount)
+{
+    if (current == Config.endNode)
+    {
+        return shouldCount(visited) ? 1 : 0;
+    }
+    int ret = 0;
+    var outputs = connections[current];
+    foreach (var output in outputs)
+    {
+        if (!visited.Contains(output))
+        {
+            visited.Add(output);
+            ret += CountPathsFrom(connections, output, visited, shouldCount);
+            visited.Remove(output);
+        }
+    }
+    return ret;
+}
 void Part1(string filename)
 {
-    int totalSplits = 0;
-    var grid = FileUtil.LoadAsCharArray(filename);
-    var startLocs = GridUtil.RowData2d(grid, 0).Select((c, i) => (c, i)).Where(p => p.c == 'S').Select(p => p.i).ToArray();
-    Debug.Assert(startLocs.Length == 1);
-    var beams = new HashSet<int> { startLocs[0] };
-    for (var row = 1; row < grid.GetLength(0); row++)
-    {
-        var newBeams = new HashSet<int>();
-        foreach (var beam in beams)
-        {
-            switch(grid[row, beam])
-            {
-                case '.':
-                    newBeams.Add(beam);
-                    break;
-                case '^':
-                    totalSplits++;
-                    if ((beam - 1) > 0) { newBeams.Add(beam - 1); }
-                    if ((beam + 1) < grid.GetLength(1)) { newBeams.Add(beam + 1); }
-                    break;
-                default:
-                    throw new InvalidDataException();
-            }
-        }
-        beams = newBeams;
-    }
-    LogUtil.LogLine($"{totalSplits}");
+    var connections = LoadFile(filename);
+    var validPaths = CountPathsFrom(connections, "you", new HashSet<string>(), (_) => true);
+    LogUtil.LogLine($"{validPaths}");
 }
 
 void Part2(string filename)
 {
-    var grid = FileUtil.LoadAsCharArray(filename);
-    var startLocs = GridUtil.RowData2d(grid, 0).Select((c, i) => (c, i)).Where(p => p.c == 'S').Select(p => p.i).ToArray();
-    Debug.Assert(startLocs.Length == 1);
-    var beams = new BeamSet { { startLocs[0], 1L } };
-    for (var row = 1; row < grid.GetLength(0); row++)
-    {
-        var newBeams = new BeamSet();
-        void InsertOrAddIfInRange(int pos, Int64 count)
-        {
-            if (0 <= pos && pos < grid.GetLength(1))
-            {
-                newBeams[pos] = newBeams.TryGetValue(pos, out var currCount) ? currCount + count : count;
-            }
-        }
-
-        foreach ((int pos, Int64 count) in beams)
-        {
-            switch (grid[row, pos])
-            {
-                case '.':
-                    InsertOrAddIfInRange(pos, count);
-                    break;
-                case '^':
-                    InsertOrAddIfInRange(pos - 1, count);
-                    InsertOrAddIfInRange(pos + 1, count);
-                    break;
-                default:
-                    throw new InvalidDataException();
-            }
-        }
-        beams = newBeams;
-    }
-    Int64 totalPaths = beams.Values.Aggregate((count, acc) => acc + count);
-    LogUtil.LogLine($"{totalPaths}");
+    var connections = LoadFile(filename);
+    var validPaths = CountPathsFrom(connections, "svr", new HashSet<string>(), (visited) => visited.Contains("dac") && visited.Contains("fft"));
+    LogUtil.LogLine($"{validPaths}");
 }
 
 void Run()
@@ -86,10 +68,17 @@ void Run()
 }
 
 Run();
+//public class Connections
+//{
+//    public int input;
+//    public required List<int> outputs;
+//}
 
 public static class Config
 {
     public static readonly string? Name = Assembly.GetExecutingAssembly()?.GetName()?.Name;
+    public static readonly string startNode = "you";
+    public static readonly string endNode = "out";
 }
 
 //D7: Part1: 1678
