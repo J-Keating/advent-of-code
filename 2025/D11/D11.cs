@@ -1,12 +1,13 @@
-﻿using System.Data;
+﻿using AOC_Util;
+using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 
-using AOC_Util;
-using DataSet = AOC_Util.DataFull;
-//using DataSet = AOC_Util.DataTest;
-
 using ConnectionList = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
+
+//using DataSet = AOC_Util.DataTest;
+using DataSet = AOC_Util.DataFull;
 
 Dictionary<string, List<string>> LoadFile(string filename)
 {
@@ -26,37 +27,52 @@ Dictionary<string, List<string>> LoadFile(string filename)
     }
     return ret;
 }
-int CountPathsFrom(ConnectionList connections, string current, HashSet<string> visited, Func<HashSet<string>, bool> shouldCount)
+
+Int64 CountPathsFrom(ConnectionList connections, string current, string endNode, HashSet<string> visited, Dictionary<string, Int64> cache)
 {
-    if (current == Config.endNode)
+    if (current == endNode)
     {
-        return shouldCount(visited) ? 1 : 0;
+        return 1;
     }
-    int ret = 0;
-    var outputs = connections[current];
-    foreach (var output in outputs)
+    Int64 ret = 0;
+    if (!cache.TryGetValue(current, out ret))
     {
-        if (!visited.Contains(output))
+        var outputs = connections[current];
+        foreach (var output in outputs)
         {
-            visited.Add(output);
-            ret += CountPathsFrom(connections, output, visited, shouldCount);
-            visited.Remove(output);
+            //Debug.Assert(!visited.Contains(output));
+            //if (!visited.Contains(output))
+            {
+                //visited.Add(output);
+                ret += CountPathsFrom(connections, output, endNode, visited, cache);
+                //visited.Remove(output);
+            }
         }
+        cache.Add(current, ret);
     }
     return ret;
 }
+
 void Part1(string filename)
 {
     var connections = LoadFile(filename);
-    var validPaths = CountPathsFrom(connections, "you", new HashSet<string>(), (_) => true);
+    var validPaths = CountPathsFrom(connections, "you", "out", new HashSet<string>(), new Dictionary<string, Int64>());
     LogUtil.LogLine($"{validPaths}");
 }
 
 void Part2(string filename)
 {
     var connections = LoadFile(filename);
-    var validPaths = CountPathsFrom(connections, "svr", new HashSet<string>(), (visited) => visited.Contains("dac") && visited.Contains("fft"));
-    LogUtil.LogLine($"{validPaths}");
+    connections.Add("out", new List<string>());
+    var dacThenFft =
+        CountPathsFrom(connections, "svr", "dac", new HashSet<string>(), new Dictionary<string, Int64>()) *
+        CountPathsFrom(connections, "dac", "fft", new HashSet<string>(), new Dictionary<string, Int64>()) *
+        CountPathsFrom(connections, "fft", "out", new HashSet<string>(), new Dictionary<string, Int64>());
+    var fftThenDac=
+        CountPathsFrom(connections, "svr", "fft", new HashSet<string>(), new Dictionary<string, Int64>()) *
+        CountPathsFrom(connections, "fft", "dac", new HashSet<string>(), new Dictionary<string, Int64>()) *
+        CountPathsFrom(connections, "dac", "out", new HashSet<string>(), new Dictionary<string, Int64>());
+    LogUtil.LogLine($"{dacThenFft + fftThenDac}");
 }
 
 void Run()
@@ -68,20 +84,13 @@ void Run()
 }
 
 Run();
-//public class Connections
-//{
-//    public int input;
-//    public required List<int> outputs;
-//}
 
 public static class Config
 {
     public static readonly string? Name = Assembly.GetExecutingAssembly()?.GetName()?.Name;
-    public static readonly string startNode = "you";
-    public static readonly string endNode = "out";
 }
 
-//D7: Part1: 1678
-//completed in 6ms
-//D7: Part2: 357525737893560
-//completed in 6ms
+//D11: Part1: 497
+//completed in 5ms
+//D11: Part2: 358564784931864
+//completed in 2ms
