@@ -5,9 +5,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+<<<<<<< HEAD
+=======
 
-//using DataSet = AOC_Util.DataFull;
-using DataSet = AOC_Util.DataTest;
+>>>>>>> cc19443f341c378467b659cd1229f5649cfcd2c9
+using DataSet = AOC_Util.DataFull;
+//using DataSet = AOC_Util.DataTest;
 
 static char FlipSwitches(char old, char flips)
 {
@@ -43,54 +46,57 @@ void Part1(string filename)
     LogUtil.LogLine($"{totalPressCount}");
 }
 
-//void Part2_wrong(string filename)
-//{
-//    var lines = File.ReadAllLines(filename);
-//    var computers = lines.Select(l => Computer.Load(l)).ToList();
+void Part2_wrong(string filename)
+{
+    var lines = File.ReadAllLines(filename);
+    var computers = lines.Select(l => Computer.Load(l)).ToList();
 
-//    var totalPressCount = 0;
-//    foreach (var c in computers)
-//    {
-//        var minPressCount = 0;
-//        var work = new Queue<(int depth, Int128 val)>([(0, '\0')]);
-//        while (minPressCount == 0)
-//        {
-//            (var depth, var val) = work.Dequeue();
-//            foreach (var inc in c.buttonJoltageIncrementsPacked)
-//            {
-//                // For each 
-//                var newVal = val + inc;
-//                if (newVal == c.joltageTargetPacked)
-//                {
-//                    minPressCount = depth + 1;
-//                    break;
-//                }
-//                bool stillPossible = true;
-//                for (int b = 0; b < 16 && stillPossible; b++)
-//                {
-//                    Int128 mask = (Int128)0xff << (8 * b);
-//                    stillPossible = stillPossible && ((c.joltageTargetPacked & mask) >= (inc & mask));
-//                }
-//                if (stillPossible && work.Where((depth, val) => val == newVal).Count() == 0)
-//                {
-//                    work.Enqueue((depth + 1, newVal));
-//                }
-//            }
-//        }
-//        totalPressCount += minPressCount;
-//    }
-//    LogUtil.LogLine($"{totalPressCount}");
-//}
+    var totalPressCount = 0;
+    foreach (var c in computers)
+    {
+        var minPressCount = 0;
+        var work = new Queue<(int depth, Int64 val)>([ (0, '\0') ]);
+        while (minPressCount == 0)
+        {
+            (var depth, var val) = work.Dequeue();
+            foreach (var inc in c.buttonJoltageIncrementsPacked)
+            {
+                // For each 
+                var newVal = val + inc;
+                if (newVal == c.joltageTargetPacked)
+                {
+                    minPressCount = depth + 1;
+                    break;
+                }
+                bool stillPossible = true;
+                for (int b = 0; b < 8 && stillPossible; b++)
+                {
+                    Int64 mask = (Int64)0xff << (8 *b);
+                    stillPossible = stillPossible && ((c.joltageTargetPacked & mask) >= (inc & mask));
+                }
+                if (stillPossible && work.Where((depth, val) => val == newVal).Count() == 0)
+                {
+                    work.Enqueue((depth + 1, newVal));
+                }
+            }
+        }
+        totalPressCount += minPressCount;
+    }
+    LogUtil.LogLine($"{totalPressCount}");
+}
 
 string disp(int[] target)
 {
     return target.Aggregate("", (a, n) => a + " " + n.ToString());
 }
+<<<<<<< HEAD
+=======
 bool isValid(int[] target, int[] steps)
 {
     Debug.Assert(target.Length == steps.Length);
     return Enumerable.Range(0, target.Length).All(i => target[i] - steps[i] >= 0);
 }
+>>>>>>> cc19443f341c378467b659cd1229f5649cfcd2c9
 int dot(int[] target, int[] steps)
 {
     Debug.Assert(target.Length == steps.Length);
@@ -111,14 +117,6 @@ int[] sub(int[] a, int[] b)
     }
     return ret;
 }
-void accumulate(int[] acc, int[] inc)
-{
-    Debug.Assert(acc.Length == inc.Length);
-    for (int i = 0; i < acc.Length; i++)
-    {
-        acc[i] += inc[i];
-    }
-}
 int? FindMinStepsTo(int[] target, int[][] stepChoices, int currDepth)
 {
     if (target.Any(d => d < 0))
@@ -130,17 +128,19 @@ int? FindMinStepsTo(int[] target, int[][] stepChoices, int currDepth)
         return currDepth;
     }
 
+<<<<<<< HEAD
+    stepChoices.Sort((a, b) => dot(b, target).CompareTo(dot(a, target)));
+//    LogUtil.Log("".PadLeft(currDepth));
+    currDepth++;
+    foreach (var step in stepChoices)
+    {
+        var newTarget = sub(target, step);
+        LogUtil.Log("".PadLeft(currDepth));
+        LogUtil.LogLine($"{disp(target)} - {disp(step)} ... {disp(newTarget)}");
+        var res = FindMinStepsTo(newTarget, (int[][])stepChoices.Clone(), currDepth);
+=======
     var newStepChoices = stepChoices.Where(s => isValid(target, s)).ToArray();
     newStepChoices.Sort((a, b) => dot(b, target).CompareTo(dot(a, target)));
-    int[] accumulateMask = new int[target.Length];
-    foreach (var step in newStepChoices)
-    {
-        accumulate(accumulateMask, step);
-    }
-    if (Enumerable.Range(0, target.Length).Any(i => accumulateMask[i] == 0 && target[i] > 0))
-    {
-        return null;
-    }
     currDepth++;
     foreach (var step in newStepChoices)
     {
@@ -148,6 +148,7 @@ int? FindMinStepsTo(int[] target, int[][] stepChoices, int currDepth)
         LogUtil.Log("".PadLeft(currDepth));
         LogUtil.LogLine($"{disp(target)} - {disp(step)} ({newStepChoices.Length})... {disp(newTarget)}");
         var res = FindMinStepsTo(newTarget, stepChoices, currDepth);
+>>>>>>> cc19443f341c378467b659cd1229f5649cfcd2c9
         if (res.HasValue)
         {
             return res;
@@ -162,9 +163,15 @@ void Part2(string filename)
     var computers = lines.Select(l => Computer.Load(l)).ToList();
 
     var totalPressCount = 0;
+<<<<<<< HEAD
+    foreach (var c in computers)
+    {
+        LogUtil.Log($"#");
+=======
     foreach ((var c, var i) in computers.Select((c, i) => (c, i)))
     {
         LogUtil.LogLine($"######{i}:");
+>>>>>>> cc19443f341c378467b659cd1229f5649cfcd2c9
         var success = FindMinStepsTo(c.joltageTarget, c.buttonJoltageIncrements, 0);
         LogUtil.LogLine($"====> {success}");
         Debug.Assert(success.HasValue);
@@ -187,8 +194,8 @@ partial class Computer
 {
     public char switchTarget;
     public required char[] buttonFlips;
-    public required Int128[] buttonJoltageIncrementsPacked;
-    public Int128 joltageTargetPacked;
+    public required Int64[] buttonJoltageIncrementsPacked;
+    public Int64 joltageTargetPacked;
     public required int[][] buttonJoltageIncrements;
     public required int[] joltageTarget;
 
@@ -206,14 +213,14 @@ partial class Computer
 
         char switchTarget = switchTargetString.ToCharArray().Reverse().Aggregate('\0', (res, c) => (char)((int)res << 1 | (c == '#' ? 1 : 0)));
         List<char> buttonFlips = new();
-        List<Int128> buttonJoltageIncrementsPacked = new();
+        List<Int64> buttonJoltageIncrementsPacked = new();
         List<int[]> buttonJoltageIncrements = new();
         foreach (string buttonString in buttonStrings.Split().Select(s => s.Trim()))
         {
             Debug.Assert(buttonString[0] == '(' && buttonString[^1] == ')');
-            char buttonFlip = buttonString[1..^1].Split(',').Aggregate('\0', (res, s) => (char)((int)res | (1 << int.Parse(s))));
+            char buttonFlip = buttonString[1..^1].Split(',').Aggregate('\0', (res, s) => (char)((int)res | (1 << (s[0] - '0'))));
             buttonFlips.Add(buttonFlip);
-            Int128 buttonJoltageIncrementPacked = buttonString[1..^1].Split(',').Aggregate((Int128)0, (res, s) => res + ((Int128)1 << (8 * int.Parse(s))));
+            Int64 buttonJoltageIncrementPacked = buttonString[1..^1].Split(',').Aggregate(0L, (res, s) => res + (1 << (8 * (s[0] - '0'))));
             buttonJoltageIncrementsPacked.Add(buttonJoltageIncrementPacked);
             int[] buttonJoltageIncrement = new int[switchTargetString.Length];
             foreach (string s in buttonString[1..^1].Split(','))
@@ -222,7 +229,7 @@ partial class Computer
             }
             buttonJoltageIncrements.Add(buttonJoltageIncrement);
         }
-        Int128 joltageTargetPacked = joltageTargetString.Split(',').Select(s => Int128.Parse(s)).Aggregate((res, i) => (res << 8) + i);
+        Int64 joltageTargetPacked = joltageTargetString.Split(',').Select(s => Int64.Parse(s)).Aggregate((res, i) => (res << 8) + i);
         int[] joltageTarget = joltageTargetString.Split(',').Select(s => int.Parse(s)).ToArray();
         return new Computer {
             switchTarget = switchTarget,
