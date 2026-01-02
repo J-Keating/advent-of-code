@@ -33,6 +33,16 @@ namespace AOC_Util
         }
     }
 
+    public static class Util
+    {
+        public static void Swap<T>(ref T a, ref T b)
+        {
+            var temp = a;
+            a = b;
+            b = temp;
+        }
+    }
+
     public static class  FileUtil
     {
         public static char[,] LoadAsCharArray(string filename)

@@ -8,6 +8,7 @@ using AOC_Util;
 using DataSet = AOC_Util.DataTest;
 
 using PointRC = (System.Int64 row, System.Int64 col);
+using Segment = (System.Int64 start, System.Int64 end);
 //using Rect = (PointRC p1, PointRC p2);
 
 PointRC[] LoadFile(string filename)
@@ -31,8 +32,8 @@ void Part1(string filename)
     {
         for (int j = i + 1; j < locs.Length; j++)
         {
-            var p1 = locs[i];
-            var p2 = locs[j];
+            ref readonly var p1 = ref locs[i];
+            ref readonly var p2 = ref locs[j];
             Debug.Assert(p2.row - p1.row >= 0);
             var area = (p2.row - p1.row + 1) * (Math.Abs(p1.col - p2.col) + 1);
             maxArea = Math.Max(maxArea, area);
@@ -41,48 +42,98 @@ void Part1(string filename)
     LogUtil.LogLine($"{maxArea}");
 }
 
-bool isInRect(PointRC p1, PointRC p2, PointRC pTest)
+bool Between(Int64 test, Int64 start, Int64 end)
 {
-    return (p1.row < pTest.row && pTest.row < p2.row &&
-            p1.col < pTest.col && pTest.col < p2.col);
+    return (start <= test && test <= end) || (end <= test && test <= start);
 }
 
-bool SegmentPermits(Segment segment, PointRC p1, PointRC p2)
+bool IsInside(List<Wall> wallsHorizontal, List<Wall> wallsVertical, Int64 col)
 {
-    bool ret = true;
-    switch (segment.walltype)
+    if (wallsHorizontal.Any(w => w.start.col <= col && col <= w.stop.col))
     {
-        case WallType.North:
-            break;
-        case WallType.South:
-            break;
-        case WallType.East:
-            break;
-        case WallType.West:
-            break;
-        default:
-            throw new InvalidDataException();
+        return true;
     }
-    return ret;
+    int before = -1;
+    int after = 0;
+    while (after < wallsVertical.Count && col < wallsVertical[after].start.col)
+    {
+        before = after;
+        after++;
+    }
+    if (before == -1 || after == wallsVertical.Count)
+    {
+        return false;
+    }
+
 }
 
 void Part2(string filename)
 {
     PointRC[] locs = LoadFile(filename);
+    List<Wall> allWalls = new();
+    for (var i = 0; i < locs.Length; i++)
+    {
+        ref readonly var p1 = ref locs[i];
+        ref readonly var p2 = ref locs[(i + 1) % locs.Length];
+        allWalls.Add(Wall.Create(in p1, in p2));
+    }
     locs.Sort();
     Int64 maxArea = 0;
     for (int i = 0; i < locs.Length; i++)
     {
         for (int j = i + 1; j < locs.Length; j++)
         {
-            var p1 = locs[i];
-            var p2 = locs[j];
+            ref readonly var p1 = ref locs[i];
+            ref readonly var p2 = ref locs[j];
             Debug.Assert(p2.row - p1.row >= 0);
-            var area = ((Math.Abs(p1.row - p2.row) + 1) * (Math.Abs(p1.col - p2.col) + 1));
+            var area = (p2.row - p1.row + 1) * (Math.Abs(p1.col - p2.col) + 1);
             if (area > maxArea)
             {
-                bool isValid = !locs[i..j].Any(p => isInRect(p1, p2, p));
-                if (isValid)
+                bool valid = true;
+                var testSegment = new Segment { start = p1.col, end = p2.col };
+                if (testSegment.start > testSegment.end)
+                {
+                    Util.Swap(ref testSegment.start, ref testSegment.end);
+                }
+                Int64 currRow = p1.row;
+                while (valid && currRow <= p2.row)
+                {
+                    var wallsHorizontal = new List<Wall>();
+                    var wallsVertical = new List<Wall>();
+                    // Find relevant walls
+                    foreach (var wall in allWalls)
+                    {
+                        switch (wall.wallType)
+                        {
+                            case WallType.Up or WallType.Down:
+                                if (Between(currRow, wall.start.row, wall.stop.row))
+                                {
+                                    wallsHorizontal.Add(wall);
+                                }
+                                break;
+                            case WallType.Right or WallType.Left:
+                                if (wall.start.row == currRow)
+                                {
+                                    wallsVertical.Add(wall);
+                                }
+                                break;
+                            default:
+                                throw new InvalidDataException();
+                        }
+                    }
+                    //walls.Sort((w1, w2) =>
+                    //{
+                    //    var cmp = w1.start.col.CompareTo(w2.start.col);
+                    //    if (cmp != 0) return cmp;
+                    //    Debug.Assert(w1.wallType != w2.wallType);
+                    //    return w1.wallType.CompareTo(w2.wallType); // W, N, S, E
+                    //});
+                    //Debug.Assert(wallsVertical.Length == 0 || wallsVertical[0].wallType == WallType.West);
+                    // Find segments defined by walls
+                    currRow++;
+                }
+
+                if (valid)
                 {
                     maxArea = Math.Max(maxArea, area);
                 }
@@ -104,17 +155,42 @@ Run();
 
 enum WallType
 {
-    North,
-    South,
-    East,
-    West
+    // Order is important
+    Up,
+    Right,
+    Left,
+    Down,
 };
 
-class Segment
+class Wall
 {
-    public WallType walltype;
-    public int location;
-    public int min, max;
+    public WallType wallType;
+    public PointRC start;
+    public PointRC stop;
+    //public int location;
+    //public int min, max;
+
+    public static Wall Create(ref readonly PointRC a, ref readonly PointRC b)
+    {
+        Debug.Assert(a.row == b.row || a.col == b.col);
+        WallType wallType = (b.row - a.row) switch
+        {
+            > 0 => WallType.Down,
+            < 0 => WallType.Up,
+            0 => (b.col - a.col) switch
+            {
+                > 0 => WallType.Right,
+                < 0 => WallType.Left,
+                0 => throw new InvalidDataException()
+            }
+        };
+        var ret = new Wall { wallType = wallType, start = a, stop = b};
+        if (wallType == WallType.Left || wallType == WallType.Up)
+        {
+            Util.Swap(ref ret.start, ref ret.stop);
+        }
+        return ret;
+    }
 }
 
 public static class Config
