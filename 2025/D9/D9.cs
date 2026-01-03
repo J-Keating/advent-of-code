@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using static System.Net.Mime.MediaTypeNames;
-//using DataSet = AOC_Util.DataFull;
-using DataSet = AOC_Util.DataTest;
+using DataSet = AOC_Util.DataFull;
+//using DataSet = AOC_Util.DataTest;
 using PointRC = (System.Int64 row, System.Int64 col);
 using Segment = (System.Int64 start, System.Int64 end);
 //using Rect = (PointRC p1, PointRC p2);
@@ -166,31 +166,8 @@ List<Segment> EnclosedSegments(ref readonly List<Wall> wallsHorizontal, ref read
     return ret;
 }
 
-bool IsSegmentInside(ref readonly List<Wall> allWalls, Int64 currRow, Segment testSegment)
+bool IsSegmentInsideOld(ref readonly List<Wall> allWalls, Int64 currRow, Segment testSegment)
 {
-    //var wallsHorizontal = new List<Wall>();
-    //var wallsVertical = new List<Wall>();
-    //// Find relevant walls
-    //foreach (var wall in allWalls)
-    //{
-    //    switch (wall.wallType)
-    //    {
-    //        case WallType.Up or WallType.Down:
-    //            if (Between(currRow, wall.start.row, wall.stop.row))
-    //            {
-    //                wallsVertical.Add(wall);
-    //            }
-    //            break;
-    //        case WallType.Right or WallType.Left:
-    //            if (wall.start.row == currRow)
-    //            {
-    //                wallsHorizontal.Add(wall);
-    //            }
-    //            break;
-    //        default:
-    //            throw new InvalidDataException();
-    //    }
-    //}
     (var wallsHorizontal, var wallsVertical) = GetWallsInRow(in allWalls, currRow);
     bool valid = true;
     var col = testSegment.end;
@@ -200,6 +177,13 @@ bool IsSegmentInside(ref readonly List<Wall> allWalls, Int64 currRow, Segment te
         col--;
     }
     return valid;
+}
+
+bool IsSegmentInside(ref readonly List<Wall> allWalls, Int64 currRow, Segment testSegment)
+{
+    (var wallsHorizontal, var wallsVertical) = GetWallsInRow(in allWalls, currRow);
+    var segments = EnclosedSegments(ref wallsHorizontal, ref wallsVertical, currRow);
+    return segments.Any(s => s.start <= testSegment.start && testSegment.end <= s.end);
 }
 
 void Part2(string filename)
@@ -232,39 +216,40 @@ void Part2(string filename)
         var s = EnclosedSegments(ref wallsHorizontal, ref wallsVertical, row);
         LogUtil.LogLine($"{row}: {s.Count}");
     }
-    Int64 maxArea = 0;
-    //for (int i = 0; i < locs.Length; i++)
-    //{
-    //    for (int j = locs.Length - 1; j > i; j--)
-    //    {
-    //        ref readonly var p1 = ref locs[i];
-    //        ref readonly var p2 = ref locs[j];
-    //        Debug.Assert(p2.row - p1.row >= 0);
-    //        var area = (p2.row - p1.row + 1) * (Math.Abs(p1.col - p2.col) + 1);
-    //        if (area > maxArea)
-    //        {
-    //            var testSegment = new Segment { start = p1.col, end = p2.col };
-    //            if (testSegment.start > testSegment.end)
-    //            {
-    //                Util.Swap(ref testSegment.start, ref testSegment.end);
-    //            }
-    //            // Insta-reject if any corners are within the test rectangle
-    //            bool valid = !locs[i..j].Any(l => testSegment.start < l.col && l.col < testSegment.end);
-    //            Int64 currRow = p1.row;
-    //            while (valid && currRow <= p2.row)
-    //            {
-    //                valid = valid && IsSegmentInside(ref allWalls, currRow, testSegment);
-    //                currRow++;
-    //            }
 
-    //            if (valid)
-    //            {
-    //                maxArea = Math.Max(maxArea, area);
-    //            }
-    //        }
-    //    }
-    //    LogUtil.LogLine($"{i}: {maxArea}");
-    //}
+    Int64 maxArea = 0;
+    for (int i = 0; i < locs.Length; i++)
+    {
+        for (int j = locs.Length - 1; j > i; j--)
+        {
+            ref readonly var p1 = ref locs[i];
+            ref readonly var p2 = ref locs[j];
+            Debug.Assert(p2.row - p1.row >= 0);
+            var area = (p2.row - p1.row + 1) * (Math.Abs(p1.col - p2.col) + 1);
+            if (area > maxArea)
+            {
+                var testSegment = new Segment { start = p1.col, end = p2.col };
+                if (testSegment.start > testSegment.end)
+                {
+                    Util.Swap(ref testSegment.start, ref testSegment.end);
+                }
+                // Insta-reject if any corners are within the test rectangle
+                bool valid = true; // !locs[i..j].Any(l => testSegment.start < l.col && l.col < testSegment.end);
+                Int64 currRow = p1.row;
+                while (valid && currRow <= p2.row)
+                {
+                    valid = valid && IsSegmentInside(ref allWalls, currRow, testSegment);
+                    currRow++;
+                }
+
+                if (valid)
+                {
+                    maxArea = Math.Max(maxArea, area);
+                }
+            }
+        }
+        LogUtil.LogLine($"{i}: {maxArea}");
+    }
     LogUtil.LogLine($"{maxArea}");
 }
 
@@ -273,7 +258,8 @@ void Run()
     LogUtil.Log($"{Config.Name}: Part1: ");
     LogUtil.Time(() => Part1(DataSet.Filename));
     LogUtil.Log($"{Config.Name}: Part2: ");
-    LogUtil.Time(() => Part2("input_test2.txt"));
+    LogUtil.Time(() => Part2(DataSet.Filename));
+    //LogUtil.Time(() => Part2("input_test2.txt"));
 }
 
 Run();
@@ -325,5 +311,5 @@ public static class Config
 
 //D9: Part1: 4781377701
 //completed in 6ms
-//D9: Part2: input.txt
-//completed in 0ms
+//D9: Part2: 1470616992
+// completed in 1827500ms
