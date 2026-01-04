@@ -23,26 +23,26 @@ using TestCase = (int width, int height, int[] counts);
         var tokens = l.Split();
         var match = Regex.Match(tokens[0], @"(\d+)x(\d+):");
         Debug.Assert(match.Success);
-        return new TestCase { width = int.Parse(match.Groups[1].Value), height = int.Parse(match.Groups[2].Value), counts = tokens[1..].Select(t => int.Parse(t)).ToArray() };
+        return new TestCase { width = int.Parse(match.Groups[1].Value), height = int.Parse(match.Groups[2].Value), counts = [..tokens[1..].Select(t => int.Parse(t))] };
     }).ToArray();
     return (shapes, testCases);
 }
 
 void Part1(string filename)
 {
-    (var shapes, var testCases) = LoadFile(filename);
+    var (shapes, testCases) = LoadFile(filename);
     int shapeCount = shapes.Length;
     Debug.Assert(shapes[0].Length == 3 && shapes[0][0].Length == 3);
     var shapeSizes = shapes.Select(shape => shape.Sum(row => row.Count(c => c == '#'))).ToArray();
     int trivialFailCount = 0;
     int trivialSuccessCount = 0;
     int otherCount = 0;
-    foreach (var testCase in testCases)
+    foreach ((var width, var height, var counts) in testCases)
     {
-        Debug.Assert(testCase.counts.Length == shapes.Length);
-        int totalHashCount = Enumerable.Range(0, shapes.Length).Select(i => shapeSizes[i] * testCase.counts[i]).Sum();
-        int threeSquareCount = (testCase.width / 3) * (testCase.height / 3);
-        if (totalHashCount > testCase.width * testCase.height)
+        Debug.Assert(counts.Length == shapes.Length);
+        int totalHashCount = Enumerable.Range(0, shapes.Length).Select(i => shapeSizes[i] * counts[i]).Sum();
+        int threeSquareCount = (width / 3) * (height / 3);
+        if (totalHashCount > width * height)
         {
             trivialFailCount++;
         }

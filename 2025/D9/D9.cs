@@ -124,7 +124,7 @@ bool IsInside(List<Wall> wallsHorizontal, List<Wall> wallsVertical, Int64 col)
 
 List<Segment> EnclosedSegments(ref readonly List<Wall> wallsHorizontal, ref readonly List<Wall> wallsVertical, Int64 currRow, Dictionary<Int64, List<Segment>> cache)
 {
-    if (!cache.ContainsKey(currRow))
+    if (!cache.TryGetValue(currRow, out var ret))
     { 
         var workingSegments = new List<Segment>();
         Int64? currSegmentStart = null;
@@ -151,7 +151,7 @@ List<Segment> EnclosedSegments(ref readonly List<Wall> wallsHorizontal, ref read
         }
 
         // Hack.  Should be better way
-        var ret = new List<Segment>();
+        ret = new List<Segment>(workingSegments.Count);
         for (var i = 0; i < workingSegments.Count; i++)
         {
             // Combine adjacent segments which are connected by a horizontal wall
@@ -168,7 +168,7 @@ List<Segment> EnclosedSegments(ref readonly List<Wall> wallsHorizontal, ref read
         }
         cache.Add(currRow, ret);
     }
-    return cache[currRow];
+    return ret;
 }
 bool IsSegmentInside(ref readonly List<Wall> allWalls, Int64 currRow, Segment testSegment, Dictionary<Int64, List<Segment>> cache)
 {

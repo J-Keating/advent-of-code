@@ -205,9 +205,9 @@ partial class Computer
         string joltageTargetString = match.Groups[3].Value;
 
         char switchTarget = switchTargetString.ToCharArray().Reverse().Aggregate('\0', (res, c) => (char)((int)res << 1 | (c == '#' ? 1 : 0)));
-        List<char> buttonFlips = new();
-        List<Int128> buttonJoltageIncrementsPacked = new();
-        List<int[]> buttonJoltageIncrements = new();
+        List<char> buttonFlips = [];
+        List<Int128> buttonJoltageIncrementsPacked = [];
+        List<int[]> buttonJoltageIncrements = [];
         foreach (string buttonString in buttonStrings.Split().Select(s => s.Trim()))
         {
             Debug.Assert(buttonString[0] == '(' && buttonString[^1] == ')');
@@ -223,13 +223,13 @@ partial class Computer
             buttonJoltageIncrements.Add(buttonJoltageIncrement);
         }
         Int128 joltageTargetPacked = joltageTargetString.Split(',').Select(s => Int128.Parse(s)).Aggregate((res, i) => (res << 8) + i);
-        int[] joltageTarget = joltageTargetString.Split(',').Select(s => int.Parse(s)).ToArray();
+        int[] joltageTarget = [..joltageTargetString.Split(',').Select(s => int.Parse(s))];
         return new Computer {
             switchTarget = switchTarget,
             buttonFlips = [.. buttonFlips],
             buttonJoltageIncrementsPacked = [.. buttonJoltageIncrementsPacked],
             joltageTargetPacked = joltageTargetPacked,
-            buttonJoltageIncrements = buttonJoltageIncrements.ToArray(),
+            buttonJoltageIncrements = [..buttonJoltageIncrements],
             joltageTarget = joltageTarget
         };
     }
