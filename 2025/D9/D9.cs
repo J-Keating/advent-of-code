@@ -13,12 +13,12 @@ using Segment = (System.Int64 start, System.Int64 end);
 PointRC[] LoadFile(string filename)
 {
     var lines = File.ReadAllLines(filename);
-    PointRC[] locs = lines.Select(l =>
+    PointRC[] locs = [.. lines.Select(l =>
     {
         var split = l.Split(',');
         Debug.Assert(split.Length == 2);
         return (Int64.Parse(split[1]), Int64.Parse(split[0]));
-    }).ToArray();
+    })];
     return locs;
 }
 
@@ -122,74 +122,65 @@ bool IsInside(List<Wall> wallsHorizontal, List<Wall> wallsVertical, Int64 col)
     return (wallsHorizontal, wallsVertical);
 }
 
-List<Segment> EnclosedSegments(ref readonly List<Wall> wallsHorizontal, ref readonly List<Wall> wallsVertical, Int64 currRow)
+List<Segment> EnclosedSegments(ref readonly List<Wall> wallsHorizontal, ref readonly List<Wall> wallsVertical, Int64 currRow, Dictionary<Int64, List<Segment>> cache)
 {
-    var workingSegments = new List<Segment>();
-    Int64? currSegmentStart = null;
-    WallType? currSegmentEndType = null;
-    foreach (var wall in wallsVertical)
-    {
-        if (currSegmentEndType.HasValue && currSegmentEndType == wall.wallType)
+    if (!cache.ContainsKey(currRow))
+    { 
+        var workingSegments = new List<Segment>();
+        Int64? currSegmentStart = null;
+        WallType? currSegmentEndType = null;
+        foreach (var wall in wallsVertical)
         {
-            Debug.Assert(currSegmentStart.HasValue);
-            workingSegments.Add(new Segment { start = currSegmentStart.Value, end = wall.start.col });
-            currSegmentStart = null;
-            currSegmentEndType = null;
-        }
-        else if (!currSegmentEndType.HasValue)
-        {
-            currSegmentStart = wall.start.col;
-            currSegmentEndType = wall.wallType switch
+            if (currSegmentEndType.HasValue && currSegmentEndType == wall.wallType)
             {
-                WallType.Up => WallType.Down,
-                WallType.Down => WallType.Up,
-                _ => throw new InvalidDataException()
-            };
+                Debug.Assert(currSegmentStart.HasValue);
+                workingSegments.Add(new Segment { start = currSegmentStart.Value, end = wall.start.col });
+                currSegmentStart = null;
+                currSegmentEndType = null;
+            }
+            else if (!currSegmentEndType.HasValue)
+            {
+                currSegmentStart = wall.start.col;
+                currSegmentEndType = wall.wallType switch
+                {
+                    WallType.Up => WallType.Down,
+                    WallType.Down => WallType.Up,
+                    _ => throw new InvalidDataException()
+                };
+            }
         }
-    }
 
-    var ret = new List<Segment>();
-    for (var i = 0; i < workingSegments.Count; i++)
-    {
-        // Combine adjacent segments which are connected by a horizontal wall
-        if (i < workingSegments.Count - 1 &&  wallsHorizontal.Any(w => workingSegments[i].end == w.start.col && w.stop.col == workingSegments[i + 1].start))
+        // Hack.  Should be better way
+        var ret = new List<Segment>();
+        for (var i = 0; i < workingSegments.Count; i++)
         {
-            var newSegment = new Segment { start = workingSegments[i].start, end = workingSegments[i + 1].end };
-            ret.Add(newSegment);
-            i++;
+            // Combine adjacent segments which are connected by a horizontal wall
+            if (i < workingSegments.Count - 1 &&  wallsHorizontal.Any(w => workingSegments[i].end == w.start.col && w.stop.col == workingSegments[i + 1].start))
+            {
+                var newSegment = new Segment { start = workingSegments[i].start, end = workingSegments[i + 1].end };
+                ret.Add(newSegment);
+                i++;
+            }
+            else
+            {
+                ret.Add(workingSegments[i]);
+            }
         }
-        else
-        {
-            ret.Add(workingSegments[i]);
-        }
+        cache.Add(currRow, ret);
     }
-    return ret;
+    return cache[currRow];
 }
-
-bool IsSegmentInsideOld(ref readonly List<Wall> allWalls, Int64 currRow, Segment testSegment)
+bool IsSegmentInside(ref readonly List<Wall> allWalls, Int64 currRow, Segment testSegment, Dictionary<Int64, List<Segment>> cache)
 {
     (var wallsHorizontal, var wallsVertical) = GetWallsInRow(in allWalls, currRow);
-    bool valid = true;
-    var col = testSegment.end;
-    while (valid && col >= testSegment.start)
-    {
-        valid = valid && IsInside(wallsHorizontal, wallsVertical, col);
-        col--;
-    }
-    return valid;
-}
-
-bool IsSegmentInside(ref readonly List<Wall> allWalls, Int64 currRow, Segment testSegment)
-{
-    (var wallsHorizontal, var wallsVertical) = GetWallsInRow(in allWalls, currRow);
-    var segments = EnclosedSegments(ref wallsHorizontal, ref wallsVertical, currRow);
+    var segments = EnclosedSegments(ref wallsHorizontal, ref wallsVertical, currRow, cache);
     return segments.Any(s => s.start <= testSegment.start && testSegment.end <= s.end);
 }
 
 void Part2(string filename)
 {
     PointRC[] locs = LoadFile(filename);
-    List<Wall> allWalls = new();
+    var allWalls = new List<Wall>();
     for (var i = 0; i < locs.Length; i++)
     {
         ref readonly var p1 = ref locs[i];
@@ -199,28 +190,30 @@ void Part2(string filename)
     locs.Sort();
 
     // Diagnostics
-    for (Int64 row = 0; row <= 14; row++)
-    {
-        LogUtil.Log($"{row}: ");
-        for (Int64 col = 0; col <= 14; col++)
-        {
-            var testSegment = new Segment { start = col, end = col };
-            string test = IsSegmentInside(ref allWalls, row, testSegment) ? "X" : ".";
-            LogUtil.Log($"{test}");
-        }
-        LogUtil.LogLine("");
-    }
-    for (Int64 row = 0; row < 14; row++)
-    {
-        (var wallsHorizontal, var wallsVertical) = GetWallsInRow(in allWalls, row);
-        var s = EnclosedSegments(ref wallsHorizontal, ref wallsVertical, row);
-        LogUtil.LogLine($"{row}: {s.Count}");
-    }
+    //for (Int64 row = 0; row <= 14; row++)
+    //{
+    //    LogUtil.Log($"{row}: ");
+    //    for (Int64 col = 0; col <= 14; col++)
+    //    {
+    //        var testSegment = new Segment { start = col, end = col };
+    //        string test = IsSegmentInside(ref allWalls, row, testSegment) ? "X" : ".";
+    //        LogUtil.Log($"{test}");
+    //    }
+    //    LogUtil.LogLine("");
+    //}
+    //for (Int64 row = 0; row < 14; row++)
+    //{
+    //    (var wallsHorizontal, var wallsVertical) = GetWallsInRow(in allWalls, row);
+    //    var s = EnclosedSegments(ref wallsHorizontal, ref wallsVertical, row);
+    //    LogUtil.LogLine($"{row}: {s.Count}");
+    //}
 
     Int64 maxArea = 0;
+    Dictionary<Int64, List<Segment>> cache = [];
     for (int i = 0; i < locs.Length; i++)
     {
-        for (int j = locs.Length - 1; j > i; j--)
+        //for (int j = locs.Length - 1; j > i; j--)
+        for (int j = i + 1; j < locs.Length; j++)
         {
             ref readonly var p1 = ref locs[i];
             ref readonly var p2 = ref locs[j];
@@ -233,12 +226,11 @@ void Part2(string filename)
                 {
                     Util.Swap(ref testSegment.start, ref testSegment.end);
                 }
-                // Insta-reject if any corners are within the test rectangle
-                bool valid = true; // !locs[i..j].Any(l => testSegment.start < l.col && l.col < testSegment.end);
+                bool valid = true;
                 Int64 currRow = p1.row;
                 while (valid && currRow <= p2.row)
                 {
-                    valid = valid && IsSegmentInside(ref allWalls, currRow, testSegment);
+                    valid = valid && IsSegmentInside(ref allWalls, currRow, testSegment, cache);
                     currRow++;
                 }
 

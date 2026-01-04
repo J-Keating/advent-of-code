@@ -1,88 +1,67 @@
-﻿using System.Data;
+﻿using AOC_Util;
+using System.Data;
 using System.Diagnostics;
 using System.Reflection;
-
-using AOC_Util;
-//using DataSet = AOC_Util.DataFull;
-using DataSet = AOC_Util.DataTest;
-
+using System.Text.RegularExpressions;
 using BeamSet = System.Collections.Generic.Dictionary<int, System.Int64>;
+using DataSet = AOC_Util.DataFull;
+//using DataSet = AOC_Util.DataTest;
+using TestCase = (int width, int height, int[] counts);
+
+(char[][][], TestCase[]) LoadFile(string filename)
+{
+    var fileContents = File.ReadAllText(filename);
+    var chunks = fileContents.Split("\r\n\r\n");
+    var shapes = chunks[0..^1].Select(c =>
+    {
+        var lines = c.Split("\r\n");
+        var ret = lines[1..].Select(l => l.Trim().ToArray()).ToArray();
+        return ret;
+    }).ToArray();
+    var testCases = chunks[^1].Split("\r\n").Select(l =>
+    {
+        var tokens = l.Split();
+        var match = Regex.Match(tokens[0], @"(\d+)x(\d+):");
+        Debug.Assert(match.Success);
+        return new TestCase { width = int.Parse(match.Groups[1].Value), height = int.Parse(match.Groups[2].Value), counts = tokens[1..].Select(t => int.Parse(t)).ToArray() };
+    }).ToArray();
+    return (shapes, testCases);
+}
 
 void Part1(string filename)
 {
-    int totalSplits = 0;
-    var grid = FileUtil.LoadAsCharArray(filename);
-    var startLocs = GridUtil.RowData2d(grid, 0).Select((c, i) => (c, i)).Where(p => p.c == 'S').Select(p => p.i).ToArray();
-    Debug.Assert(startLocs.Length == 1);
-    var beams = new HashSet<int> { startLocs[0] };
-    for (var row = 1; row < grid.GetLength(0); row++)
+    (var shapes, var testCases) = LoadFile(filename);
+    int shapeCount = shapes.Length;
+    Debug.Assert(shapes[0].Length == 3 && shapes[0][0].Length == 3);
+    var shapeSizes = shapes.Select(shape => shape.Sum(row => row.Count(c => c == '#'))).ToArray();
+    int trivialFailCount = 0;
+    int trivialSuccessCount = 0;
+    int otherCount = 0;
+    foreach (var testCase in testCases)
     {
-        var newBeams = new HashSet<int>();
-        foreach (var beam in beams)
+        Debug.Assert(testCase.counts.Length == shapes.Length);
+        int totalHashCount = Enumerable.Range(0, shapes.Length).Select(i => shapeSizes[i] * testCase.counts[i]).Sum();
+        int threeSquareCount = (testCase.width / 3) * (testCase.height / 3);
+        if (totalHashCount > testCase.width * testCase.height)
         {
-            switch(grid[row, beam])
-            {
-                case '.':
-                    newBeams.Add(beam);
-                    break;
-                case '^':
-                    totalSplits++;
-                    if ((beam - 1) > 0) { newBeams.Add(beam - 1); }
-                    if ((beam + 1) < grid.GetLength(1)) { newBeams.Add(beam + 1); }
-                    break;
-                default:
-                    throw new InvalidDataException();
-            }
+            trivialFailCount++;
         }
-        beams = newBeams;
+        else if (threeSquareCount >= shapeSizes.Sum())
+        {
+            trivialSuccessCount++;
+        }
+        else
+        {
+            otherCount++;
+        }
     }
-    LogUtil.LogLine($"{totalSplits}");
-}
-
-void Part2(string filename)
-{
-    var grid = FileUtil.LoadAsCharArray(filename);
-    var startLocs = GridUtil.RowData2d(grid, 0).Select((c, i) => (c, i)).Where(p => p.c == 'S').Select(p => p.i).ToArray();
-    Debug.Assert(startLocs.Length == 1);
-    var beams = new BeamSet { { startLocs[0], 1L } };
-    for (var row = 1; row < grid.GetLength(0); row++)
-    {
-        var newBeams = new BeamSet();
-        void InsertOrAddIfInRange(int pos, Int64 count)
-        {
-            if (0 <= pos && pos < grid.GetLength(1))
-            {
-                newBeams[pos] = newBeams.TryGetValue(pos, out var currCount) ? currCount + count : count;
-            }
-        }
-
-        foreach ((int pos, Int64 count) in beams)
-        {
-            switch (grid[row, pos])
-            {
-                case '.':
-                    InsertOrAddIfInRange(pos, count);
-                    break;
-                case '^':
-                    InsertOrAddIfInRange(pos - 1, count);
-                    InsertOrAddIfInRange(pos + 1, count);
-                    break;
-                default:
-                    throw new InvalidDataException();
-            }
-        }
-        beams = newBeams;
-    }
-    Int64 totalPaths = beams.Values.Aggregate((count, acc) => acc + count);
-    LogUtil.LogLine($"{totalPaths}");
+    LogUtil.LogLine($"Trivial Pass: {trivialSuccessCount}, Trivial Fail: {trivialFailCount}, Other: {otherCount}");
 }
 
 void Run()
 {
     LogUtil.Log($"{Config.Name}: Part1: ");
     LogUtil.Time(() => Part1(DataSet.Filename));
-    LogUtil.Log($"{Config.Name}: Part2: ");
-    LogUtil.Time(() => Part2(DataSet.Filename));
 }
 
 Run();
@@ -92,7 +71,5 @@ public static class Config
     public static readonly string? Name = Assembly.GetExecutingAssembly()?.GetName()?.Name;
 }
 
-//D7: Part1: 1678
-//completed in 6ms
-//D7: Part2: 357525737893560
-//completed in 6ms
+//D12: Part1: Trivial Pass: 410, Trivial Fail: 590, Other: 0
+//completed in 32ms
