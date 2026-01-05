@@ -122,10 +122,11 @@ bool IsInside(List<Wall> wallsHorizontal, List<Wall> wallsVertical, Int64 col)
     return (wallsHorizontal, wallsVertical);
 }
 
-List<Segment> EnclosedSegments(ref readonly List<Wall> wallsHorizontal, ref readonly List<Wall> wallsVertical, Int64 currRow, Dictionary<Int64, List<Segment>> cache)
+List<Segment> EnclosedSegments(ref readonly List<Wall> allWalls, Int64 currRow, List<Segment>[] cache)
 {
-    if (!cache.TryGetValue(currRow, out var ret))
+    if (cache[currRow] == null)
     { 
+        (var wallsHorizontal, var wallsVertical) = GetWallsInRow(in allWalls, currRow);
         var workingSegments = new List<Segment>();
         Int64? currSegmentStart = null;
         WallType? currSegmentEndType = null;
@@ -151,7 +152,7 @@ List<Segment> EnclosedSegments(ref readonly List<Wall> wallsHorizontal, ref read
         }
 
         // Hack.  Should be better way
-        ret = new List<Segment>(workingSegments.Count);
+        var ret = new List<Segment>(workingSegments.Count);
         for (var i = 0; i < workingSegments.Count; i++)
         {
             // Combine adjacent segments which are connected by a horizontal wall
@@ -166,14 +167,13 @@ List<Segment> EnclosedSegments(ref readonly List<Wall> wallsHorizontal, ref read
                 ret.Add(workingSegments[i]);
             }
         }
-        cache.Add(currRow, ret);
+        cache[currRow] = ret;
     }
-    return ret;
+    return cache[currRow];
 }
-bool IsSegmentInside(ref readonly List<Wall> allWalls, Int64 currRow, Segment testSegment, Dictionary<Int64, List<Segment>> cache)
+bool IsSegmentInside(ref readonly List<Wall> allWalls, Int64 currRow, Segment testSegment, List<Segment>[] cache)
 {
-    (var wallsHorizontal, var wallsVertical) = GetWallsInRow(in allWalls, currRow);
-    var segments = EnclosedSegments(ref wallsHorizontal, ref wallsVertical, currRow, cache);
+    var segments = EnclosedSegments(in allWalls, currRow, cache);
     return segments.Any(s => s.start <= testSegment.start && testSegment.end <= s.end);
 }
 
@@ -209,7 +209,7 @@ void Part2(string filename)
     //}
 
     Int64 maxArea = 0;
-    Dictionary<Int64, List<Segment>> cache = [];
+    var cache = new List<Segment>[((int)locs.Select(l => l.row).Max() + 1)];
     for (int i = 0; i < locs.Length; i++)
     {
         //for (int j = locs.Length - 1; j > i; j--)
@@ -304,4 +304,4 @@ public static class Config
 //D9: Part1: 4781377701
 //completed in 6ms
 //D9: Part2: 1470616992
-// completed in 1827500ms
+// completed in 52056ms
