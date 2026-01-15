@@ -3,11 +3,12 @@ using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-//using DataSet = AOC_Util.DataFull;
-using DataSet = AOC_Util.DataTest;
+using DataSet = AOC_Util.DataFull;
+//using DataSet = AOC_Util.DataTest;
 
 static char FlipSwitches(char old, char flips)
 {
@@ -119,7 +120,7 @@ void accumulate(int[] acc, int[] inc)
         acc[i] += inc[i];
     }
 }
-int? FindMinStepsTo(int[] target, int[][] stepChoices, int currDepth)
+int? FindMinStepsToWrong(int[] target, int[][] stepChoices, int currDepth)
 {
     if (target.Any(d => d < 0))
     {
@@ -147,7 +148,7 @@ int? FindMinStepsTo(int[] target, int[][] stepChoices, int currDepth)
         var newTarget = sub(target, step);
         LogUtil.Log("".PadLeft(currDepth));
         LogUtil.LogLine($"{disp(target)} - {disp(step)} ({newStepChoices.Length})... {disp(newTarget)}");
-        var res = FindMinStepsTo(newTarget, stepChoices, currDepth);
+        var res = FindMinStepsToWrong(newTarget, stepChoices, currDepth);
         if (res.HasValue)
         {
             return res;
@@ -156,6 +157,15 @@ int? FindMinStepsTo(int[] target, int[][] stepChoices, int currDepth)
     //LogUtil.LogLine($" => {disp(newTarget)}");
     return null;
 }
+
+BigInteger Factorial(int n)
+{
+    BigInteger result = 1;
+    for (int i = 2; i <= n; i++)
+        result *= i;
+    return result;
+}
+
 void Part2(string filename)
 {
     var lines = File.ReadAllLines(filename);
@@ -165,10 +175,14 @@ void Part2(string filename)
     foreach ((var c, var i) in computers.Select((c, i) => (c, i)))
     {
         LogUtil.LogLine($"######{i}:");
-        var success = FindMinStepsTo(c.joltageTarget, c.buttonJoltageIncrements, 0);
-        LogUtil.LogLine($"====> {success}");
-        Debug.Assert(success.HasValue);
-        totalPressCount += success.Value;
+        // Get the index of the bit which has the fewest number of buttons that can change it.  For a tie, go to the smaller Joltage
+        var currBit = c.bitsToButtons.Select((b, index) => (b.Count, c.joltageTarget[index], index)).Min().index;
+        // Stars and sticks = N=JoltageTarget, K=Number of buttons
+        var N = c.joltageTarget[currBit];
+        var K = c.bitsToButtons[currBit].Count;
+        // N! / (K! * (N-K)!)
+        var permutations = Factorial(N) / ((Factorial(K) * Factorial(N - K)));
+        LogUtil.LogLine($"{i}====> {permutations}");
     }
     LogUtil.LogLine($"{totalPressCount}");
 }
@@ -187,9 +201,8 @@ partial class Computer
 {
     public char switchTarget;
     public required char[] buttonFlips;
-    public required Int128[] buttonJoltageIncrementsPacked;
-    public Int128 joltageTargetPacked;
-    public required int[][] buttonJoltageIncrements;
+    public required int[][] buttonsToBits;
+    public required List<int>[] bitsToButtons;
     public required int[] joltageTarget;
 
     public static Computer Load(string line)
@@ -206,30 +219,40 @@ partial class Computer
 
         char switchTarget = switchTargetString.ToCharArray().Reverse().Aggregate('\0', (res, c) => (char)((int)res << 1 | (c == '#' ? 1 : 0)));
         List<char> buttonFlips = [];
-        List<Int128> buttonJoltageIncrementsPacked = [];
-        List<int[]> buttonJoltageIncrements = [];
+        List<int[]> buttonsToBits = [];
         foreach (string buttonString in buttonStrings.Split().Select(s => s.Trim()))
         {
             Debug.Assert(buttonString[0] == '(' && buttonString[^1] == ')');
             char buttonFlip = buttonString[1..^1].Split(',').Aggregate('\0', (res, s) => (char)((int)res | (1 << int.Parse(s))));
             buttonFlips.Add(buttonFlip);
             Int128 buttonJoltageIncrementPacked = buttonString[1..^1].Split(',').Aggregate((Int128)0, (res, s) => res + ((Int128)1 << (8 * int.Parse(s))));
-            buttonJoltageIncrementsPacked.Add(buttonJoltageIncrementPacked);
             int[] buttonJoltageIncrement = new int[switchTargetString.Length];
             foreach (string s in buttonString[1..^1].Split(','))
             {
                 buttonJoltageIncrement[s[0] - '0'] = 1;
             }
-            buttonJoltageIncrements.Add(buttonJoltageIncrement);
+            buttonsToBits.Add(buttonJoltageIncrement);
         }
         Int128 joltageTargetPacked = joltageTargetString.Split(',').Select(s => Int128.Parse(s)).Aggregate((res, i) => (res << 8) + i);
         int[] joltageTarget = [..joltageTargetString.Split(',').Select(s => int.Parse(s))];
-        return new Computer {
+        var bitsToButtons = new List<int>[joltageTarget.Length];
+        for (int bitIndex = 0; bitIndex < joltageTarget.Length; bitIndex++)
+        {
+            bitsToButtons[bitIndex] = new List<int>();
+            for (int buttonIndex = 0; buttonIndex < buttonsToBits.Count; buttonIndex++)
+            {
+                if (buttonsToBits[buttonIndex][bitIndex] > 0)
+                {
+                    bitsToButtons[bitIndex].Add(buttonIndex);
+                }
+            }
+        }
+        return new Computer
+        {
             switchTarget = switchTarget,
             buttonFlips = [.. buttonFlips],
-            buttonJoltageIncrementsPacked = [.. buttonJoltageIncrementsPacked],
-            joltageTargetPacked = joltageTargetPacked,
-            buttonJoltageIncrements = [..buttonJoltageIncrements],
+            buttonsToBits = [.. buttonsToBits],
+            bitsToButtons = bitsToButtons,
             joltageTarget = joltageTarget
         };
     }
